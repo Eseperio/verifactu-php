@@ -57,5 +57,4 @@ class Verifactu
         return VerifactuService::generateInvoiceQr($record);
     }
 
-    // Additional static façade methods can be added here as the library evolves.
 }

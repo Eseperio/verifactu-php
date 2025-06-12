@@ -16,13 +16,64 @@ use eseperio\verifactu\models\QueryResponse;
 class VerifactuService
 {
     /**
+     * Configuración global de la clase.
+     * @var array
+     */
+    protected static $config = [];
+
+    /**
+     * Instancia del cliente SOAP.
+     * @var \SoapClient|null
+     */
+    protected static $client = null;
+
+    /**
+     * Establece la configuración global.
+     * @param array $data
+     */
+    public static function config($data)
+    {
+        self::$config = $data;
+        self::$client = null; // Resetear cliente si cambia la config
+    }
+
+    /**
+     * Obtiene un parámetro de configuración.
+     * @param string $param
+     * @return mixed
+     * @throws \InvalidArgumentException
+     */
+    public static function getConfig($param)
+    {
+        if (!isset(self::$config[$param])) {
+            throw new \InvalidArgumentException("El parámetro de configuración '$param' no está definido.");
+        }
+        return self::$config[$param];
+    }
+
+    /**
+     * Devuelve el cliente SOAP, creándolo si es necesario.
+     * @return \SoapClient
+     */
+    protected static function getClient()
+    {
+        if (self::$client === null) {
+            self::$client = SoapClientFactoryService::createSoapClient(
+                self::getConfig('wsdl'),
+                self::getConfig('certPath'),
+                self::getConfig('certPassword')
+            );
+        }
+        return self::$client;
+    }
+
+    /**
      * Registers a new invoice with AEAT via VERI*FACTU.
      *
      * @param InvoiceSubmission $invoice
-     * @param array $config (Required: wsdl, certPath, certPassword, baseVerificationUrl)
      * @return InvoiceResponse
      */
-    public static function registerInvoice(InvoiceSubmission $invoice, $config)
+    public static function registerInvoice(InvoiceSubmission $invoice)
     {
         // 1. Validate input
         $validation = $invoice->validate();
@@ -37,10 +88,14 @@ class VerifactuService
         $xml = self::buildInvoiceXml($invoice);
 
         // 4. Sign XML
-        $signedXml = XmlSignerService::signXml($xml, $config['certPath'], $config['certPassword']);
+        $signedXml = XmlSignerService::signXml(
+            $xml,
+            self::getConfig('certPath'),
+            self::getConfig('certPassword')
+        );
 
-        // 5. Create SOAP client
-        $client = SoapClientFactoryService::createSoapClient($config['wsdl'], $config['certPath'], $config['certPassword']);
+        // 5. Get SOAP client
+        $client = self::getClient();
 
         // 6. Call AEAT web service
         $params = ['RegistroAlta' => $signedXml];
@@ -54,10 +109,9 @@ class VerifactuService
      * Cancels an invoice with AEAT via VERI*FACTU.
      *
      * @param InvoiceCancellation $cancellation
-     * @param array $config
      * @return InvoiceResponse
      */
-    public static function cancelInvoice(InvoiceCancellation $cancellation, $config)
+    public static function cancelInvoice(InvoiceCancellation $cancellation)
     {
         $validation = $cancellation->validate();
         if ($validation !== true) {
@@ -65,8 +119,12 @@ class VerifactuService
         }
         $cancellation->hash = HashGeneratorService::generate($cancellation);
         $xml = self::buildCancellationXml($cancellation);
-        $signedXml = XmlSignerService::signXml($xml, $config['certPath'], $config['certPassword']);
-        $client = SoapClientFactoryService::createSoapClient($config['wsdl'], $config['certPath'], $config['certPassword']);
+        $signedXml = XmlSignerService::signXml(
+            $xml,
+            self::getConfig('certPath'),
+            self::getConfig('certPassword')
+        );
+        $client = self::getClient();
         $params = ['RegistroAnulacion' => $signedXml];
         $responseXml = $client->__soapCall('SuministroLR', [$params]);
         return ResponseParserService::parseInvoiceResponse($responseXml);
@@ -76,17 +134,16 @@ class VerifactuService
      * Queries submitted invoices from AEAT via VERI*FACTU.
      *
      * @param InvoiceQuery $query
-     * @param array $config
      * @return QueryResponse
      */
-    public static function queryInvoices(InvoiceQuery $query, $config)
+    public static function queryInvoices(InvoiceQuery $query)
     {
         $validation = $query->validate();
         if ($validation !== true) {
             throw new \InvalidArgumentException('InvoiceQuery validation failed: ' . print_r($validation, true));
         }
         $xml = self::buildQueryXml($query);
-        $client = SoapClientFactoryService::createSoapClient($config['wsdl'], $config['certPath'], $config['certPassword']);
+        $client = self::getClient();
         $params = ['ConsultaFactuSistemaFacturacion' => $xml];
         $responseXml = $client->__soapCall('ConsultaLR', [$params]);
         return ResponseParserService::parseQueryResponse($responseXml);
@@ -96,11 +153,14 @@ class VerifactuService
      * Generates a base64 QR code for the provided invoice.
      *
      * @param InvoiceRecord $record
-     * @param string $baseVerificationUrl
+     * @param string|null $baseVerificationUrl
      * @return string
      */
-    public static function generateInvoiceQr(InvoiceRecord $record, $baseVerificationUrl)
+    public static function generateInvoiceQr(InvoiceRecord $record, $baseVerificationUrl = null)
     {
+        if ($baseVerificationUrl === null) {
+            $baseVerificationUrl = self::getConfig('baseVerificationUrl');
+        }
         return QrGeneratorService::generateQr($record, $baseVerificationUrl);
     }
 
