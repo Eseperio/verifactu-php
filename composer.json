@@ -1,22 +1,26 @@
 {
-    "name": "eseperio/verifactu-php",
-    "description": "Librería para la integración del sistema de la agencia tributaria española \"Veri*factu\" (verifactu)",
-    "type": "library",
-    "require": {
-        "ext-soap": "*",
-        "ext-libxml": "*"
-    },
-    "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "eseperio\\verifactu\\": "src/"
-        }
-    },
-    "authors": [
-        {
-            "name": "E.Alamo",
-            "email": "erosdelalamo@gmail.com"
-        }
-    ],
-    "minimum-stability": "dev"
+  "name": "eseperio/verifactu-php",
+  "description": "Librería para la integración del sistema de la agencia tributaria española \"Veri*factu\" (verifactu)",
+  "type": "library",
+  "require": {
+    "php": ">=8.1",
+    "bacon/bacon-qr-code": "^3",
+    "ext-soap": "*",
+    "ext-libxml": "*",
+    "ext-openssl": "*",
+    "ext-dom": "*"
+  },
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "eseperio\\verifactu\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "E.Alamo",
+      "email": "erosdelalamo@gmail.com"
+    }
+  ],
+  "minimum-stability": "dev"
 }
