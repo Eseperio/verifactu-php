@@ -18,7 +18,7 @@ abstract class InvoiceRecord extends Model
 
     /**
      * Invoice identification data (<IDFactura> or <IDFacturaAnulada>)
-     * @var array
+     * @var \eseperio\verifactu\models\InvoiceId
      */
     public $invoiceId;
 
