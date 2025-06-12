@@ -9,7 +9,7 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Eseperio\\VerifactuPhp\\": "src/"
+            "Eseperio\\Verifactu\\": "src/"
         }
     },
     "authors": [
