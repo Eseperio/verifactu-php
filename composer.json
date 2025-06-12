@@ -10,10 +10,18 @@
     "ext-openssl": "*",
     "ext-dom": "*"
   },
+  "require-dev": {
+    "phpunit/phpunit": "^10.0"
+  },
   "license": "MIT",
   "autoload": {
     "psr-4": {
       "eseperio\\verifactu\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "eseperio\\verifactu\\tests\\": "tests/"
     }
   },
   "authors": [
