@@ -3,8 +3,10 @@
   "description": "Librería para la integración del sistema de la agencia tributaria española \"Veri*factu\" (verifactu)",
   "type": "library",
   "require": {
-    "php": ">=8.1",
+
     "bacon/bacon-qr-code": "^3",
+    "robrichards/xmlseclibs": "^3.0",
+    "php": ">=8.1",
     "ext-soap": "*",
     "ext-libxml": "*",
     "ext-openssl": "*",

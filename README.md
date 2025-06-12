@@ -61,13 +61,6 @@ Install via Composer:
 composer require eseperio/verifactu
 ```
 
-**You will also need:**
-
-* [bacon/bacon-qr-code](https://github.com/Bacon/BaconQrCode) for QR code generation
-* [robrichards/xmlseclibs](https://github.com/robrichards/xmlseclibs) for XML signatures
-
-Install them if not present:
-
 ```bash
 composer require bacon/bacon-qr-code
 composer require robrichards/xmlseclibs
