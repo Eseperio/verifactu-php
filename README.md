@@ -2,6 +2,9 @@
 
 > ⚠️ 2025: Library under development. You can try it, but expect changes and incomplete features.
 
+Tasks pending before the first beta release:
+- [ ] 
+
 **A modern PHP library for integrating with Spain’s AEAT Verifactu system (digital invoice submission, cancellation,
 querying, and events) according to the official regulatory technical specification.**
 

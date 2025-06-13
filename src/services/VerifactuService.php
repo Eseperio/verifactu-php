@@ -15,6 +15,25 @@ use eseperio\verifactu\models\QueryResponse;
  */
 class VerifactuService
 {
+
+
+    /**
+     * WSDL parameter name.
+     */
+    const WSDL_ENDPOINT = 'wsdl';
+    /**
+     * Certificate path parameter name.
+     */
+    const CERT_PATH_KEY = 'certPath';
+    /**
+     * Certificate password parameter name.
+     */
+    const CERT_PASSWORD_KEY = 'certPassword';
+    /**
+     * Environment: production.
+     */
+    const QR_VERIFICATION_URL = 'qrValidationUrl';
+
     /**
      * Configuración global de la clase.
      * @var array
@@ -38,7 +57,7 @@ class VerifactuService
     }
 
     /**
-     * Obtiene un parámetro de configuración.
+     * Obtiene uns parámetro de configuración.
      * @param string $param
      * @return mixed
      * @throws \InvalidArgumentException
@@ -59,9 +78,9 @@ class VerifactuService
     {
         if (self::$client === null) {
             self::$client = SoapClientFactoryService::createSoapClient(
-                self::getConfig('wsdl'),
-                self::getConfig('certPath'),
-                self::getConfig('certPassword')
+                self::getConfig(self::WSDL_ENDPOINT),
+                self::getConfig(self::CERT_PATH_KEY),
+                self::getConfig(self::CERT_PASSWORD_KEY)
             );
         }
         return self::$client;
@@ -72,6 +91,8 @@ class VerifactuService
      *
      * @param InvoiceSubmission $invoice
      * @return InvoiceResponse
+     * @throws \DOMException
+     * @throws \SoapFault
      */
     public static function registerInvoice(InvoiceSubmission $invoice)
     {
@@ -90,8 +111,8 @@ class VerifactuService
         // 4. Sign XML
         $signedXml = XmlSignerService::signXml(
             $xml,
-            self::getConfig('certPath'),
-            self::getConfig('certPassword')
+            self::getConfig(self::CERT_PATH_KEY),
+            self::getConfig(self::CERT_PASSWORD_KEY)
         );
 
         // 5. Get SOAP client
@@ -121,8 +142,8 @@ class VerifactuService
         $xml = self::buildCancellationXml($cancellation);
         $signedXml = XmlSignerService::signXml(
             $xml,
-            self::getConfig('certPath'),
-            self::getConfig('certPassword')
+            self::getConfig(self::CERT_PATH_KEY),
+            self::getConfig(self::CERT_PASSWORD_KEY)
         );
         $client = self::getClient();
         $params = ['RegistroAnulacion' => $signedXml];
@@ -159,7 +180,7 @@ class VerifactuService
     public static function generateInvoiceQr(InvoiceRecord $record, $baseVerificationUrl = null)
     {
         if ($baseVerificationUrl === null) {
-            $baseVerificationUrl = self::getConfig('baseVerificationUrl');
+            $baseVerificationUrl = self::getConfig(self::QR_VERIFICATION_URL);
         }
         return QrGeneratorService::generateQr($record, $baseVerificationUrl);
     }
