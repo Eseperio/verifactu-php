@@ -73,22 +73,38 @@ composer require robrichards/xmlseclibs
 
 ## Basic Usage
 
-### 1. **Register an Invoice (Alta)**
+### 1. **Configuración**
+
+Antes de usar cualquier servicio, debes configurar la librería con tu certificado, contraseña, tipo de certificado y entorno.  
+Debes elegir entre tipo de certificado (`certificate` o `seal`) y entorno (`production` o `sandbox`) según si vas a trabajar en producción o en pruebas.
+
+```php
+use eseperio\verifactu\Verifactu;
+
+// Configura la librería (haz esto una vez antes de cualquier operación)
+Verifactu::config(
+    '/ruta/a/tu-certificado.pfx', // Ruta al certificado
+    'tu-contraseña-certificado',  // Contraseña del certificado
+    Verifactu::TYPE_CERTIFICATE,  // Tipo de certificado: TYPE_CERTIFICATE o TYPE_SEAL
+    Verifactu::ENVIRONMENT_PRODUCTION // Entorno: ENVIRONMENT_PRODUCTION o ENVIRONMENT_SANDBOX
+);
+```
+
+- Usa `Verifactu::TYPE_CERTIFICATE` para un certificado personal/empresa, o `Verifactu::TYPE_SEAL` para certificado de sello.
+- Usa `Verifactu::ENVIRONMENT_PRODUCTION` para envíos reales, o `Verifactu::ENVIRONMENT_SANDBOX` para homologación/pruebas AEAT.
+
+---
+
+### 2. **Register an Invoice (Alta)**
 
 ```php
 use eseperio\verifactu\Verifactu;
 use eseperio\verifactu\models\InvoiceSubmission;
 use eseperio\verifactu\models\InvoiceId;
 
-$config = [
-    'wsdl' => 'https://aeat.example/wsdl/VerifactuService.wsdl',
-    'certPath' => '/path/to/your-certificate.pfx',
-    'certPassword' => 'your-cert-password',
-    'baseVerificationUrl' => 'https://aeat.es/consulta-verifactu',
-];
+// Después de llamar a Verifactu::config(...)
 
 $invoice = new InvoiceSubmission();
-$invoice->versionId = '1.0';
 $invoice->invoiceId = new InvoiceId();
 $invoice->invoiceId->issuerNif = 'B12345678';
 $invoice->invoiceId->seriesNumber = 'FA2024/001';
@@ -96,68 +112,69 @@ $invoice->invoiceId->issueDate = '2024-07-01';
 $invoice->issuerName = 'Empresa Ejemplo SL';
 // ...asigna el resto de campos obligatorios...
 
-$response = Verifactu::registerInvoice($invoice, $config);
+$response = Verifactu::registerInvoice($invoice);
 
-if ($response->submissionStatus === 'Correcto') {
+if ($response->submissionStatus === \eseperio\verifactu\models\InvoiceResponse::STATUS_OK) {
     echo "AEAT CSV: " . $response->csv;
 } else {
-    // See error codes and messages in $response->lineResponses
+    // Consulta los códigos y mensajes de error en $response->lineResponses
 }
 ```
 
 ---
 
-### 2. **Cancel an Invoice (Anulación)**
+### 3. **Cancel an Invoice (Anulación)**
 
 ```php
 use eseperio\verifactu\Verifactu;
 use eseperio\verifactu\models\InvoiceCancellation;
 use eseperio\verifactu\models\InvoiceId;
 
-$config = [ /* ...same as above... */ ];
+// Después de llamar a Verifactu::config(...)
 
 $cancellation = new InvoiceCancellation();
-$cancellation->versionId = '1.0';
 $cancellation->invoiceId = new InvoiceId();
 $cancellation->invoiceId->issuerNif = 'B12345678';
 $cancellation->invoiceId->seriesNumber = 'FA2024/001';
 $cancellation->invoiceId->issueDate = '2024-07-01';
 // ...asigna los campos obligatorios...
 
-$response = Verifactu::cancelInvoice($cancellation, $config);
+$response = Verifactu::cancelInvoice($cancellation);
 
-// Check response as above
+// Consulta la respuesta como en el ejemplo anterior
 ```
 
 ---
 
-### 3. **Query Submitted Invoices**
+### 4. **Query Submitted Invoices**
 
 ```php
 use eseperio\verifactu\Verifactu;
 use eseperio\verifactu\models\InvoiceQuery;
+
+// Después de llamar a Verifactu::config(...)
 
 $query = new InvoiceQuery();
 $query->year = '2024';
 $query->period = '07';
 // ...añade filtros opcionales...
 
-$result = Verifactu::queryInvoices($query, $config);
+$result = Verifactu::queryInvoices($query);
 
 foreach ($result->foundRecords as $record) {
-    // Handle each record
+    // Procesa cada registro
 }
 ```
 
 ---
 
-### 4. **Generate QR for an Invoice**
+### 5. **Generate QR for an Invoice**
 
 ```php
 use eseperio\verifactu\Verifactu;
-// $invoice must be a valid InvoiceRecord with populated data
-$qrBase64 = Verifactu::generateInvoiceQr($invoice, $config['baseVerificationUrl']);
-// Save or embed the PNG in your PDF, HTML, etc.
+// $invoice debe ser un InvoiceRecord válido con los datos necesarios
+$qrBase64 = Verifactu::generateInvoiceQr($invoice);
+// Guarda o incrusta el PNG en tu PDF, HTML, etc.
 ```
 
 ---
@@ -262,4 +279,3 @@ See [LICENSE](LICENSE) file.
 
 See the [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines on how to contribute to this project, including setting
 up your development environment, running tests, and submitting pull requests.
-
