@@ -1,9 +1,9 @@
 # Verifactu PHP Library
 
-> ⚠️ 2025: Library under development. You can try it, but expect changes and incomplete features.
+> ⚠️ 2025: Library __UNDER DEVELOPMENT__. You can try it, but expect changes, incomplete features or to be broken until first alpha version is released.
 
 Tasks pending before the first beta release:
-- [ ] 
+- [ ] Tests all new code to ensure it works properly.
 
 **A modern PHP library for integrating with Spain’s AEAT Verifactu system (digital invoice submission, cancellation,
 querying, and events) according to the official regulatory technical specification.**
