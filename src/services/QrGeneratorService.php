@@ -3,7 +3,8 @@ namespace eseperio\verifactu\services;
 
 use eseperio\verifactu\models\InvoiceRecord;
 use BaconQrCode\Writer;
-use BaconQrCode\Renderer\Image\Png;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\Image\ImagickImageBackEnd;
 use BaconQrCode\Renderer\RendererStyle\RendererStyle;
 
 /**
@@ -26,7 +27,10 @@ class QrGeneratorService
     {
         $qrContent = self::buildQrContent($record, $baseVerificationUrl);
 
-        $renderer = new Png(new RendererStyle(300));
+        $renderer = new ImageRenderer(
+            new RendererStyle(300),
+            new ImagickImageBackEnd()
+        );
         $writer = new Writer($renderer);
         $pngData = $writer->writeString($qrContent);
 
