@@ -3,7 +3,6 @@
   "description": "Librería para la integración del sistema de la agencia tributaria española \"Veri*factu\" (verifactu)",
   "type": "library",
   "require": {
-
     "bacon/bacon-qr-code": "^3",
     "robrichards/xmlseclibs": "^3.0",
     "php": ">=8.1",
@@ -32,5 +31,11 @@
       "email": "erosdelalamo@gmail.com"
     }
   ],
-  "minimum-stability": "dev"
+  "minimum-stability": "dev",
+  "scripts": {
+    "test": "phpunit"
+  },
+  "scripts-descriptions": {
+    "test": "Run the unit tests using PHPUnit"
+  }
 }

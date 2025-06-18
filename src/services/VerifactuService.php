@@ -35,13 +35,13 @@ class VerifactuService
     const QR_VERIFICATION_URL = 'qrValidationUrl';
 
     /**
-     * Configuración global de la clase.
+     * Global configuration for Verifactu service.
      * @var array
      */
     protected static $config = [];
 
     /**
-     * Instancia del cliente SOAP.
+     * Soap instance for communication with AEAT.
      * @var \SoapClient|null
      */
     protected static $client = null;
@@ -53,7 +53,7 @@ class VerifactuService
     public static function config($data)
     {
         self::$config = $data;
-        self::$client = null; // Resetear cliente si cambia la config
+        self::$client = null;
     }
 
     /**
@@ -156,6 +156,7 @@ class VerifactuService
      *
      * @param InvoiceQuery $query
      * @return QueryResponse
+     * @throws \SoapFault
      */
     public static function queryInvoices(InvoiceQuery $query)
     {
@@ -171,18 +172,24 @@ class VerifactuService
     }
 
     /**
-     * Generates a base64 QR code for the provided invoice.
+     * Generates a QR code for the provided invoice.
      *
      * @param InvoiceRecord $record
-     * @param string|null $baseVerificationUrl
-     * @return string
+     * @param string|null $baseUrl
+     * @param string $destination Destination type (file or string)
+     * @param int $size Resolution of the QR code
+     * @param string $engine Renderer to use (gd, imagick, svg)
+     * @return string QR image data or file path
      */
-    public static function generateInvoiceQr(InvoiceRecord $record, $baseVerificationUrl = null)
+    public static function generateInvoiceQr(
+        InvoiceRecord $record,
+                      $destination = QrGeneratorService::DESTINATION_STRING,
+                      $size = 300,
+                      $engine = QrGeneratorService::RENDERER_GD
+    )
     {
-        if ($baseVerificationUrl === null) {
-            $baseVerificationUrl = self::getConfig(self::QR_VERIFICATION_URL);
-        }
-        return QrGeneratorService::generateQr($record, $baseVerificationUrl);
+        $baseUrl = self::getConfig(self::QR_VERIFICATION_URL);
+        return QrGeneratorService::generateQr($record, $baseUrl, $destination, $size, $engine);
     }
 
     /**

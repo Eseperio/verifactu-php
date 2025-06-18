@@ -73,25 +73,25 @@ composer require robrichards/xmlseclibs
 
 ## Basic Usage
 
-### 1. **Configuración**
+### 1. **Configuration**
 
-Antes de usar cualquier servicio, debes configurar la librería con tu certificado, contraseña, tipo de certificado y entorno.  
-Debes elegir entre tipo de certificado (`certificate` o `seal`) y entorno (`production` o `sandbox`) según si vas a trabajar en producción o en pruebas.
+Before using any service, you must configure the library with your certificate, password, certificate type, and environment.  
+Choose between certificate type (`certificate` or `seal`) and environment (`production` or `sandbox`) according to whether you'll be working in production or testing.
 
 ```php
 use eseperio\verifactu\Verifactu;
 
-// Configura la librería (haz esto una vez antes de cualquier operación)
+// Configure the library (do this once before any operation)
 Verifactu::config(
-    '/ruta/a/tu-certificado.pfx', // Ruta al certificado
-    'tu-contraseña-certificado',  // Contraseña del certificado
-    Verifactu::TYPE_CERTIFICATE,  // Tipo de certificado: TYPE_CERTIFICATE o TYPE_SEAL
-    Verifactu::ENVIRONMENT_PRODUCTION // Entorno: ENVIRONMENT_PRODUCTION o ENVIRONMENT_SANDBOX
+    '/path/to/your-certificate.pfx', // Path to certificate
+    'your-certificate-password',     // Certificate password
+    Verifactu::TYPE_CERTIFICATE,     // Certificate type: TYPE_CERTIFICATE or TYPE_SEAL
+    Verifactu::ENVIRONMENT_PRODUCTION // Environment: ENVIRONMENT_PRODUCTION or ENVIRONMENT_SANDBOX
 );
 ```
 
-- Usa `Verifactu::TYPE_CERTIFICATE` para un certificado personal/empresa, o `Verifactu::TYPE_SEAL` para certificado de sello.
-- Usa `Verifactu::ENVIRONMENT_PRODUCTION` para envíos reales, o `Verifactu::ENVIRONMENT_SANDBOX` para homologación/pruebas AEAT.
+- Use `Verifactu::TYPE_CERTIFICATE` for a personal/company certificate, or `Verifactu::TYPE_SEAL` for a seal certificate.
+- Use `Verifactu::ENVIRONMENT_PRODUCTION` for real submissions, or `Verifactu::ENVIRONMENT_SANDBOX` for AEAT homologation/testing.
 
 ---
 
@@ -170,12 +170,70 @@ foreach ($result->foundRecords as $record) {
 
 ### 5. **Generate QR for an Invoice**
 
+The library provides flexible options for generating QR codes for invoices, supporting different renderers, resolutions, and output formats.
+
 ```php
 use eseperio\verifactu\Verifactu;
-// $invoice debe ser un InvoiceRecord válido con los datos necesarios
-$qrBase64 = Verifactu::generateInvoiceQr($invoice);
-// Guarda o incrusta el PNG en tu PDF, HTML, etc.
+use eseperio\verifactu\services\QrGeneratorService;
+
+// Basic usage (returns raw image data using GD renderer)
+$qrData = Verifactu::generateInvoiceQr($invoice);
+
+// Save QR directly to a file
+$filePath = Verifactu::generateInvoiceQr(
+    $invoice,
+    null, // Use default verification URL
+    QrGeneratorService::DESTINATION_FILE, // Save to file instead of returning data
+    300, // Resolution (size in pixels)
+    QrGeneratorService::RENDERER_GD // Use GD library (default)
+);
+echo "QR code saved to: $filePath";
+
+// Generate SVG format
+$svgData = Verifactu::generateInvoiceQr(
+    $invoice,
+    null,
+    QrGeneratorService::DESTINATION_STRING,
+    300,
+    QrGeneratorService::RENDERER_SVG
+);
+// Use SVG data directly in HTML
+echo '<div>' . $svgData . '</div>';
+
+// Generate using Imagick (if available on your server)
+$pngData = Verifactu::generateInvoiceQr(
+    $invoice,
+    null,
+    QrGeneratorService::DESTINATION_STRING,
+    300,
+    QrGeneratorService::RENDERER_IMAGICK
+);
+
+// Convert to base64 for embedding in HTML or PDF
+$base64Data = base64_encode($pngData);
+echo '<img src="data:image/png;base64,' . $base64Data . '" alt="QR Code" />';
+
+// Higher resolution QR code
+$highResQr = Verifactu::generateInvoiceQr(
+    $invoice,
+    null,
+    QrGeneratorService::DESTINATION_STRING,
+    600 // Higher resolution
+);
 ```
+
+#### Available Options:
+
+- **Destination Types**:
+  - `QrGeneratorService::DESTINATION_STRING`: Returns the raw image data (default)
+  - `QrGeneratorService::DESTINATION_FILE`: Saves to a temporary file and returns the file path
+
+- **Renderer Types**:
+  - `QrGeneratorService::RENDERER_GD`: Uses GD library (default, widely available)
+  - `QrGeneratorService::RENDERER_IMAGICK`: Uses ImageMagick (if available)
+  - `QrGeneratorService::RENDERER_SVG`: Generates SVG format (vector-based)
+
+- **Resolution**: Size in pixels (default: 300)
 
 ---
 
@@ -232,7 +290,7 @@ See the `/src/models` directory for PHPDoc details and validation rules for each
 * **HashGeneratorService:** Implements AEAT-compliant SHA-256 hash calculation.
 * **XmlSignerService:** Digitally signs XML blocks using XAdES Enveloped and your certificate.
 * **SoapClientFactoryService:** Configures and creates secure SOAP clients with certificates.
-* **QrGeneratorService:** Generates AEAT-compliant QR codes (PNG base64) for invoices.
+* **QrGeneratorService:** Generates AEAT-compliant QR codes for invoices in various formats (PNG, SVG) using different renderers (GD, Imagick, SVG).
 * **ResponseParserService:** Converts AEAT XML/SOAP responses to models and decodes errors.
 * **EventDispatcherService:** Handles event submission to AEAT endpoints.
 * **CertificateManagerService:** Manages certificate and private key loading and validation.
