@@ -29,7 +29,7 @@ class InvoiceQuery extends Model
      * Counterparty information (Contraparte, optional)
      * @var array
      */
-    public $counterparty;
+    private $counterparty;
 
     /**
      * Issue date filter (FechaExpedicionFactura, optional)
@@ -41,7 +41,7 @@ class InvoiceQuery extends Model
      * System information filter (SistemaInformatico, optional)
      * @var array
      */
-    public $systemInfo;
+    private $systemInfo;
 
     /**
      * External reference filter (RefExterna, optional)
@@ -53,7 +53,83 @@ class InvoiceQuery extends Model
      * Pagination key (ClavePaginacion, optional)
      * @var array
      */
-    public $paginationKey;
+    private $paginationKey;
+
+    /**
+     * Get the counterparty information
+     * @return array
+     */
+    public function getCounterparty()
+    {
+        return $this->counterparty;
+    }
+
+    /**
+     * Set the counterparty information
+     * @param string $nif Counterparty NIF
+     * @param string|null $name Counterparty name (optional)
+     * @return $this
+     */
+    public function setCounterparty($nif, $name = null)
+    {
+        $this->counterparty = [
+            'nif' => $nif
+        ];
+
+        if ($name !== null) {
+            $this->counterparty['name'] = $name;
+        }
+
+        return $this;
+    }
+
+    /**
+     * Get the system information
+     * @return array
+     */
+    public function getSystemInfo()
+    {
+        return $this->systemInfo;
+    }
+
+    /**
+     * Set the system information
+     * @param string $system System name
+     * @param string $version System version
+     * @return $this
+     */
+    public function setSystemInfo($system, $version)
+    {
+        $this->systemInfo = [
+            'system' => $system,
+            'version' => $version
+        ];
+        return $this;
+    }
+
+    /**
+     * Get the pagination key
+     * @return array
+     */
+    public function getPaginationKey()
+    {
+        return $this->paginationKey;
+    }
+
+    /**
+     * Set the pagination key
+     * @param int $page Page number
+     * @param int $size Page size
+     * @return $this
+     */
+    public function setPaginationKey($page, $size)
+    {
+        $this->paginationKey = [
+            'page' => $page,
+            'size' => $size
+        ];
+        return $this;
+    }
 
     /**
      * Returns validation rules for invoice query.

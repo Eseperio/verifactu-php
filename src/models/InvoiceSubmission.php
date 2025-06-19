@@ -38,7 +38,7 @@ class InvoiceSubmission extends InvoiceRecord
      * Each list can be empty or omitted if not applicable.
      * @var array
      */
-    public $rectificationData;
+    private $rectificationData = [];
 
     /**
      * Invoice type (TipoFactura)
@@ -63,7 +63,7 @@ class InvoiceSubmission extends InvoiceRecord
      *   ]
      * @var array
      */
-    public $recipients;
+    private $recipients = [];
 
     /**
      * Tax breakdown (Desglose). Array of tax/fee details applied to the invoice.
@@ -78,7 +78,7 @@ class InvoiceSubmission extends InvoiceRecord
      *   ]
      * @var array
      */
-    public $breakdown;
+    private $breakdown = [];
 
     /**
      * Tax amount (CuotaTotal). Total amount of taxes applied to the invoice.
@@ -91,6 +91,137 @@ class InvoiceSubmission extends InvoiceRecord
      * @var float
      */
     public $totalAmount;
+
+    /**
+     * Get the rectification data
+     * @return array
+     */
+    public function getRectificationData()
+    {
+        return $this->rectificationData;
+    }
+
+    /**
+     * Set the rectification data
+     * @param array $rectificationData Array of rectification data
+     * @return $this
+     */
+    public function setRectificationData($rectificationData)
+    {
+        $this->rectificationData = $rectificationData;
+        return $this;
+    }
+
+    /**
+     * Add a rectified invoice
+     * @param string $issuerNif NIF of the original invoice issuer
+     * @param string $seriesNumber Series and number of rectified invoice
+     * @param string $issueDate Date of rectified invoice (YYYY-MM-DD)
+     * @return $this
+     */
+    public function addRectifiedInvoice($issuerNif, $seriesNumber, $issueDate)
+    {
+        if (!isset($this->rectificationData['rectified'])) {
+            $this->rectificationData['rectified'] = [];
+        }
+
+        $this->rectificationData['rectified'][] = [
+            'issuerNif' => $issuerNif,
+            'seriesNumber' => $seriesNumber,
+            'issueDate' => $issueDate
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Add a substituted invoice
+     * @param string $issuerNif NIF of the original invoice issuer
+     * @param string $seriesNumber Series and number of substituted invoice
+     * @param string $issueDate Date of substituted invoice (YYYY-MM-DD)
+     * @return $this
+     */
+    public function addSubstitutedInvoice($issuerNif, $seriesNumber, $issueDate)
+    {
+        if (!isset($this->rectificationData['substituted'])) {
+            $this->rectificationData['substituted'] = [];
+        }
+
+        $this->rectificationData['substituted'][] = [
+            'issuerNif' => $issuerNif,
+            'seriesNumber' => $seriesNumber,
+            'issueDate' => $issueDate
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Get the recipients list
+     * @return array
+     */
+    public function getRecipients()
+    {
+        return $this->recipients;
+    }
+
+    /**
+     * Add a recipient to the invoice
+     * @param string $nif Recipient NIF
+     * @param string|null $name Recipient name (optional)
+     * @return $this
+     */
+    public function addRecipient($nif, $name = null)
+    {
+        $recipient = new Recipient();
+        $recipient->nif = $nif;
+        $recipient->name = $name;
+
+        $this->recipients[] = [
+            'nif' => $recipient->nif,
+            'name' => $recipient->name
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Get the tax breakdown
+     * @return array
+     */
+    public function getBreakdown()
+    {
+        return $this->breakdown;
+    }
+
+    /**
+     * Add a tax breakdown item
+     * @param float $rate Tax rate
+     * @param float $base Taxable base
+     * @param float $amount Tax amount
+     * @return $this
+     */
+    public function addBreakdownItem($rate, $base, $amount)
+    {
+        $this->breakdown[] = [
+            'rate' => $rate,
+            'base' => $base,
+            'amount' => $amount
+        ];
+
+        return $this;
+    }
+
+    /**
+     * Set the tax breakdown
+     * @param array $breakdown Array of tax breakdown items
+     * @return $this
+     */
+    public function setBreakdown($breakdown)
+    {
+        $this->breakdown = $breakdown;
+        return $this;
+    }
 
     /**
      * Returns validation rules for invoice submission.

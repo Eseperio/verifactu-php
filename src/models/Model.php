@@ -42,7 +42,13 @@ abstract class Model
             $properties = is_array($properties) ? $properties : [$properties];
 
             foreach ($properties as $property) {
-                $value = isset($this->$property) ? $this->$property : null;
+                // Try to get value using getter method first
+                $getter = 'get' . ucfirst($property);
+                if (method_exists($this, $getter)) {
+                    $value = $this->$getter();
+                } else {
+                    $value = isset($this->$property) ? $this->$property : null;
+                }
 
                 if ($validator === 'required') {
                     if ($value === null || $value === '' || (is_array($value) && empty($value))) {

@@ -29,7 +29,27 @@ class InvoiceCancellation extends InvoiceRecord
      * Generator data (Generador, optional)
      * @var array
      */
-    public $generatorData;
+    private $generatorData = [];
+
+    /**
+     * Get the generator data
+     * @return array
+     */
+    public function getGeneratorData()
+    {
+        return $this->generatorData;
+    }
+
+    /**
+     * Set the generator data
+     * @param array $generatorData Generator data
+     * @return $this
+     */
+    public function setGeneratorData($generatorData)
+    {
+        $this->generatorData = $generatorData;
+        return $this;
+    }
 
     /**
      * Returns validation rules for invoice cancellation.

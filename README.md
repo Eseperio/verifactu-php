@@ -105,35 +105,40 @@ use eseperio\verifactu\models\InvoiceId;
 // Después de llamar a Verifactu::config(...)
 
 $invoice = new InvoiceSubmission();
-$invoice->invoiceId = new InvoiceId();
-$invoice->invoiceId->issuerNif = 'B12345678';
-$invoice->invoiceId->seriesNumber = 'FA2024/001';
-$invoice->invoiceId->issueDate = '2024-07-01';
+
+// Set invoice ID
+$invoiceId = new InvoiceId();
+$invoiceId->issuerNif = 'B12345678';
+$invoiceId->seriesNumber = 'FA2024/001';
+$invoiceId->issueDate = '2024-07-01';
+$invoice->setInvoiceId($invoiceId);
+
+// Set basic invoice data
 $invoice->issuerName = 'Empresa Ejemplo SL';
 $invoice->invoiceType = 'F1'; // Tipo de factura (F1, F2, etc.)
 $invoice->taxAmount = 21.00; // Cuota total de impuestos
 $invoice->totalAmount = 121.00; // Importe total de la factura
-$invoice->breakdown = [
-    'subject' => 'Servicios profesionales',
-    'taxBase' => 100.00,
-    'taxRate' => 21,
-    'taxAmount' => 21.00
-]; // Desglose de impuestos
-$invoice->chaining = [
-    'previousInvoice' => 'FA2024/000',
-    'previousHash' => '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
-]; // Datos de encadenamiento
-$invoice->systemInfo = [
-    'system' => 'ERP Company',
-    'version' => '1.0'
-]; // Información del sistema
+
+// Add tax breakdown
+$invoice->addBreakdownItem(21, 100.00, 21.00);
+
+// Set chaining data
+$invoice->setChaining('FA2024/000', '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+
+// Set system information
+$invoice->setSystemInfo('ERP Company', '1.0');
+
+// Set other required fields
 $invoice->recordTimestamp = '2024-07-01T12:00:00+02:00'; // Fecha y hora con zona horaria
 $invoice->hash = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'; // Huella calculada
-$invoice->rectificationData = []; // optional
+
+// Optional fields
 $invoice->rectificationType = 'S'; // optional
-$invoice->recipients = []; // optional
 $invoice->externalRef = 'REF123'; // optional
 $invoice->xmlSignature = ''; // optional
+
+// If you need to add recipients
+// $invoice->addRecipient('12345678Z', 'Cliente Ejemplo');
 
 $response = Verifactu::registerInvoice($invoice);
 
@@ -156,24 +161,25 @@ use eseperio\verifactu\models\InvoiceId;
 // Después de llamar a Verifactu::config(...)
 
 $cancellation = new InvoiceCancellation();
-$cancellation->invoiceId = new InvoiceId();
-$cancellation->invoiceId->issuerNif = 'B12345678';
-$cancellation->invoiceId->seriesNumber = 'FA2024/001';
-$cancellation->invoiceId->issueDate = '2024-07-01';
-$cancellation->chaining = [
-    'previousInvoice' => 'FA2024/000',
-    'previousHash' => '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
-]; // Datos de encadenamiento
-$cancellation->systemInfo = [
-    'system' => 'ERP Company',
-    'version' => '1.0'
-]; // Información del sistema
+
+// Set invoice ID
+$invoiceId = new InvoiceId();
+$invoiceId->issuerNif = 'B12345678';
+$invoiceId->seriesNumber = 'FA2024/001';
+$invoiceId->issueDate = '2024-07-01';
+$cancellation->setInvoiceId($invoiceId);
+
+// Set chaining data
+$cancellation->setChaining('FA2024/000', '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef');
+
+// Set system information
+$cancellation->setSystemInfo('ERP Company', '1.0');
 $cancellation->recordTimestamp = '2024-07-01T12:00:00+02:00'; // Fecha y hora con zona horaria
 $cancellation->hash = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'; // Huella calculada
 $cancellation->noPreviousRecord = 'N'; // optional
 $cancellation->previousRejection = 'N'; // optional
 $cancellation->generator = 'EMISOR'; // optional
-$cancellation->generatorData = []; // optional
+$cancellation->setGeneratorData([]); // optional
 $cancellation->externalRef = 'REF123'; // optional
 $cancellation->xmlSignature = ''; // optional
 
@@ -196,20 +202,11 @@ $query = new InvoiceQuery();
 $query->year = '2024';
 $query->period = '07';
 $query->seriesNumber = 'FA2024'; // optional
-$query->counterparty = [
-    'nif' => 'A12345678',
-    'name' => 'Cliente Ejemplo SL'
-]; // optional
+$query->setCounterparty('A12345678', 'Cliente Ejemplo SL'); // optional
 $query->issueDate = '2024-07-01'; // optional
-$query->systemInfo = [
-    'system' => 'ERP Company',
-    'version' => '1.0'
-]; // optional
+$query->setSystemInfo('ERP Company', '1.0'); // optional
 $query->externalRef = 'REF123'; // optional
-$query->paginationKey = [
-    'page' => 1,
-    'size' => 50
-]; // optional
+$query->setPaginationKey(1, 50); // optional
 
 $result = Verifactu::queryInvoices($query);
 
