@@ -2,12 +2,12 @@
 namespace eseperio\verifactu\models;
 
 /**
- * Model representing invoice identification data (<IDFactura> node).
- * Fields: issuer NIF, series+number, issue date.
- * Original schema: IDFacturaType
+ * Model representing chaining data with a previous invoice (EncadenamientoFacturaAnteriorType).
+ * Used to link invoices in a chain for integrity verification.
+ * Original schema: EncadenamientoFacturaAnteriorType
  * @see docs/aeat/esquemas/SuministroInformacion.xsd.xml
  */
-class InvoiceId extends Model
+class PreviousInvoiceChaining extends Model
 {
     /**
      * Issuer NIF (IDEmisorFactura)
@@ -28,14 +28,20 @@ class InvoiceId extends Model
     public $issueDate;
 
     /**
-     * Returns validation rules for the invoice ID.
+     * Previous invoice hash (Huella)
+     * @var string
+     */
+    public $hash;
+
+    /**
+     * Returns validation rules for the chaining data.
      * @return array
      */
     public function rules()
     {
         return [
-            [['issuerNif', 'seriesNumber', 'issueDate'], 'required'],
-            [['issuerNif', 'seriesNumber', 'issueDate'], 'string'],
+            [['issuerNif', 'seriesNumber', 'issueDate', 'hash'], 'required'],
+            [['issuerNif', 'seriesNumber', 'issueDate', 'hash'], 'string'],
             ['issueDate', function($value) {
                 // Checks for format YYYY-MM-DD (simple regex)
                 return (preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $value)) ? true : 'Must be a valid date (YYYY-MM-DD).';

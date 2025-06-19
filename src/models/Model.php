@@ -3,7 +3,7 @@ namespace eseperio\verifactu\models;
 
 /**
  * Abstract base model with validation support.
- * All models must implement the rules() method.
+ * All models must implement the rules() method and toXml() method.
  */
 abstract class Model
 {
@@ -24,6 +24,7 @@ abstract class Model
      * @return array
      */
     abstract public function rules();
+
 
     /**
      * Validates model properties based on rules().

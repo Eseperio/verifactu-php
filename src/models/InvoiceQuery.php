@@ -143,4 +143,81 @@ class InvoiceQuery extends Model
             [['counterparty', 'systemInfo', 'paginationKey'], 'array'],
         ];
     }
+
+    /**
+     * Serializes the invoice query to XML.
+     * 
+     * @param \DOMDocument $doc The DOM document to use for creating elements
+     * @return \DOMElement The root element of this model's XML representation
+     * @throws \DOMException
+     */
+    public function toXml(\DOMDocument $doc)
+    {
+        // Root node <ConsultaFactuSistemaFacturacion>
+        $consulta = $doc->createElement('ConsultaFactuSistemaFacturacion');
+
+        // <Cabecera>
+        $cabecera = $doc->createElement('Cabecera');
+        $cabecera->appendChild($doc->createElement('Ejercicio', $this->year));
+        $cabecera->appendChild($doc->createElement('Periodo', $this->period));
+        $consulta->appendChild($cabecera);
+
+        // <FiltroConsulta>
+        $filtro = $doc->createElement('FiltroConsulta');
+
+        // <PeriodoImputacion>
+        $periodoImputacion = $doc->createElement('PeriodoImputacion');
+        $periodoImputacion->appendChild($doc->createElement('Ejercicio', $this->year));
+        $periodoImputacion->appendChild($doc->createElement('Periodo', $this->period));
+        $filtro->appendChild($periodoImputacion);
+
+        // <NumSerieFactura> (optional)
+        if (!empty($this->seriesNumber)) {
+            $filtro->appendChild($doc->createElement('NumSerieFactura', $this->seriesNumber));
+        }
+
+        // <Contraparte> (optional, array)
+        $counterparty = $this->getCounterparty();
+        if (!empty($counterparty) && is_array($counterparty)) {
+            $contraparte = $doc->createElement('Contraparte');
+            foreach ($counterparty as $key => $value) {
+                $contraparte->appendChild($doc->createElement($key, $value));
+            }
+            $filtro->appendChild($contraparte);
+        }
+
+        // <FechaExpedicionFactura> (optional)
+        if (!empty($this->issueDate)) {
+            $filtro->appendChild($doc->createElement('FechaExpedicionFactura', $this->issueDate));
+        }
+
+        // <SistemaInformatico> (optional, array)
+        $systemInfo = $this->getSystemInfo();
+        if (!empty($systemInfo) && is_array($systemInfo)) {
+            $sistema = $doc->createElement('SistemaInformatico');
+            foreach ($systemInfo as $key => $value) {
+                $sistema->appendChild($doc->createElement($key, $value));
+            }
+            $filtro->appendChild($sistema);
+        }
+
+        // <RefExterna> (optional)
+        if (!empty($this->externalRef)) {
+            $filtro->appendChild($doc->createElement('RefExterna', $this->externalRef));
+        }
+
+        // <ClavePaginacion> (optional, array)
+        $paginationKey = $this->getPaginationKey();
+        if (!empty($paginationKey) && is_array($paginationKey)) {
+            $clavePag = $doc->createElement('ClavePaginacion');
+            foreach ($paginationKey as $key => $value) {
+                $clavePag->appendChild($doc->createElement($key, $value));
+            }
+            $filtro->appendChild($clavePag);
+        }
+
+        $consulta->appendChild($filtro);
+
+        return $consulta;
+    }
 }
