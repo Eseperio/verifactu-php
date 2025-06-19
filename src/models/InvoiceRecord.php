@@ -99,7 +99,7 @@ abstract class InvoiceRecord extends Model
 
     /**
      * Get the chaining data
-     * @return \eseperio\verifactu\models\Encadenamiento
+     * @return \eseperio\verifactu\models\Chaining
      */
     public function getChaining()
     {
@@ -108,7 +108,7 @@ abstract class InvoiceRecord extends Model
 
     /**
      * Set the chaining data
-     * @param \eseperio\verifactu\models\Encadenamiento|array $chaining Chaining data
+     * @param \eseperio\verifactu\models\Chaining|array $chaining Chaining data
      * @return $this
      */
     public function setChaining($chaining)
@@ -155,7 +155,7 @@ abstract class InvoiceRecord extends Model
 
     /**
      * Get the system information
-     * @return \eseperio\verifactu\models\SistemaInformatico
+     * @return \eseperio\verifactu\models\ComputerSystem
      */
     public function getSystemInfo()
     {
@@ -164,7 +164,7 @@ abstract class InvoiceRecord extends Model
 
     /**
      * Set the system information
-     * @param \eseperio\verifactu\models\SistemaInformatico|array $systemInfo System information
+     * @param \eseperio\verifactu\models\ComputerSystem|array $systemInfo System information
      * @return $this
      */
     public function setSystemInfo($systemInfo)
