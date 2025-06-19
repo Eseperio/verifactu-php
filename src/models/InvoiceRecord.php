@@ -24,7 +24,7 @@ abstract class InvoiceRecord extends Model
      * Invoice identification data (<IDFactura> or <IDFacturaAnulada>)
      * @var \eseperio\verifactu\models\InvoiceId
      */
-    private $invoiceId;
+    protected $invoiceId;
 
     /**
      * External reference (RefExterna, optional)
@@ -36,13 +36,13 @@ abstract class InvoiceRecord extends Model
      * Chaining data (Encadenamiento), for hash linkage with previous record
      * @var \eseperio\verifactu\models\Chaining
      */
-    private $chaining;
+    protected $chaining;
 
     /**
      * System information (SistemaInformatico)
      * @var \eseperio\verifactu\models\ComputerSystem
      */
-    private $systemInfo;
+    protected $systemInfo;
 
     /**
      * Record timestamp with timezone (FechaHoraHusoGenRegistro)

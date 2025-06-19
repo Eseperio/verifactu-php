@@ -200,115 +200,8 @@ class VerifactuService
      */
     protected static function buildInvoiceXml(InvoiceSubmission $invoice)
     {
-        $doc = new \DOMDocument('1.0', 'UTF-8');
-        $doc->formatOutput = true;
-
-        // Root node <RegistroAlta>
-        $registroAlta = $doc->createElement('RegistroAlta');
-
-        // <IDVersion>
-        $registroAlta->appendChild($doc->createElement('IDVersion', $invoice->versionId));
-
-        // <IDFactura>
-        $idFactura = $doc->createElement('IDFactura');
-        $idFactura->appendChild($doc->createElement('IDEmisorFactura', $invoice->invoiceId->issuerNif));
-        $idFactura->appendChild($doc->createElement('NumSerieFactura', $invoice->invoiceId->seriesNumber));
-        $idFactura->appendChild($doc->createElement('FechaExpedicionFactura', $invoice->invoiceId->issueDate));
-        $registroAlta->appendChild($idFactura);
-
-        // <RefExterna> (optional)
-        if (!empty($invoice->externalRef)) {
-            $registroAlta->appendChild($doc->createElement('RefExterna', $invoice->externalRef));
-        }
-
-        // <NombreRazonEmisor>
-        $registroAlta->appendChild($doc->createElement('NombreRazonEmisor', $invoice->issuerName));
-
-        // <TipoFactura>
-        $registroAlta->appendChild($doc->createElement('TipoFactura', $invoice->invoiceType));
-
-        // <TipoRectificativa> (optional)
-        if (!empty($invoice->rectificationType)) {
-            $registroAlta->appendChild($doc->createElement('TipoRectificativa', $invoice->rectificationType));
-        }
-
-        // <FacturasRectificadas> o <FacturasSustituidas> (optional, array)
-        // Por simplicidad, aquí solo mostramos ejemplo para rectificadas
-        if (!empty($invoice->rectificationData['rectified'])) {
-            $facturasRectificadas = $doc->createElement('FacturasRectificadas');
-            foreach ($invoice->rectificationData['rectified'] as $item) {
-                $idFacturaRectificada = $doc->createElement('IDFacturaRectificada');
-                $idFacturaRectificada->appendChild($doc->createElement('IDEmisorFactura', $item['issuerNif']));
-                $idFacturaRectificada->appendChild($doc->createElement('NumSerieFactura', $item['seriesNumber']));
-                $idFacturaRectificada->appendChild($doc->createElement('FechaExpedicionFactura', $item['issueDate']));
-                $facturasRectificadas->appendChild($idFacturaRectificada);
-            }
-            $registroAlta->appendChild($facturasRectificadas);
-        }
-
-        // <Destinatarios> (optional, array)
-        if (!empty($invoice->recipients) && is_array($invoice->recipients)) {
-            $destinatarios = $doc->createElement('Destinatarios');
-            foreach ($invoice->recipients as $recipient) {
-                $idDestinatario = $doc->createElement('IDDestinatario');
-                $idDestinatario->appendChild($doc->createElement('NIF', $recipient['nif']));
-                // Puedes añadir más campos del destinatario según XSD
-                $destinatarios->appendChild($idDestinatario);
-            }
-            $registroAlta->appendChild($destinatarios);
-        }
-
-        // <Desglose> (tax breakdown, required, array)
-        if (!empty($invoice->breakdown) && is_array($invoice->breakdown)) {
-            $desglose = $doc->createElement('Desglose');
-            // Este nodo puede ser muy complejo; aquí solo se muestra ejemplo mínimo
-            foreach ($invoice->breakdown as $tax) {
-                $detalle = $doc->createElement('Detalle');
-                $detalle->appendChild($doc->createElement('TipoImpositivo', $tax['rate']));
-                $detalle->appendChild($doc->createElement('BaseImponibleOimporteNoSujeto', $tax['base']));
-                $detalle->appendChild($doc->createElement('CuotaRepercutida', $tax['amount']));
-                $desglose->appendChild($detalle);
-            }
-            $registroAlta->appendChild($desglose);
-        }
-
-        // <CuotaTotal>
-        $registroAlta->appendChild($doc->createElement('CuotaTotal', $invoice->taxAmount));
-        // <ImporteTotal>
-        $registroAlta->appendChild($doc->createElement('ImporteTotal', $invoice->totalAmount));
-
-        // <Encadenamiento> (required, array)
-        if (!empty($invoice->chaining)) {
-            $encadenamiento = $doc->createElement('Encadenamiento');
-            if (isset($invoice->chaining['previousHash'])) {
-                $encadenamiento->appendChild($doc->createElement('RegistroAnterior', $invoice->chaining['previousHash']));
-            } else {
-                $encadenamiento->appendChild($doc->createElement('PrimerRegistro', 'S'));
-            }
-            $registroAlta->appendChild($encadenamiento);
-        }
-
-        // <SistemaInformatico> (required, array)
-        if (!empty($invoice->systemInfo)) {
-            $sistema = $doc->createElement('SistemaInformatico');
-            foreach ($invoice->systemInfo as $key => $value) {
-                $sistema->appendChild($doc->createElement($key, $value));
-            }
-            $registroAlta->appendChild($sistema);
-        }
-
-        // <FechaHoraHusoGenRegistro>
-        $registroAlta->appendChild($doc->createElement('FechaHoraHusoGenRegistro', $invoice->recordTimestamp));
-
-        // <TipoHuella>
-        $registroAlta->appendChild($doc->createElement('TipoHuella', $invoice->hashType));
-
-        // <Huella>
-        $registroAlta->appendChild($doc->createElement('Huella', $invoice->hash));
-
-        // Finalizar
-        $doc->appendChild($registroAlta);
-        return $doc->saveXML();
+        $invoiceDom = $invoice->toXml();
+        return $invoiceDom->saveXML();
     }
 
     /**
@@ -316,86 +209,13 @@ class VerifactuService
      *
      * @param InvoiceCancellation $cancellation
      * @return string XML string
+     * @throws \DOMException
      */
     protected static function buildCancellationXml(InvoiceCancellation $cancellation)
     {
-        $doc = new \DOMDocument('1.0', 'UTF-8');
-        $doc->formatOutput = true;
-
-        // Root node <RegistroAnulacion>
-        $registroAnulacion = $doc->createElement('RegistroAnulacion');
-
-        // <IDVersion>
-        $registroAnulacion->appendChild($doc->createElement('IDVersion', $cancellation->versionId));
-
-        // <IDFacturaAnulada>
-        $idFacturaAnulada = $doc->createElement('IDFacturaAnulada');
-        $idFacturaAnulada->appendChild($doc->createElement('IDEmisorFacturaAnulada', $cancellation->invoiceId->issuerNif));
-        $idFacturaAnulada->appendChild($doc->createElement('NumSerieFacturaAnulada', $cancellation->invoiceId->seriesNumber));
-        $idFacturaAnulada->appendChild($doc->createElement('FechaExpedicionFacturaAnulada', $cancellation->invoiceId->issueDate));
-        $registroAnulacion->appendChild($idFacturaAnulada);
-
-        // <RefExterna> (optional)
-        if (!empty($cancellation->externalRef)) {
-            $registroAnulacion->appendChild($doc->createElement('RefExterna', $cancellation->externalRef));
-        }
-
-        // <SinRegistroPrevio> (optional)
-        if (!empty($cancellation->noPreviousRecord)) {
-            $registroAnulacion->appendChild($doc->createElement('SinRegistroPrevio', $cancellation->noPreviousRecord));
-        }
-
-        // <RechazoPrevio> (optional)
-        if (!empty($cancellation->previousRejection)) {
-            $registroAnulacion->appendChild($doc->createElement('RechazoPrevio', $cancellation->previousRejection));
-        }
-
-        // <GeneradoPor> (optional)
-        if (!empty($cancellation->generator)) {
-            $registroAnulacion->appendChild($doc->createElement('GeneradoPor', $cancellation->generator));
-        }
-
-        // <Generador> (optional, array)
-        if (!empty($cancellation->generatorData) && is_array($cancellation->generatorData)) {
-            $generador = $doc->createElement('Generador');
-            foreach ($cancellation->generatorData as $key => $value) {
-                $generador->appendChild($doc->createElement($key, $value));
-            }
-            $registroAnulacion->appendChild($generador);
-        }
-
-        // <Encadenamiento> (required, array)
-        if (!empty($cancellation->chaining)) {
-            $encadenamiento = $doc->createElement('Encadenamiento');
-            if (isset($cancellation->chaining['previousHash'])) {
-                $encadenamiento->appendChild($doc->createElement('RegistroAnterior', $cancellation->chaining['previousHash']));
-            } else {
-                $encadenamiento->appendChild($doc->createElement('PrimerRegistro', 'S'));
-            }
-            $registroAnulacion->appendChild($encadenamiento);
-        }
-
-        // <SistemaInformatico> (required, array)
-        if (!empty($cancellation->systemInfo)) {
-            $sistema = $doc->createElement('SistemaInformatico');
-            foreach ($cancellation->systemInfo as $key => $value) {
-                $sistema->appendChild($doc->createElement($key, $value));
-            }
-            $registroAnulacion->appendChild($sistema);
-        }
-
-        // <FechaHoraHusoGenRegistro>
-        $registroAnulacion->appendChild($doc->createElement('FechaHoraHusoGenRegistro', $cancellation->recordTimestamp));
-
-        // <TipoHuella>
-        $registroAnulacion->appendChild($doc->createElement('TipoHuella', $cancellation->hashType));
-
-        // <Huella>
-        $registroAnulacion->appendChild($doc->createElement('Huella', $cancellation->hash));
-
-        // Finalizar
-        $doc->appendChild($registroAnulacion);
-        return $doc->saveXML();
+        // Get the XML element from the model
+        $cancellationDom = $cancellation->toXml();
+        return $cancellationDom->saveXML();
     }
 
 
@@ -404,78 +224,12 @@ class VerifactuService
      *
      * @param InvoiceQuery $query
      * @return string XML string
+     * @throws \DOMException
      */
     protected static function buildQueryXml(InvoiceQuery $query)
     {
-        $doc = new \DOMDocument('1.0', 'UTF-8');
-        $doc->formatOutput = true;
-
-        // Root node <ConsultaFactuSistemaFacturacion>
-        $consulta = $doc->createElement('ConsultaFactuSistemaFacturacion');
-
-        // <Cabecera>
-        $cabecera = $doc->createElement('Cabecera');
-        $cabecera->appendChild($doc->createElement('Ejercicio', $query->year));
-        $cabecera->appendChild($doc->createElement('Periodo', $query->period));
-        $consulta->appendChild($cabecera);
-
-        // <FiltroConsulta>
-        $filtro = $doc->createElement('FiltroConsulta');
-
-        // <PeriodoImputacion>
-        $periodoImputacion = $doc->createElement('PeriodoImputacion');
-        $periodoImputacion->appendChild($doc->createElement('Ejercicio', $query->year));
-        $periodoImputacion->appendChild($doc->createElement('Periodo', $query->period));
-        $filtro->appendChild($periodoImputacion);
-
-        // <NumSerieFactura> (optional)
-        if (!empty($query->seriesNumber)) {
-            $filtro->appendChild($doc->createElement('NumSerieFactura', $query->seriesNumber));
-        }
-
-        // <Contraparte> (optional, array)
-        if (!empty($query->counterparty) && is_array($query->counterparty)) {
-            $contraparte = $doc->createElement('Contraparte');
-            foreach ($query->counterparty as $key => $value) {
-                $contraparte->appendChild($doc->createElement($key, $value));
-            }
-            $filtro->appendChild($contraparte);
-        }
-
-        // <FechaExpedicionFactura> (optional)
-        if (!empty($query->issueDate)) {
-            $filtro->appendChild($doc->createElement('FechaExpedicionFactura', $query->issueDate));
-        }
-
-        // <SistemaInformatico> (optional, array)
-        if (!empty($query->systemInfo) && is_array($query->systemInfo)) {
-            $sistema = $doc->createElement('SistemaInformatico');
-            foreach ($query->systemInfo as $key => $value) {
-                $sistema->appendChild($doc->createElement($key, $value));
-            }
-            $filtro->appendChild($sistema);
-        }
-
-        // <RefExterna> (optional)
-        if (!empty($query->externalRef)) {
-            $filtro->appendChild($doc->createElement('RefExterna', $query->externalRef));
-        }
-
-        // <ClavePaginacion> (optional, array)
-        if (!empty($query->paginationKey) && is_array($query->paginationKey)) {
-            $clavePag = $doc->createElement('ClavePaginacion');
-            foreach ($query->paginationKey as $key => $value) {
-                $clavePag->appendChild($doc->createElement($key, $value));
-            }
-            $filtro->appendChild($clavePag);
-        }
-
-        $consulta->appendChild($filtro);
-
-        // Puedes añadir <DatosAdicionalesRespuesta> si tu modelo lo contempla y el XSD lo permite.
-
-        $doc->appendChild($consulta);
-        return $doc->saveXML();
+        $queryDom = $query->toXml();
+        return $queryDom->saveXML();
     }
 
 }

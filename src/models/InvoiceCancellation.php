@@ -99,100 +99,93 @@ class InvoiceCancellation extends InvoiceRecord
 
     /**
      * Serializes the invoice cancellation to XML.
-     * 
-     * @param \DOMDocument $doc The DOM document to use for creating elements
-     * @return \DOMElement The root element of this model's XML representation
+     *
+     * @return \DOMDocument The root element of this model's XML representation
      * @throws \DOMException
      */
-    public function toXml(\DOMDocument $doc)
+    public function toXml()
     {
-        // Root node <RegistroAnulacion>
-        $registroAnulacion = $doc->createElement('RegistroAnulacion');
+        // Create the XML document
+        $doc = new \DOMDocument('1.0', 'UTF-8');
+        $doc->formatOutput = true;
 
-        // <IDVersion>
-        $registroAnulacion->appendChild($doc->createElement('IDVersion', $this->versionId));
+        // Create root element: RegistroAnulacion
+        $root = $doc->createElement('RegistroAnulacion');
+        $doc->appendChild($root);
 
-        // <IDFacturaAnulada>
-        $idFacturaAnulada = $doc->createElement('IDFacturaAnulada');
-        $invoiceId = $this->getInvoiceId();
-        $idFacturaAnulada->appendChild($doc->createElement('IDEmisorFacturaAnulada', $invoiceId->issuerNif));
-        $idFacturaAnulada->appendChild($doc->createElement('NumSerieFacturaAnulada', $invoiceId->seriesNumber));
-        $idFacturaAnulada->appendChild($doc->createElement('FechaExpedicionFacturaAnulada', $invoiceId->issueDate));
-        $registroAnulacion->appendChild($idFacturaAnulada);
+        // IDVersion (required, hardcoded as '1.0')
+        $idVersion = $doc->createElement('IDVersion', '1.0');
+        $root->appendChild($idVersion);
 
-        // <RefExterna> (optional)
-        if (!empty($this->externalRef)) {
-            $registroAnulacion->appendChild($doc->createElement('RefExterna', $this->externalRef));
+        // IDFactura (required)
+        if (method_exists($this, 'getInvoiceId')) {
+            $invoiceId = $this->getInvoiceId();
+            if (method_exists($invoiceId, 'toXml')) {
+                $idFacturaNode = $invoiceId->toXml($doc);
+                $idFacturaNode->tagName = 'IDFactura';
+                $root->appendChild($idFacturaNode);
+            }
         }
 
-        // <SinRegistroPrevio> (optional)
+        // RefExterna (optional)
+        if (!empty($this->externalReference)) {
+            $root->appendChild($doc->createElement('RefExterna', $this->externalReference));
+        }
+
+        // SinRegistroPrevio (optional)
         if (!empty($this->noPreviousRecord)) {
-            $registroAnulacion->appendChild($doc->createElement('SinRegistroPrevio', $this->noPreviousRecord));
+            $root->appendChild($doc->createElement('SinRegistroPrevio', $this->noPreviousRecord));
         }
 
-        // <RechazoPrevio> (optional)
+        // RechazoPrevio (optional)
         if (!empty($this->previousRejection)) {
-            $registroAnulacion->appendChild($doc->createElement('RechazoPrevio', $this->previousRejection));
+            $root->appendChild($doc->createElement('RechazoPrevio', $this->previousRejection));
         }
 
-        // <GeneradoPor> (optional)
+        // GeneradoPor (optional)
         if (!empty($this->generator)) {
-            $registroAnulacion->appendChild($doc->createElement('GeneradoPor', $this->generator));
+            $root->appendChild($doc->createElement('GeneradoPor', $this->generator));
         }
 
-        // <Generador> (optional, array)
-        $generatorData = $this->getGeneratorData();
-        if (!empty($generatorData)) {
-            $generador = $doc->createElement('Generador');
-            if (method_exists($generatorData, 'toXml')) {
-                $generatorElement = $generatorData->toXml($doc);
-                foreach ($generatorElement->childNodes as $child) {
-                    $importedNode = $doc->importNode($child, true);
-                    $generador->appendChild($importedNode);
-                }
-            } else {
-                // Fallback to manual serialization
-                if (isset($generatorData->nif)) {
-                    $generador->appendChild($doc->createElement('NIF', $generatorData->nif));
-                }
-                if (isset($generatorData->name)) {
-                    $generador->appendChild($doc->createElement('NombreRazon', $generatorData->name));
-                }
-            }
-            $registroAnulacion->appendChild($generador);
+        // Generador (optional)
+        if (!empty($this->generatorData) && method_exists($this->generatorData, 'toXml')) {
+            $generadorNode = $this->generatorData->toXml($doc);
+            $generadorNode->tagName = 'Generador';
+            $root->appendChild($generadorNode);
         }
 
-        // <Encadenamiento> (required, array)
-        $chaining = $this->getChaining();
-        if (!empty($chaining)) {
-            $encadenamiento = $doc->createElement('Encadenamiento');
-            if (isset($chaining['previousHash'])) {
-                $encadenamiento->appendChild($doc->createElement('RegistroAnterior', $chaining['previousHash']));
-            } else {
-                $encadenamiento->appendChild($doc->createElement('PrimerRegistro', 'S'));
-            }
-            $registroAnulacion->appendChild($encadenamiento);
+        // Encadenamiento (required, must be set by the user)
+        if (!empty($this->chaining) && method_exists($this->chaining, 'toXml')) {
+            $encadenamientoNode = $this->chaining->toXml($doc);
+            $encadenamientoNode->tagName = 'Encadenamiento';
+            $root->appendChild($encadenamientoNode);
         }
 
-        // <SistemaInformatico> (required, array)
-        $systemInfo = $this->getSystemInfo();
-        if (!empty($systemInfo)) {
-            $sistema = $doc->createElement('SistemaInformatico');
-            foreach ($systemInfo as $key => $value) {
-                $sistema->appendChild($doc->createElement($key, $value));
-            }
-            $registroAnulacion->appendChild($sistema);
+        // SistemaInformatico (required)
+        if (!empty($this->computerSystem) && method_exists($this->computerSystem, 'toXml')) {
+            $sistemaNode = $this->computerSystem->toXml($doc);
+            $sistemaNode->tagName = 'SistemaInformatico';
+            $root->appendChild($sistemaNode);
         }
 
-        // <FechaHoraHusoGenRegistro>
-        $registroAnulacion->appendChild($doc->createElement('FechaHoraHusoGenRegistro', $this->recordTimestamp));
+        // FechaHoraHusoGenRegistro (required, must be set by the user)
+        if (!empty($this->generationDateTime)) {
+            $root->appendChild($doc->createElement('FechaHoraHusoGenRegistro', $this->generationDateTime));
+        }
 
-        // <TipoHuella>
-        $registroAnulacion->appendChild($doc->createElement('TipoHuella', $this->hashType));
+        // TipoHuella (required, must be set by the user)
+        if (!empty($this->hashType)) {
+            $root->appendChild($doc->createElement('TipoHuella', $this->hashType));
+        }
 
-        // <Huella>
-        $registroAnulacion->appendChild($doc->createElement('Huella', $this->hash));
+        // Huella (required, must be set by the user)
+        if (!empty($this->hashValue)) {
+            $root->appendChild($doc->createElement('Huella', $this->hashValue));
+        }
 
-        return $registroAnulacion;
+        // ds:Signature (optional, to be added after signing)
+        // Not included here, but the node can be appended externally if needed
+
+        return $doc;
     }
 }

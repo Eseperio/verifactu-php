@@ -486,131 +486,201 @@ class InvoiceSubmission extends InvoiceRecord
     /**
      * Serializes the invoice submission to XML.
      * 
-     * @param \DOMDocument $doc The DOM document to use for creating elements
-     * @return \DOMElement The root element of this model's XML representation
+     * @return \DOMDocument The root element of this model's XML representation
      * @throws \DOMException
      */
-    public function toXml(\DOMDocument $doc)
+    public function toXml()
     {
-        // Root node <RegistroAlta>
-        $registroAlta = $doc->createElement('RegistroAlta');
+        // Create the XML document
+        $doc = new \DOMDocument('1.0', 'UTF-8');
+        $doc->formatOutput = true;
 
-        // <IDVersion>
-        $registroAlta->appendChild($doc->createElement('IDVersion', $this->versionId));
+        // Create root element: RegistroAlta
+        $root = $doc->createElement('RegistroAlta');
+        $doc->appendChild($root);
 
-        // <IDFactura>
-        $idFactura = $doc->createElement('IDFactura');
-        $invoiceId = $this->getInvoiceId();
-        $idFactura->appendChild($doc->createElement('IDEmisorFactura', $invoiceId->issuerNif));
-        $idFactura->appendChild($doc->createElement('NumSerieFactura', $invoiceId->seriesNumber));
-        $idFactura->appendChild($doc->createElement('FechaExpedicionFactura', $invoiceId->issueDate));
-        $registroAlta->appendChild($idFactura);
+        // IDVersion (required, hardcoded as '1.0')
+        $idVersion = $doc->createElement('IDVersion', '1.0');
+        $root->appendChild($idVersion);
 
-        // <RefExterna> (optional)
-        if (!empty($this->externalRef)) {
-            $registroAlta->appendChild($doc->createElement('RefExterna', $this->externalRef));
+        // IDFactura (required)
+        if (method_exists($this, 'getInvoiceId')) {
+            $invoiceId = $this->getInvoiceId();
+            if (method_exists($invoiceId, 'toXml')) {
+                $idFacturaNode = $invoiceId->toXml($doc);
+                $idFacturaNode->tagName = 'IDFactura';
+                $root->appendChild($idFacturaNode);
+            }
         }
 
-        // <NombreRazonEmisor>
-        $registroAlta->appendChild($doc->createElement('NombreRazonEmisor', $this->issuerName));
+        // RefExterna (optional)
+        if (!empty($this->externalReference)) {
+            $root->appendChild($doc->createElement('RefExterna', $this->externalReference));
+        }
 
-        // <TipoFactura>
-        $registroAlta->appendChild($doc->createElement('TipoFactura', $this->invoiceType));
+        // NombreRazonEmisor (required)
+        $root->appendChild($doc->createElement('NombreRazonEmisor', $this->issuerName));
 
-        // <TipoRectificativa> (optional)
+        // Subsanacion (optional)
+        if (!empty($this->subsanacion)) {
+            $root->appendChild($doc->createElement('Subsanacion', $this->subsanacion));
+        }
+
+        // RechazoPrevio (optional)
+        if (!empty($this->previousRejection)) {
+            $root->appendChild($doc->createElement('RechazoPrevio', $this->previousRejection));
+        }
+
+        // TipoFactura (required)
+        $root->appendChild($doc->createElement('TipoFactura', $this->invoiceType));
+
+        // TipoRectificativa (optional)
         if (!empty($this->rectificationType)) {
-            $registroAlta->appendChild($doc->createElement('TipoRectificativa', $this->rectificationType));
+            $root->appendChild($doc->createElement('TipoRectificativa', $this->rectificationType));
         }
 
-        // <FacturasRectificadas> o <FacturasSustituidas> (optional, array)
-        $rectificationData = $this->getRectificationData();
-        if (!empty($rectificationData['rectified'])) {
+        // FacturasRectificadas (optional)
+        $rectData = $this->getRectificationData();
+        if (!empty($rectData['rectified'])) {
             $facturasRectificadas = $doc->createElement('FacturasRectificadas');
-            foreach ($rectificationData['rectified'] as $item) {
+            foreach ($rectData['rectified'] as $rect) {
                 $idFacturaRectificada = $doc->createElement('IDFacturaRectificada');
-                $idFacturaRectificada->appendChild($doc->createElement('IDEmisorFactura', $item['issuerNif']));
-                $idFacturaRectificada->appendChild($doc->createElement('NumSerieFactura', $item['seriesNumber']));
-                $idFacturaRectificada->appendChild($doc->createElement('FechaExpedicionFactura', $item['issueDate']));
+                $idFacturaRectificada->appendChild($doc->createElement('IDEmisorFactura', $rect['issuerNif']));
+                $idFacturaRectificada->appendChild($doc->createElement('NumSerieFactura', $rect['seriesNumber']));
+                $idFacturaRectificada->appendChild($doc->createElement('FechaExpedicionFactura', $rect['issueDate']));
                 $facturasRectificadas->appendChild($idFacturaRectificada);
             }
-            $registroAlta->appendChild($facturasRectificadas);
+            $root->appendChild($facturasRectificadas);
         }
 
-        // <Destinatarios> (optional, array)
-        $recipients = $this->getRecipients();
-        if (!empty($recipients) && is_array($recipients)) {
+        // FacturasSustituidas (optional)
+        if (!empty($rectData['substituted'])) {
+            $facturasSustituidas = $doc->createElement('FacturasSustituidas');
+            foreach ($rectData['substituted'] as $subst) {
+                $idFacturaSustituida = $doc->createElement('IDFacturaSustituida');
+                $idFacturaSustituida->appendChild($doc->createElement('IDEmisorFactura', $subst['issuerNif']));
+                $idFacturaSustituida->appendChild($doc->createElement('NumSerieFactura', $subst['seriesNumber']));
+                $idFacturaSustituida->appendChild($doc->createElement('FechaExpedicionFactura', $subst['issueDate']));
+                $facturasSustituidas->appendChild($idFacturaSustituida);
+            }
+            $root->appendChild($facturasSustituidas);
+        }
+
+        // ImporteRectificacion (optional)
+        if (!empty($this->rectificationBreakdown) && method_exists($this->rectificationBreakdown, 'toXml')) {
+            $importeRectificacionNode = $this->rectificationBreakdown->toXml($doc);
+            $importeRectificacionNode->tagName = 'ImporteRectificacion';
+            $root->appendChild($importeRectificacionNode);
+        }
+
+        // FechaOperacion (optional)
+        if (!empty($this->operationDate)) {
+            $root->appendChild($doc->createElement('FechaOperacion', $this->operationDate));
+        }
+
+        // DescripcionOperacion (required)
+        $root->appendChild($doc->createElement('DescripcionOperacion', $this->operationDescription));
+
+        // FacturaSimplificadaArt7273 (optional)
+        if (!empty($this->simplifiedInvoice)) {
+            $root->appendChild($doc->createElement('FacturaSimplificadaArt7273', $this->simplifiedInvoice));
+        }
+
+        // FacturaSinIdentifDestinatarioArt61d (optional)
+        if (!empty($this->invoiceWithoutRecipient)) {
+            $root->appendChild($doc->createElement('FacturaSinIdentifDestinatarioArt61d', $this->invoiceWithoutRecipient));
+        }
+
+        // Macrodato (optional)
+        if (!empty($this->macrodata)) {
+            $root->appendChild($doc->createElement('Macrodato', $this->macrodata));
+        }
+
+        // EmitidaPorTerceroODestinatario (optional)
+        if (!empty($this->issuedBy)) {
+            $root->appendChild($doc->createElement('EmitidaPorTerceroODestinatario', $this->issuedBy));
+        }
+
+        // Tercero (optional)
+        if (!empty($this->thirdParty) && method_exists($this->thirdParty, 'toXml')) {
+            $terceroNode = $this->thirdParty->toXml($doc);
+            $terceroNode->tagName = 'Tercero';
+            $root->appendChild($terceroNode);
+        }
+
+        // Destinatarios (optional)
+        if (!empty($this->recipients)) {
             $destinatarios = $doc->createElement('Destinatarios');
-            foreach ($recipients as $recipient) {
-                $idDestinatario = $doc->createElement('IDDestinatario');
-                $idDestinatario->appendChild($doc->createElement('NIF', $recipient->nif));
-                // Add more recipient fields as needed
-                $destinatarios->appendChild($idDestinatario);
-            }
-            $registroAlta->appendChild($destinatarios);
-        }
-
-        // <Desglose> (tax breakdown, required, array)
-        $breakdown = $this->getBreakdown();
-        if (!empty($breakdown)) {
-            $desglose = $doc->createElement('Desglose');
-
-            // If breakdown is an object with toXml method, use it
-            if (method_exists($breakdown, 'toXml')) {
-                $breakdownElement = $breakdown->toXml($doc);
-                foreach ($breakdownElement->childNodes as $child) {
-                    $importedNode = $doc->importNode($child, true);
-                    $desglose->appendChild($importedNode);
-                }
-            } else {
-                // Fallback to manual serialization
-                foreach ($breakdown->getDetails() as $detail) {
-                    $detalleElement = $doc->createElement('Detalle');
-                    $detalleElement->appendChild($doc->createElement('TipoImpositivo', $detail->taxRate));
-                    $detalleElement->appendChild($doc->createElement('BaseImponibleOimporteNoSujeto', $detail->taxableBase));
-                    $detalleElement->appendChild($doc->createElement('CuotaRepercutida', $detail->taxAmount));
-                    $desglose->appendChild($detalleElement);
+            foreach ($this->recipients as $recipient) {
+                if (method_exists($recipient, 'toXml')) {
+                    $idDestinatario = $recipient->toXml($doc);
+                    $idDestinatario->tagName = 'IDDestinatario';
+                    $destinatarios->appendChild($idDestinatario);
                 }
             }
-
-            $registroAlta->appendChild($desglose);
+            $root->appendChild($destinatarios);
         }
 
-        // <CuotaTotal>
-        $registroAlta->appendChild($doc->createElement('CuotaTotal', $this->taxAmount));
-        // <ImporteTotal>
-        $registroAlta->appendChild($doc->createElement('ImporteTotal', $this->totalAmount));
-
-        // <Encadenamiento> (required, array)
-        $chaining = $this->getChaining();
-        if (!empty($chaining)) {
-            $encadenamiento = $doc->createElement('Encadenamiento');
-            if (isset($chaining['previousHash'])) {
-                $encadenamiento->appendChild($doc->createElement('RegistroAnterior', $chaining['previousHash']));
-            } else {
-                $encadenamiento->appendChild($doc->createElement('PrimerRegistro', 'S'));
-            }
-            $registroAlta->appendChild($encadenamiento);
+        // Cupon (optional)
+        if (!empty($this->coupon)) {
+            $root->appendChild($doc->createElement('Cupon', $this->coupon));
         }
 
-        // <SistemaInformatico> (required, array)
-        $systemInfo = $this->getSystemInfo();
-        if (!empty($systemInfo)) {
-            $sistema = $doc->createElement('SistemaInformatico');
-            foreach ($systemInfo as $key => $value) {
-                $sistema->appendChild($doc->createElement($key, $value));
-            }
-            $registroAlta->appendChild($sistema);
+        // Desglose (required)
+        if (!empty($this->breakdown) && method_exists($this->breakdown, 'toXml')) {
+            $desgloseNode = $this->breakdown->toXml($doc);
+            $desgloseNode->tagName = 'Desglose';
+            $root->appendChild($desgloseNode);
         }
 
-        // <FechaHoraHusoGenRegistro>
-        $registroAlta->appendChild($doc->createElement('FechaHoraHusoGenRegistro', $this->recordTimestamp));
+        // CuotaTotal (required)
+        $root->appendChild($doc->createElement('CuotaTotal', number_format($this->taxAmount, 2, '.', '')));
 
-        // <TipoHuella>
-        $registroAlta->appendChild($doc->createElement('TipoHuella', $this->hashType));
+        // ImporteTotal (required)
+        $root->appendChild($doc->createElement('ImporteTotal', number_format($this->totalAmount, 2, '.', '')));
 
-        // <Huella>
-        $registroAlta->appendChild($doc->createElement('Huella', $this->hash));
+        // Encadenamiento (required, must be set by the user)
+        if (!empty($this->chaining) && method_exists($this->chaining, 'toXml')) {
+            $encadenamientoNode = $this->chaining->toXml($doc);
+            $encadenamientoNode->tagName = 'Encadenamiento';
+            $root->appendChild($encadenamientoNode);
+        }
 
-        return $registroAlta;
+        // SistemaInformatico (required)
+        if (!empty($this->computerSystem) && method_exists($this->computerSystem, 'toXml')) {
+            $sistemaNode = $this->computerSystem->toXml($doc);
+            $sistemaNode->tagName = 'SistemaInformatico';
+            $root->appendChild($sistemaNode);
+        }
+
+        // FechaHoraHusoGenRegistro (required, must be set by the user)
+        if (!empty($this->generationDateTime)) {
+            $root->appendChild($doc->createElement('FechaHoraHusoGenRegistro', $this->generationDateTime));
+        }
+
+        // NumRegistroAcuerdoFacturacion (optional)
+        if (!empty($this->invoiceAgreementNumber)) {
+            $root->appendChild($doc->createElement('NumRegistroAcuerdoFacturacion', $this->invoiceAgreementNumber));
+        }
+
+        // IdAcuerdoSistemaInformatico (optional)
+        if (!empty($this->systemAgreementId)) {
+            $root->appendChild($doc->createElement('IdAcuerdoSistemaInformatico', $this->systemAgreementId));
+        }
+
+        // TipoHuella (required, must be set by the user)
+        if (!empty($this->hashType)) {
+            $root->appendChild($doc->createElement('TipoHuella', $this->hashType));
+        }
+
+        // Huella (required, must be set by the user)
+        if (!empty($this->hashValue)) {
+            $root->appendChild($doc->createElement('Huella', $this->hashValue));
+        }
+
+        // ds:Signature (optional, to be added after signing)
+        // Not included here, but the node can be appended externally if needed
+
+        return $doc;
     }
 }
