@@ -1,132 +1,132 @@
-# Contribuyendo a Verifactu-PHP
+# Contributing to Verifactu-PHP
 
-¡Gracias por tu interés en contribuir a la biblioteca Verifactu-PHP! Esta guía te ayudará a entender el proceso de contribución y a garantizar que tu aportación se integre de manera eficiente.
+Thank you for your interest in contributing to the Verifactu-PHP library! This guide will help you understand the contribution process and ensure your contribution is integrated efficiently.
 
-## Requisitos previos
+## Prerequisites
 
-Para contribuir a este proyecto, necesitarás:
+To contribute to this project, you will need:
 
-- PHP 8.1 o superior
+- PHP 8.1 or higher
 - Composer
-- Conocimientos básicos sobre la API Veri*factu de la AEAT
-- Familiaridad con PHPUnit para tests
+- Basic knowledge of the AEAT Veri*factu API
+- Familiarity with PHPUnit for testing
 
-## Configuración del entorno de desarrollo
+## Development Environment Setup
 
-1. Clona el repositorio:
+1. Clone the repository:
    ```bash
    git clone https://github.com/eseperio/verifactu-php.git
    cd verifactu-php
    ```
 
-2. Instala las dependencias:
+2. Install dependencies:
    ```bash
    composer install
    ```
 
-## Estructura del proyecto
+## Project Structure
 
-- `src/` - Código fuente de la biblioteca
-  - `models/` - Modelos de datos para representar facturas y otros elementos
-  - `services/` - Servicios que implementan la lógica de negocio
-  - `dictionaries/` - Diccionarios y mapeos de códigos de error
-- `tests/` - Tests unitarios y de integración
-- `docs/` - Documentación del proyecto y recursos relacionados con la API de AEAT
+- `src/` - Source code of the library
+  - `models/` - Data models to represent invoices and other elements
+  - `services/` - Services implementing business logic
+  - `dictionaries/` - Dictionaries and error code mappings
+- `tests/` - Unit and integration tests
+- `docs/` - Project documentation and resources related to the AEAT API
 
-## Ejecutando los tests
+## Running Tests
 
-Los tests están configurados usando PHPUnit. Para ejecutarlos:
+Tests are configured using PHPUnit. To run them:
 
 ```bash
 vendor/bin/phpunit
 ```
 
-Para ejecutar un grupo específico de tests:
+To run a specific group of tests:
 
 ```bash
 vendor/bin/phpunit --testsuite Unit
 ```
 
-Para ejecutar un test específico:
+To run a specific test:
 
 ```bash
 vendor/bin/phpunit tests/Unit/Models/ModelTest.php
 ```
 
-Para generar un informe de cobertura:
+To generate a coverage report:
 
 ```bash
 vendor/bin/phpunit --coverage-html coverage
 ```
 
-Asegúrate de que todos los tests pasen antes de enviar un pull request.
+Make sure all tests pass before submitting a pull request.
 
-## Directrices de contribución
+## Contribution Guidelines
 
-### Estilo de código
+### Code Style
 
-- Sigue el estándar [PSR-12](https://www.php-fig.org/psr/psr-12/) para el estilo de código.
-- Usa camelCase para los nombres de métodos y propiedades.
-- Nombra las clases con PascalCase.
-- Incluye comentarios DocBlock para todas las clases, métodos y propiedades.
+- Follow the [PSR-12](https://www.php-fig.org/psr/psr-12/) standard for code style.
+- Use camelCase for method and property names.
+- Name classes with PascalCase.
+- Include DocBlock comments for all classes, methods, and properties.
 
-### Proceso de contribución
+### Contribution Process
 
-1. **Crea un fork** del repositorio en GitHub.
-2. **Crea una rama** para tu funcionalidad o corrección:
+1. **Create a fork** of the repository on GitHub.
+2. **Create a branch** for your feature or fix:
    ```bash
-   git checkout -b feature/nombre-descriptivo
+   git checkout -b feature/descriptive-name
    ```
-   o
+   or
    ```bash
-   git checkout -b fix/nombre-bug
+   git checkout -b fix/bug-name
    ```
-3. **Implementa tus cambios** siguiendo las directrices de estilo.
-4. **Añade o actualiza los tests** para cubrir tus cambios.
-5. **Ejecuta los tests** para asegurarte de que todo pasa correctamente.
-6. **Comenta tus commits** de manera descriptiva y útil.
-7. **Push** a tu fork.
-8. **Crea un pull request** describiendo tus cambios.
+3. **Implement your changes** following the style guidelines.
+4. **Add or update tests** to cover your changes.
+5. **Run tests** to ensure everything passes correctly.
+6. **Comment your commits** in a descriptive and helpful way.
+7. **Push** to your fork.
+8. **Create a pull request** describing your changes.
 
 ### Commits
 
-- Usa mensajes de commit claros y descriptivos.
-- Cada commit debe representar un conjunto lógico de cambios relacionados.
-- Referencia Issues o Pull Requests usando `#` seguido del número.
+- Use clear and descriptive commit messages.
+- Each commit should represent a logical set of related changes.
+- Reference Issues or Pull Requests using `#` followed by the number.
 
-### Documentación
+### Documentation
 
-- Actualiza la documentación cuando añadas o modifiques funcionalidades.
-- Proporciona ejemplos de uso para nuevas funcionalidades.
-- Mantén actualizado el README.md con cualquier cambio relevante.
+- Update documentation when adding or modifying functionality.
+- Provide examples of usage for new features.
+- Keep the README.md updated with any relevant changes.
 
-## Añadiendo nuevos tests
+## Adding New Tests
 
-Al añadir nuevas funcionalidades, asegúrate de:
+When adding new features, ensure you:
 
-1. Crear tests unitarios para cada método público.
-2. Verificar casos límite y posibles errores.
-3. Mantener una cobertura del código superior al 80%.
-4. Estructurar los tests en relación con la clase que prueban.
+1. Create unit tests for each public method.
+2. Verify edge cases and possible errors.
+3. Maintain code coverage above 80%.
+4. Structure tests in relation to the class they test.
 
-## Reportar bugs o solicitar funcionalidades
+## Reporting Bugs or Requesting Features
 
-- Usa GitHub Issues para reportar bugs o solicitar funcionalidades.
-- Proporciona un título claro y una descripción detallada.
-- Para bugs, incluye los pasos para reproducirlo y el comportamiento esperado vs. actual.
-- Para nuevas funcionalidades, explica el caso de uso y los beneficios.
+- Use GitHub Issues to report bugs or request features.
+- Provide a clear title and detailed description.
+- For bugs, include steps to reproduce and expected vs. actual behavior.
+- For new features, explain the use case and benefits.
 
-## Consideraciones específicas para Verifactu
+## Specific Considerations for Verifactu
 
-- Ten en cuenta las especificaciones técnicas de la AEAT al implementar cambios.
-- Mantén la retrocompatibilidad cuando sea posible.
-- Considera implicaciones de seguridad al manejar certificados digitales.
-- Documenta cualquier cambio en la API o en los requisitos.
+- Consider AEAT technical specifications when implementing changes.
+- Maintain backward compatibility when possible.
+- Consider security implications when handling digital certificates.
+- Document any changes to the API or requirements.
 
-## Licencia
+## License
 
-Al contribuir a este proyecto, aceptas que tus contribuciones se licenciarán bajo la misma licencia que el proyecto (MIT).
+By contributing to this project, you agree that your contributions will be licensed under the same license as the project (MIT).
 
 ---
 
-¡Gracias por contribuir a Verifactu-PHP!
+Thank you for contributing to Verifactu-PHP!
