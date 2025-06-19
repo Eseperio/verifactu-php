@@ -72,9 +72,10 @@ class QrGeneratorService
      */
     protected static function buildQrContent(InvoiceRecord $record, $baseVerificationUrl)
     {
-        $nif = $record->invoiceId->issuerNif;
-        $series = $record->invoiceId->seriesNumber;
-        $date = $record->invoiceId->issueDate;
+        $invoiceId = $record->getInvoiceId();
+        $nif = $invoiceId->issuerNif;
+        $series = $invoiceId->seriesNumber;
+        $date = $invoiceId->issueDate;
         $hash = $record->hash;
 
         $params = http_build_query([

@@ -17,6 +17,7 @@ class QrGeneratorServiceTest extends TestCase
         // Create a mock InvoiceRecord
         $mockInvoiceRecord = $this->getMockBuilder(InvoiceRecord::class)
             ->disableOriginalConstructor()
+            ->onlyMethods(['getInvoiceId'])
             ->getMockForAbstractClass();
 
         // Create an InvoiceId
@@ -26,7 +27,7 @@ class QrGeneratorServiceTest extends TestCase
         $invoiceId->issueDate = '2023-01-01';
 
         // Set up the mock InvoiceRecord
-        $mockInvoiceRecord->invoiceId = $invoiceId;
+        $mockInvoiceRecord->method('getInvoiceId')->willReturn($invoiceId);
         $mockInvoiceRecord->hash = 'abcdef1234567890';
 
         // Use reflection to access the protected method
@@ -217,6 +218,7 @@ class QrGeneratorServiceTest extends TestCase
     {
         $mockInvoiceRecord = $this->getMockBuilder(InvoiceRecord::class)
             ->disableOriginalConstructor()
+            ->onlyMethods(['getInvoiceId'])
             ->getMockForAbstractClass();
 
         $invoiceId = new InvoiceId();
@@ -224,7 +226,7 @@ class QrGeneratorServiceTest extends TestCase
         $invoiceId->seriesNumber = 'FACT-001';
         $invoiceId->issueDate = '2023-01-01';
 
-        $mockInvoiceRecord->invoiceId = $invoiceId;
+        $mockInvoiceRecord->method('getInvoiceId')->willReturn($invoiceId);
         $mockInvoiceRecord->hash = 'abcdef1234567890';
 
         return $mockInvoiceRecord;

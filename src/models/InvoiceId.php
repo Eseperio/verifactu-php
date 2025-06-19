@@ -42,4 +42,26 @@ class InvoiceId extends Model
             }],
         ];
     }
+
+    /**
+     * Serializes the invoice ID to XML.
+     * 
+     * @param \DOMDocument $doc The XML document to use for creating elements
+     * @return \DOMElement The root element of this model's XML representation
+     */
+    public function toXml(\DOMDocument $doc)
+    {
+        $root = $doc->createElement('IDFactura');
+
+        // IDEmisorFactura (required)
+        $root->appendChild($doc->createElement('IDEmisorFactura', $this->issuerNif));
+
+        // NumSerieFactura (required)
+        $root->appendChild($doc->createElement('NumSerieFactura', $this->seriesNumber));
+
+        // FechaExpedicionFactura (required)
+        $root->appendChild($doc->createElement('FechaExpedicionFactura', $this->issueDate));
+
+        return $root;
+    }
 }
