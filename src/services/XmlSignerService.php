@@ -27,7 +27,7 @@ class XmlSignerService
 
         // --- 2. Use XMLSecurityDSig and XMLSecurityKey from the xmlseclibs library ---
         // xmlseclibs: https://github.com/robrichards/xmlseclibs
-        if (!class_exists(XMLSecurityDSig::class)) {
+        if (!class_exists('RobRichards\XMLSecLibs\XMLSecurityDSig')) {
             throw new \RuntimeException('xmlseclibs library is required for XML signing.');
         }
 
