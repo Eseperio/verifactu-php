@@ -1,10 +1,8 @@
 # Verifactu PHP Library
 
+> ⚠️ 2025: Library __UNDER DEVELOPMENT__. You can try it, but expect changes, incomplete features or to be broken until
+> first alpha version is released. See the [CHANGELOG](CHANGELOG.md) for details of changes done during development.
 
-> ⚠️ 2025: Library __UNDER DEVELOPMENT__. You can try it, but expect changes, incomplete features or to be broken until first alpha version is released.
-
-Tasks pending before the first beta release:
-- [ ] Tests all new code to ensure it works properly.
 
 **A modern PHP library for integrating with 🇪🇸Spain’s AEAT Verifactu system (digital invoice submission, cancellation,
 querying, and events) according to the official regulatory technical specification.**
@@ -76,8 +74,10 @@ composer require robrichards/xmlseclibs
 
 ### 1. **Configuration**
 
-Before using any service, you must configure the library with your certificate, password, certificate type, and environment.  
-Choose between certificate type (`certificate` or `seal`) and environment (`production` or `sandbox`) according to whether you'll be working in production or testing.
+Before using any service, you must configure the library with your certificate, password, certificate type, and
+environment.  
+Choose between certificate type (`certificate` or `seal`) and environment (`production` or `sandbox`) according to
+whether you'll be working in production or testing.
 
 ```php
 use eseperio\verifactu\Verifactu;
@@ -91,8 +91,10 @@ Verifactu::config(
 );
 ```
 
-- Use `Verifactu::TYPE_CERTIFICATE` for a personal/company certificate, or `Verifactu::TYPE_SEAL` for a seal certificate.
-- Use `Verifactu::ENVIRONMENT_PRODUCTION` for real submissions, or `Verifactu::ENVIRONMENT_SANDBOX` for AEAT homologation/testing.
+- Use `Verifactu::TYPE_CERTIFICATE` for a personal/company certificate, or `Verifactu::TYPE_SEAL` for a seal
+  certificate.
+- Use `Verifactu::ENVIRONMENT_PRODUCTION` for real submissions, or `Verifactu::ENVIRONMENT_SANDBOX` for AEAT
+  homologation/testing.
 
 ---
 
@@ -386,7 +388,8 @@ if ($result->queryStatus === \eseperio\verifactu\models\QueryResponse::STATUS_OK
 
 ### 5. **Generate QR for an Invoice**
 
-The library provides flexible options for generating QR codes for invoices, supporting different renderers, resolutions, and output formats.
+The library provides flexible options for generating QR codes for invoices, supporting different renderers, resolutions,
+and output formats.
 
 ```php
 use eseperio\verifactu\Verifactu;
@@ -477,13 +480,13 @@ if ($response->submissionStatus === \eseperio\verifactu\models\InvoiceResponse::
 #### Available Options:
 
 - **Destination Types**:
-  - `QrGeneratorService::DESTINATION_STRING`: Returns the raw image data (default)
-  - `QrGeneratorService::DESTINATION_FILE`: Saves to a temporary file and returns the file path
+    - `QrGeneratorService::DESTINATION_STRING`: Returns the raw image data (default)
+    - `QrGeneratorService::DESTINATION_FILE`: Saves to a temporary file and returns the file path
 
 - **Renderer Types**:
-  - `QrGeneratorService::RENDERER_GD`: Uses GD library (default, widely available)
-  - `QrGeneratorService::RENDERER_IMAGICK`: Uses ImageMagick (if available)
-  - `QrGeneratorService::RENDERER_SVG`: Generates SVG format (vector-based)
+    - `QrGeneratorService::RENDERER_GD`: Uses GD library (default, widely available)
+    - `QrGeneratorService::RENDERER_IMAGICK`: Uses ImageMagick (if available)
+    - `QrGeneratorService::RENDERER_SVG`: Generates SVG format (vector-based)
 
 - **Resolution**: Size in pixels (default: 300)
 
@@ -532,7 +535,8 @@ Verifactu::config(
 * `Verifactu::ENVIRONMENT_PRODUCTION`: For real submissions to AEAT
 * `Verifactu::ENVIRONMENT_SANDBOX`: For testing in AEAT's homologation environment
 
-The library automatically selects the appropriate SOAP endpoints and QR verification URLs based on the certificate type and environment.
+The library automatically selects the appropriate SOAP endpoints and QR verification URLs based on the certificate type
+and environment.
 
 ### Advanced Configuration
 
@@ -554,7 +558,8 @@ VerifactuService::config([
 
 ## Main Models
 
-The library provides a comprehensive set of object-oriented models that represent different aspects of the AEAT Verifactu system. All models extend the base `Model` class, which provides validation functionality.
+The library provides a comprehensive set of object-oriented models that represent different aspects of the AEAT
+Verifactu system. All models extend the base `Model` class, which provides validation functionality.
 
 ### Core Models
 
@@ -626,7 +631,9 @@ See the `/src/models` directory for PHPDoc details and validation rules for each
 
 ## Service Reference
 
-The library is organized into specialized services that handle different aspects of the AEAT Verifactu integration. While most operations can be performed through the main `Verifactu` facade, you can also use these services directly for more advanced use cases.
+The library is organized into specialized services that handle different aspects of the AEAT Verifactu integration.
+While most operations can be performed through the main `Verifactu` facade, you can also use these services directly for
+more advanced use cases.
 
 ### Main Services
 
@@ -697,7 +704,8 @@ The library is organized into specialized services that handle different aspects
   $certInfo = CertificateManagerService::loadCertificate($certPath, $certPassword);
   ```
 
-Each service is designed to be used independently or as part of the overall workflow orchestrated by the `VerifactuService`. This modular design allows for flexibility and testability.
+Each service is designed to be used independently or as part of the overall workflow orchestrated by the
+`VerifactuService`. This modular design allows for flexibility and testability.
 
 ---
 
@@ -738,7 +746,8 @@ if ($response->submissionStatus !== \eseperio\verifactu\models\InvoiceResponse::
 }
 ```
 
-All AEAT error codes are mapped to human-readable messages using the official code dictionary in `/src/dictionaries/ErrorRegistry.php`.
+All AEAT error codes are mapped to human-readable messages using the official code dictionary in
+`/src/dictionaries/ErrorRegistry.php`.
 
 ### Exception Handling
 
