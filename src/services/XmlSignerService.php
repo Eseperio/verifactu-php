@@ -1,5 +1,7 @@
 <?php
 namespace eseperio\verifactu\services;
+use RobRichards\XMLSecLibs\XMLSecurityDSig;
+use RobRichards\XMLSecLibs\XMLSecurityKey;
 
 /**
  * Service responsible for digitally signing XML blocks using XAdES Enveloped
@@ -25,23 +27,23 @@ class XmlSignerService
 
         // --- 2. Use XMLSecurityDSig and XMLSecurityKey from the xmlseclibs library ---
         // xmlseclibs: https://github.com/robrichards/xmlseclibs
-        if (!class_exists('XMLSecurityDSig')) {
+        if (!class_exists(XMLSecurityDSig::class)) {
             throw new \RuntimeException('xmlseclibs library is required for XML signing.');
         }
 
         $doc = new \DOMDocument();
         $doc->loadXML($xml);
 
-        $objDSig = new \XMLSecurityDSig();
-        $objDSig->setCanonicalMethod(\XMLSecurityDSig::EXC_C14N);
+        $objDSig = new XMLSecurityDSig();
+        $objDSig->setCanonicalMethod(XMLSecurityDSig::EXC_C14N);
         $objDSig->addReference(
             $doc,
-            \XMLSecurityDSig::SHA256,
+            XMLSecurityDSig::SHA256,
             ['http://www.w3.org/2000/09/xmldsig#enveloped-signature'],
             ['force_uri' => true]
         );
 
-        $objKey = new \XMLSecurityKey(\XMLSecurityKey::RSA_SHA256, ['type' => 'private']);
+        $objKey = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, ['type' => 'private']);
         $objKey->loadKey($privateKey, false);
 
         // Attach the certificate (public) to the KeyInfo
