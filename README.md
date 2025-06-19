@@ -1,6 +1,7 @@
 # Verifactu PHP Library
 
-> ⚠️ 2025: Library __UNDER DEVELOPMENT__. You can try it, but expect changes, incomplete features or to be broken until
+> [!WARNING]
+> 2025: Library __UNDER DEVELOPMENT__. You can try it, but expect changes, incomplete features or to be broken until
 > first alpha version is released. See the [CHANGELOG](CHANGELOG.md) for details of changes done during development.
 
 
