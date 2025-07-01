@@ -11,9 +11,49 @@ use BaconQrCode\Writer;
 use eseperio\verifactu\models\InvoiceRecord;
 
 /**
- * Service responsible for generating QR codes
- * for invoices according to the AEAT Verifactu specification,
- * using bacon/bacon-qr-code only.
+ * Service responsible for generating QR codes for invoices according to the AEAT Verifactu specification.
+ *
+ * This service uses the bacon/bacon-qr-code library to generate QR codes that comply with
+ * the Spanish Tax Agency (AEAT) Verifactu requirements. The QR code contains a URL with
+ * embedded invoice information that can be used to verify the invoice's authenticity.
+ *
+ * Usage:
+ * The main method is `generateQr()` which takes an InvoiceRecord object and generates
+ * a QR code with the verification URL containing the invoice's key data.
+ *
+ * Available rendering engines:
+ * - GD (RENDERER_GD): Uses PHP's GD library. Output format is PNG. Most widely compatible option.
+ * - Imagick (RENDERER_IMAGICK): Uses ImageMagick for higher quality images. Output format is PNG.
+ * - SVG (RENDERER_SVG): Generates vector SVG files that can be scaled without quality loss.
+ *
+ * Output destinations:
+ * - String (DESTINATION_STRING): Returns the binary/text content of the QR image.
+ * - File (DESTINATION_FILE): Saves the QR to a temporary file and returns the file path.
+ *
+ * Example usage:
+ * ```
+ * // Create an invoice record
+ * $invoiceId = new InvoiceId('B12345678', 'FACT-2023-001', '31-12-2023');
+ * $record = new InvoiceRecord($invoiceId, 'abcdef123456789');
+ *
+ * // Generate QR code as SVG string
+ * $svgQrCode = QrGeneratorService::generateQr(
+ *     $record,
+ *     'https://sede.agenciatributaria.gob.es/verifactu',
+ *     QrGeneratorService::DESTINATION_STRING,
+ *     400,
+ *     QrGeneratorService::RENDERER_SVG
+ * );
+ *
+ * // Generate QR code as PNG file
+ * $pngFilePath = QrGeneratorService::generateQr(
+ *     $record,
+ *     'https://sede.agenciatributaria.gob.es/verifactu',
+ *     QrGeneratorService::DESTINATION_FILE,
+ *     300,
+ *     QrGeneratorService::RENDERER_GD
+ * );
+ * ```
  */
 class QrGeneratorService
 {
