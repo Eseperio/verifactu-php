@@ -7,7 +7,7 @@
 **A modern PHP library for integrating with 🇪🇸Spain’s AEAT Verifactu system (digital invoice submission, cancellation,
 querying, and events) according to the official regulatory technical specification.**
 
-> [!INFO]
+> [!NOTE]
 > This library supports verfactu transactions only. For non verifactu signed transactions, such as those required when
 > not using invoicing software, you may look for a different library.
 
