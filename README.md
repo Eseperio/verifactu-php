@@ -4,9 +4,12 @@
 > 2025: Library __UNDER DEVELOPMENT__. You can try it, but expect changes, incomplete features or to be broken until
 > first alpha version is released. See the [CHANGELOG](CHANGELOG.md) for details of changes done during development.
 
-
 **A modern PHP library for integrating with 🇪🇸Spain’s AEAT Verifactu system (digital invoice submission, cancellation,
 querying, and events) according to the official regulatory technical specification.**
+
+> [!INFO]
+> This library supports verfactu transactions only. For non verifactu signed transactions, such as those required when
+> not using invoicing software, you may look for a different library.
 
 ---
 
