@@ -45,7 +45,7 @@ class HashGeneratorService
                 'issuerNif'         => $invoiceId->issuerNif,
                 'seriesNumber'      => $invoiceId->seriesNumber,
                 'issueDate'         => $invoiceId->issueDate,
-                'invoiceType'       => $record->invoiceType->value,
+                'invoiceType'       => $record->invoiceType instanceof \BackedEnum ? $record->invoiceType->value : (string)$record->invoiceType,
                 'taxAmount'         => $record->taxAmount,
                 'totalAmount'       => $record->totalAmount,
                 'hash'              => $chaining && $chaining->getPreviousInvoice() ? $chaining->getPreviousInvoice()->hash : '',
