@@ -86,21 +86,24 @@ class InvoiceCancellationTest extends TestCase
 
         // Set System Info
         $computerSystem = new \eseperio\verifactu\models\ComputerSystem();
-        $computerSystem->name = 'Test System';
-        $computerSystem->nif = 'B12345678';
+        $computerSystem->providerName = 'Test System';
+        $computerSystem->setProviderId([
+            'name' => 'Test Provider', 
+            'nif' => 'B12345678'
+        ]);
         $computerSystem->systemName = 'Test System Name';
         $computerSystem->systemId = '01';
         $computerSystem->version = '1.0';
         $computerSystem->installationNumber = '001';
-        $computerSystem->onlyVerifactuUse = 'S';
-        $computerSystem->multipleOTUse = 'N';
-        $computerSystem->multipleOTIndicator = 'N';
+        $computerSystem->onlyVerifactu = \eseperio\verifactu\models\enums\YesNoType::YES;
+        $computerSystem->multipleObligations = \eseperio\verifactu\models\enums\YesNoType::NO;
+        $computerSystem->hasMultipleObligations = \eseperio\verifactu\models\enums\YesNoType::NO;
         $cancellation->setSystemInfo($computerSystem);
 
         // Set other required fields
-        $cancellation->generationDateTime = '2023-01-01T12:00:00+01:00';
-        $cancellation->hashType = '01';
-        $cancellation->hashValue = 'abcdef1234567890abcdef1234567890';
+        $cancellation->recordTimestamp = '2023-01-01T12:00:00+01:00';
+        $cancellation->hashType = \eseperio\verifactu\models\enums\HashType::SHA_256;
+        $cancellation->hash = 'abcdef1234567890abcdef1234567890';
 
         // Verify that all required properties are set
         $this->assertInstanceOf(\eseperio\verifactu\models\InvoiceId::class, $cancellation->getInvoiceId());

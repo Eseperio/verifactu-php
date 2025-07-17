@@ -132,7 +132,7 @@ $invoice->setInvoiceId($invoiceId);
 
 // Set basic invoice data
 $invoice->issuerName = 'Empresa Ejemplo SL';
-$invoice->invoiceType = InvoiceType::NORMAL; // Using enum instead of string
+$invoice->invoiceType = InvoiceType::STANDARD; // Using enum instead of string
 $invoice->operationDescription = 'Venta de productos';
 $invoice->taxAmount = 21.00; // Cuota total de impuestos
 $invoice->totalAmount = 121.00; // Importe total de la factura
@@ -166,6 +166,7 @@ $computerSystem->systemId = '01';
 $computerSystem->installationNumber = '1';
 $computerSystem->onlyVerifactu = YesNoType::YES;
 $computerSystem->multipleObligations = YesNoType::NO;
+$computerSystem->hasMultipleObligations = YesNoType::NO;
 
 // Set provider information
 $provider = new LegalPerson();
@@ -259,6 +260,7 @@ $computerSystem->systemId = '01';
 $computerSystem->installationNumber = '1';
 $computerSystem->onlyVerifactu = YesNoType::YES;
 $computerSystem->multipleObligations = YesNoType::NO;
+$computerSystem->hasMultipleObligations = YesNoType::NO;
 
 // Set provider information
 $provider = new LegalPerson();

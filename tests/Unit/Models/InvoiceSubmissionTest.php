@@ -83,29 +83,32 @@ class InvoiceSubmissionTest extends TestCase
 
         // Set System Info
         $computerSystem = new \eseperio\verifactu\models\ComputerSystem();
-        $computerSystem->name = 'Test System';
-        $computerSystem->nif = 'B12345678';
+        $computerSystem->providerName = 'Test System';
+        $computerSystem->setProviderId([
+            'name' => 'Test Provider', 
+            'nif' => 'B12345678'
+        ]);
         $computerSystem->systemName = 'Test System Name';
         $computerSystem->systemId = '01';
         $computerSystem->version = '1.0';
         $computerSystem->installationNumber = '001';
-        $computerSystem->onlyVerifactuUse = 'S';
-        $computerSystem->multipleOTUse = 'N';
-        $computerSystem->multipleOTIndicator = 'N';
+        $computerSystem->onlyVerifactu = \eseperio\verifactu\models\enums\YesNoType::YES;
+        $computerSystem->multipleObligations = \eseperio\verifactu\models\enums\YesNoType::NO;
+        $computerSystem->hasMultipleObligations = \eseperio\verifactu\models\enums\YesNoType::NO;
         $submission->setSystemInfo($computerSystem);
 
         // Set other required fields
-        $submission->generationDateTime = '2023-01-01T12:00:00+01:00';
-        $submission->hashType = '01';
-        $submission->hashValue = 'abcdef1234567890abcdef1234567890';
+        $submission->recordTimestamp = '2023-01-01T12:00:00+01:00';
+        $submission->hashType = \eseperio\verifactu\models\enums\HashType::SHA_256;
+        $submission->hash = 'abcdef1234567890abcdef1234567890';
 
         // Create a breakdown
         $breakdown = new \eseperio\verifactu\models\Breakdown();
         $detail = new \eseperio\verifactu\models\BreakdownDetail();
-        $detail->taxBase = 100.00;
+        $detail->taxableBase = 100.00;
         $detail->taxRate = 21.00;
         $detail->taxAmount = 21.00;
-        $detail->operationQualification = 'S1';
+        $detail->operationQualification = \eseperio\verifactu\models\enums\OperationQualificationType::SUBJECT_NO_EXEMPT_NO_REVERSE;
         $breakdown->addDetail($detail);
         $submission->setBreakdown($breakdown);
 

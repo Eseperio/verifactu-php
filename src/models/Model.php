@@ -64,6 +64,11 @@ abstract class Model
                         $errors[$property][] = is_string($result) ? $result : "Validation failed for $property.";
                     }
                 } else {
+                    // Skip validation for string/integer/float validators if value is null (unless marked as required)
+                    if ($value === null && in_array($validator, ['string', 'integer', 'float', 'email'])) {
+                        continue;
+                    }
+                    
                     switch ($validator) {
                         case 'string':
                             if (!is_string($value)) {
