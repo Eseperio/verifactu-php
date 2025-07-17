@@ -33,9 +33,13 @@
   ],
   "minimum-stability": "dev",
   "scripts": {
-    "test": "phpunit"
+    "test": "phpunit",
+    "test-readme": "phpunit tests/Unit/Examples/",
+    "test-unit": "phpunit --testsuite=Unit"
   },
   "scripts-descriptions": {
-    "test": "Run the unit tests using PHPUnit"
+    "test": "Run the unit tests using PHPUnit",
+    "test-readme": "Test that README.md examples work correctly",
+    "test-unit": "Run all unit tests"
   }
 }
