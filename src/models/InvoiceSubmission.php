@@ -641,12 +641,12 @@ class InvoiceSubmission extends InvoiceRecord
 
         // FacturaSimplificadaArt7273 (optional)
         if (!empty($this->simplifiedInvoice)) {
-            $root->appendChild($doc->createElement('FacturaSimplificadaArt7273', (string) $this->simplifiedInvoice));
+            $root->appendChild($doc->createElement('FacturaSimplificadaArt7273', $this->simplifiedInvoice?->value));
         }
 
         // FacturaSinIdentifDestinatarioArt61d (optional)
         if (!empty($this->invoiceWithoutRecipient)) {
-            $root->appendChild($doc->createElement('FacturaSinIdentifDestinatarioArt61d', (string) $this->invoiceWithoutRecipient));
+            $root->appendChild($doc->createElement('FacturaSinIdentifDestinatarioArt61d', $this->invoiceWithoutRecipient?->value));
         }
 
         // Macrodato (optional)
