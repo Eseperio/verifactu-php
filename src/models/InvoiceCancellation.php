@@ -177,17 +177,17 @@ class InvoiceCancellation extends InvoiceRecord
 
         // SinRegistroPrevio (optional)
         if (!empty($this->noPreviousRecord)) {
-            $root->appendChild($doc->createElement('SinRegistroPrevio', (string) $this->noPreviousRecord));
+            $root->appendChild($doc->createElement('SinRegistroPrevio', $this->noPreviousRecord?->value));
         }
 
         // RechazoPrevio (optional)
         if (!empty($this->previousRejection)) {
-            $root->appendChild($doc->createElement('RechazoPrevio', (string) $this->previousRejection));
+            $root->appendChild($doc->createElement('RechazoPrevio', $this->previousRejection?->value));
         }
 
         // GeneradoPor (optional)
         if (!empty($this->generator)) {
-            $root->appendChild($doc->createElement('GeneradoPor', (string) $this->generator));
+            $root->appendChild($doc->createElement('GeneradoPor', $this->generator?->value));
         }
 
         // Generador (optional)
@@ -218,7 +218,7 @@ class InvoiceCancellation extends InvoiceRecord
 
         // TipoHuella (required, must be set by the user)
         if (!empty($this->hashType)) {
-            $root->appendChild($doc->createElement('TipoHuella', (string) $this->hashType));
+            $root->appendChild($doc->createElement('TipoHuella', $this->hashType?->value));
         }
 
         // Huella (required, must be set by the user)

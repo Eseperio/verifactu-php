@@ -587,11 +587,11 @@ class InvoiceSubmission extends InvoiceRecord
         $root->appendChild($doc->createElement('NombreRazonEmisor', $this->issuerName));
 
         // TipoFactura (required)
-        $root->appendChild($doc->createElement('TipoFactura', (string) $this->invoiceType));
+        $root->appendChild($doc->createElement('TipoFactura', $this->invoiceType?->value));
 
         // TipoRectificativa (optional)
         if (!empty($this->rectificationType)) {
-            $root->appendChild($doc->createElement('TipoRectificativa', (string) $this->rectificationType));
+            $root->appendChild($doc->createElement('TipoRectificativa', $this->rectificationType?->value));
         }
 
         // FacturasRectificadas (optional)
