@@ -121,7 +121,7 @@ class Verifactu
     {
         $endpoint = match ($environment) {
             self::ENVIRONMENT_PRODUCTION => $certType === self::TYPE_SEAL ? self::URL_PRODUCTION_SEAL : self::URL_PRODUCTION,
-            self::ENVIRONMENT_SANDBOX => $certType === self::TYPE_SEAL ? self::URL_TEST_SEAL : self::URL_TEST,
+            self::ENVIRONMENT_SANDBOX => __DIR__ . '/../docs/aeat/SistemaFacturacion.wsdl.xml',
             default => throw new \InvalidArgumentException("Invalid environment: $environment")
         };
 

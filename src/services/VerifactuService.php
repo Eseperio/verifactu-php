@@ -87,15 +87,20 @@ class VerifactuService
     {
         if (self::$client === null) {
             $environment = self::$config['environment'] ?? null;
+            $certPath = self::$config[self::CERT_PATH_KEY] ?? null;
+            $certContent = self::$config[self::CERT_CONTENT_KEY] ?? null;
+            // Si existe contenido de certificado, usarlo en vez de la ruta
+            if ($certContent) {
+                $certPath = $certContent;
+            }
             self::$client = SoapClientFactoryService::createSoapClient(
                 self::getConfig(self::WSDL_ENDPOINT),
-                self::getConfig(self::CERT_PATH_KEY),
+                $certPath,
                 self::getConfig(self::CERT_PASSWORD_KEY),
                 [],
                 $environment
             );
         }
-
         return self::$client;
     }
 

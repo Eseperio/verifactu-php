@@ -48,8 +48,11 @@ class SoapClientFactoryService
             $wsdl = realpath(__DIR__ . '/../../docs/aeat/SistemaFacturacion.wsdl.xml');
         }
 
-        if (!file_exists($certPath)) {
-            throw new \RuntimeException("Certificate file not found: $certPath");
+        // Si el certificado es una ruta válida, comprobar existencia. Si es contenido, permitir string.
+        $isFile = is_string($certPath) && file_exists($certPath);
+        $isString = is_string($certPath) && !file_exists($certPath);
+        if (!$isFile && !$isString) {
+            throw new \RuntimeException("Certificate not found or invalid: $certPath");
         }
 
         $defaultOptions = [
