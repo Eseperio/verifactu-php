@@ -19,13 +19,33 @@ class SoapClientFactoryService
      * @param array $options  Additional SoapClient options (optional)
      * @throws \RuntimeException
      */
-    public static function createSoapClient($wsdl, $certPath, $certPassword = '', $options = []): \SoapClient
+    public static function createSoapClient($wsdl, $certPath, $certPassword = '', $options = [], $environment = null): \SoapClient
     {
-        // Detect sandbox mode by checking if $wsdl is a local file
-        $isLocalWsdl = file_exists($wsdl);
-        if ($isLocalWsdl) {
-            // En sandbox, forzamos el uso del WSDL local
-            $wsdl = realpath($wsdl);
+        // Inicializamos $environment si no está definido
+        if (!isset($environment)) {
+            $environment = null;
+        }
+        // Detect environment from argument or config
+        if ($environment === null && class_exists('eseperio\\verifactu\\services\\VerifactuService')) {
+            // Intentamos obtener el entorno de la configuración global
+            $configClass = 'eseperio\\verifactu\\services\\VerifactuService';
+            if (method_exists($configClass, 'getConfig')) {
+                $env = null;
+                try {
+                    $env = $configClass::getConfig('environment');
+                } catch (\Throwable $e) {
+                    // Si no está definido, seguimos con null
+                }
+                if ($env !== null) {
+                    $environment = $env;
+                }
+            }
+        }
+
+        // Selección del WSDL según entorno
+        if ($environment === 'sandbox') {
+            // Forzamos el WSDL local para sandbox
+            $wsdl = realpath(__DIR__ . '/../../docs/aeat/SistemaFacturacion.wsdl.xml');
         }
 
         if (!file_exists($certPath)) {
