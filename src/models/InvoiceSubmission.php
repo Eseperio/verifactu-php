@@ -651,12 +651,12 @@ class InvoiceSubmission extends InvoiceRecord
 
         // Macrodato (optional)
         if (!empty($this->macrodata)) {
-            $root->appendChild($doc->createElement('Macrodato', (string) $this->macrodata));
+            $root->appendChild($doc->createElement('Macrodato', $this->macrodata?->value));
         }
 
         // EmitidaPorTerceroODestinatario (optional)
         if (!empty($this->issuedBy)) {
-            $root->appendChild($doc->createElement('EmitidaPorTerceroODestinatario', (string) $this->issuedBy));
+            $root->appendChild($doc->createElement('EmitidaPorTerceroODestinatario', $this->issuedBy?->value));
         }
 
         // Tercero (optional)
@@ -682,7 +682,7 @@ class InvoiceSubmission extends InvoiceRecord
 
         // Cupon (optional)
         if (!empty($this->coupon)) {
-            $root->appendChild($doc->createElement('Cupon', (string) $this->coupon));
+            $root->appendChild($doc->createElement('Cupon', $this->coupon?->value));
         }
 
         // Desglose (required)
@@ -729,7 +729,7 @@ class InvoiceSubmission extends InvoiceRecord
 
         // TipoHuella (required, must be set by the user)
         if (!empty($this->hashType)) {
-            $root->appendChild($doc->createElement('TipoHuella', (string) $this->hashType));
+            $root->appendChild($doc->createElement('TipoHuella', $this->hashType?->value));
         }
 
         // Huella (required, must be set by the user)
