@@ -138,16 +138,15 @@ $invoice->invoiceType = InvoiceType::STANDARD; // Using corrected enum value
 $invoice->operationDescription = 'Venta de productos';
 $invoice->taxAmount = 21.00; // Total tax amount
 $invoice->totalAmount = 121.00; // Total invoice amount
-$invoice->selfEmployment = YesNoType::NO;
-$invoice->thirdParty = YesNoType::NO;
-$invoice->simplifiedRegime = YesNoType::NO;
+$invoice->simplifiedInvoice = YesNoType::NO; // Corrected property name
+$invoice->invoiceWithoutRecipient = YesNoType::NO; // Corrected property name
 
 // Add tax breakdown (using object-oriented approach)
 $breakdown = new Breakdown();
 $detail = new BreakdownDetail();
 $detail->taxType = TaxType::IVA;
 $detail->taxRate = 21.00;
-$detail->taxBase = 100.00;
+$detail->taxableBase = 100.00; // Corrected property name
 $detail->taxAmount = 21.00;
 $detail->operationQualification = OperationQualificationType::SUBJECT_NO_EXEMPT_NO_REVERSE;
 $breakdown->addDetail($detail);
@@ -155,7 +154,7 @@ $invoice->setBreakdown($breakdown);
 
 // Set chaining data (using object-oriented approach)
 $chaining = new Chaining();
-$chaining->firstInvoice = YesNoType::YES; // For the first invoice in a chain
+$chaining->firstRecord = YesNoType::YES; // Corrected property name - For the first invoice in a chain
 // Or for subsequent invoices:
 // $chaining->setPreviousInvoice([
 //     'seriesNumber' => 'FA2024/000',
