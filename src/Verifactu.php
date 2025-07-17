@@ -74,9 +74,23 @@ class Verifactu
     {
         $endpoint = match ($environment) {
             self::ENVIRONMENT_PRODUCTION => $certType === self::TYPE_SEAL ? self::URL_PRODUCTION_SEAL : self::URL_PRODUCTION,
-            self::ENVIRONMENT_SANDBOX => $certType === self::TYPE_SEAL ? self::URL_TEST_SEAL : self::URL_TEST,
+            self::ENVIRONMENT_SANDBOX => __DIR__ . '/../docs/aeat/SistemaFacturacion.wsdl.xml',
             default => throw new \InvalidArgumentException("Invalid environment: $environment")
         };
+
+        if ($environment === self::ENVIRONMENT_SANDBOX) {
+            $xsdFiles = [
+                __DIR__ . '/../docs/aeat/SuministroInformacion.xsd',
+                __DIR__ . '/../docs/aeat/SuministroLR.xsd',
+                __DIR__ . '/../docs/aeat/ConsultaLR.xsd',
+                __DIR__ . '/../docs/aeat/RespuestaConsultaLR.xsd',
+                __DIR__ . '/../docs/aeat/RespuestaSuministro.xsd',
+            ];
+            $missing = array_filter($xsdFiles, fn($f) => !file_exists($f));
+            if (count($missing) > 0) {
+                trigger_error('Advertencia: Faltan XSD oficiales para sandbox: ' . implode(', ', $missing), E_USER_WARNING);
+            }
+        }
 
         $qrValidationUrl = match ($environment) {
             self::ENVIRONMENT_PRODUCTION => self::QR_VERIFICATION_URL_PRODUCTION,
