@@ -21,6 +21,13 @@ class SoapClientFactoryService
      */
     public static function createSoapClient($wsdl, $certPath, $certPassword = '', $options = []): \SoapClient
     {
+        // Detect sandbox mode by checking if $wsdl is a local file
+        $isLocalWsdl = file_exists($wsdl);
+        if ($isLocalWsdl) {
+            // En sandbox, forzamos el uso del WSDL local
+            $wsdl = realpath($wsdl);
+        }
+
         if (!file_exists($certPath)) {
             throw new \RuntimeException("Certificate file not found: $certPath");
         }
