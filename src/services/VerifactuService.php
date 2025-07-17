@@ -96,14 +96,20 @@ class VerifactuService
      */
     public static function registerInvoice(InvoiceSubmission $invoice)
     {
-        // 1. Validate input
-        $validation = $invoice->validate();
+        // 1. Validate input (excluding hash which will be generated)
+        $validation = $invoice->validateExceptHash();
         if ($validation !== true) {
             throw new \InvalidArgumentException('InvoiceSubmission validation failed: ' . print_r($validation, true));
         }
 
         // 2. Generate hash (huella)
         $invoice->hash = HashGeneratorService::generate($invoice);
+        
+        // 3. Final validation including hash
+        $finalValidation = $invoice->validate();
+        if ($finalValidation !== true) {
+            throw new \InvalidArgumentException('InvoiceSubmission final validation failed: ' . print_r($finalValidation, true));
+        }
 
         // 3. Prepare XML (you would build this as per AEAT XSD, example below is placeholder)
         $xml = self::buildInvoiceXml($invoice);
@@ -134,11 +140,20 @@ class VerifactuService
      */
     public static function cancelInvoice(InvoiceCancellation $cancellation)
     {
-        $validation = $cancellation->validate();
+        // 1. Validate input (excluding hash which will be generated)
+        $validation = $cancellation->validateExceptHash();
         if ($validation !== true) {
             throw new \InvalidArgumentException('InvoiceCancellation validation failed: ' . print_r($validation, true));
         }
+        
+        // 2. Generate hash (huella)
         $cancellation->hash = HashGeneratorService::generate($cancellation);
+        
+        // 3. Final validation including hash
+        $finalValidation = $cancellation->validate();
+        if ($finalValidation !== true) {
+            throw new \InvalidArgumentException('InvoiceCancellation final validation failed: ' . print_r($finalValidation, true));
+        }
         $xml = self::buildCancellationXml($cancellation);
         $signedXml = XmlSignerService::signXml(
             $xml,
