@@ -161,17 +161,17 @@ class InvoiceCancellation extends InvoiceRecord
 
         // SinRegistroPrevio (optional)
         if (!empty($this->noPreviousRecord)) {
-            $root->appendChild($doc->createElement('SinRegistroPrevio', $this->noPreviousRecord));
+            $root->appendChild($doc->createElement('SinRegistroPrevio', (string)$this->noPreviousRecord));
         }
 
         // RechazoPrevio (optional)
         if (!empty($this->previousRejection)) {
-            $root->appendChild($doc->createElement('RechazoPrevio', $this->previousRejection));
+            $root->appendChild($doc->createElement('RechazoPrevio', (string)$this->previousRejection));
         }
 
         // GeneradoPor (optional)
         if (!empty($this->generator)) {
-            $root->appendChild($doc->createElement('GeneradoPor', $this->generator));
+            $root->appendChild($doc->createElement('GeneradoPor', (string)$this->generator));
         }
 
         // Generador (optional)
@@ -189,25 +189,25 @@ class InvoiceCancellation extends InvoiceRecord
         }
 
         // SistemaInformatico (required)
-        if (!empty($this->computerSystem) && method_exists($this->computerSystem, 'toXml')) {
-            $originalNode = $this->computerSystem->toXml($doc);
+        if (!empty($this->systemInfo) && method_exists($this->systemInfo, 'toXml')) {
+            $originalNode = $this->systemInfo->toXml($doc);
             $sistemaNode = $this->renameElement($doc, $originalNode, 'SistemaInformatico');
             $root->appendChild($sistemaNode);
         }
 
         // FechaHoraHusoGenRegistro (required, must be set by the user)
-        if (!empty($this->generationDateTime)) {
-            $root->appendChild($doc->createElement('FechaHoraHusoGenRegistro', $this->generationDateTime));
+        if (!empty($this->recordTimestamp)) {
+            $root->appendChild($doc->createElement('FechaHoraHusoGenRegistro', $this->recordTimestamp));
         }
 
         // TipoHuella (required, must be set by the user)
         if (!empty($this->hashType)) {
-            $root->appendChild($doc->createElement('TipoHuella', $this->hashType));
+            $root->appendChild($doc->createElement('TipoHuella', (string)$this->hashType));
         }
 
         // Huella (required, must be set by the user)
-        if (!empty($this->hashValue)) {
-            $root->appendChild($doc->createElement('Huella', $this->hashValue));
+        if (!empty($this->hash)) {
+            $root->appendChild($doc->createElement('Huella', $this->hash));
         }
 
         // ds:Signature (optional, to be added after signing)

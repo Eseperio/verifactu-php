@@ -548,22 +548,12 @@ class InvoiceSubmission extends InvoiceRecord
         // NombreRazonEmisor (required)
         $root->appendChild($doc->createElement('NombreRazonEmisor', $this->issuerName));
 
-        // Subsanacion (optional)
-        if (!empty($this->subsanacion)) {
-            $root->appendChild($doc->createElement('Subsanacion', $this->subsanacion));
-        }
-
-        // RechazoPrevio (optional)
-        if (!empty($this->previousRejection)) {
-            $root->appendChild($doc->createElement('RechazoPrevio', $this->previousRejection));
-        }
-
         // TipoFactura (required)
-        $root->appendChild($doc->createElement('TipoFactura', $this->invoiceType));
+        $root->appendChild($doc->createElement('TipoFactura', (string)$this->invoiceType));
 
         // TipoRectificativa (optional)
         if (!empty($this->rectificationType)) {
-            $root->appendChild($doc->createElement('TipoRectificativa', $this->rectificationType));
+            $root->appendChild($doc->createElement('TipoRectificativa', (string)$this->rectificationType));
         }
 
         // FacturasRectificadas (optional)
@@ -610,22 +600,22 @@ class InvoiceSubmission extends InvoiceRecord
 
         // FacturaSimplificadaArt7273 (optional)
         if (!empty($this->simplifiedInvoice)) {
-            $root->appendChild($doc->createElement('FacturaSimplificadaArt7273', $this->simplifiedInvoice));
+            $root->appendChild($doc->createElement('FacturaSimplificadaArt7273', (string)$this->simplifiedInvoice));
         }
 
         // FacturaSinIdentifDestinatarioArt61d (optional)
         if (!empty($this->invoiceWithoutRecipient)) {
-            $root->appendChild($doc->createElement('FacturaSinIdentifDestinatarioArt61d', $this->invoiceWithoutRecipient));
+            $root->appendChild($doc->createElement('FacturaSinIdentifDestinatarioArt61d', (string)$this->invoiceWithoutRecipient));
         }
 
         // Macrodato (optional)
         if (!empty($this->macrodata)) {
-            $root->appendChild($doc->createElement('Macrodato', $this->macrodata));
+            $root->appendChild($doc->createElement('Macrodato', (string)$this->macrodata));
         }
 
         // EmitidaPorTerceroODestinatario (optional)
         if (!empty($this->issuedBy)) {
-            $root->appendChild($doc->createElement('EmitidaPorTerceroODestinatario', $this->issuedBy));
+            $root->appendChild($doc->createElement('EmitidaPorTerceroODestinatario', (string)$this->issuedBy));
         }
 
         // Tercero (optional)
@@ -650,7 +640,7 @@ class InvoiceSubmission extends InvoiceRecord
 
         // Cupon (optional)
         if (!empty($this->coupon)) {
-            $root->appendChild($doc->createElement('Cupon', $this->coupon));
+            $root->appendChild($doc->createElement('Cupon', (string)$this->coupon));
         }
 
         // Desglose (required)
@@ -674,15 +664,15 @@ class InvoiceSubmission extends InvoiceRecord
         }
 
         // SistemaInformatico (required)
-        if (!empty($this->computerSystem) && method_exists($this->computerSystem, 'toXml')) {
-            $originalNode = $this->computerSystem->toXml($doc);
+        if (!empty($this->systemInfo) && method_exists($this->systemInfo, 'toXml')) {
+            $originalNode = $this->systemInfo->toXml($doc);
             $sistemaNode = $this->renameElement($doc, $originalNode, 'SistemaInformatico');
             $root->appendChild($sistemaNode);
         }
 
         // FechaHoraHusoGenRegistro (required, must be set by the user)
-        if (!empty($this->generationDateTime)) {
-            $root->appendChild($doc->createElement('FechaHoraHusoGenRegistro', $this->generationDateTime));
+        if (!empty($this->recordTimestamp)) {
+            $root->appendChild($doc->createElement('FechaHoraHusoGenRegistro', $this->recordTimestamp));
         }
 
         // NumRegistroAcuerdoFacturacion (optional)
@@ -697,12 +687,12 @@ class InvoiceSubmission extends InvoiceRecord
 
         // TipoHuella (required, must be set by the user)
         if (!empty($this->hashType)) {
-            $root->appendChild($doc->createElement('TipoHuella', $this->hashType));
+            $root->appendChild($doc->createElement('TipoHuella', (string)$this->hashType));
         }
 
         // Huella (required, must be set by the user)
-        if (!empty($this->hashValue)) {
-            $root->appendChild($doc->createElement('Huella', $this->hashValue));
+        if (!empty($this->hash)) {
+            $root->appendChild($doc->createElement('Huella', $this->hash));
         }
 
         // ds:Signature (optional, to be added after signing)
