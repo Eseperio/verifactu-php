@@ -1,13 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace eseperio\verifactu\dictionaries;
 
 class ErrorRegistry
 {
     /**
-     * Diccionario de errores AEAT: [codigo => descripcion]
+     * Diccionario de errores AEAT: [codigo => descripcion].
      */
-    private static $errors = [
+    private static array $errors = [
         // Errores que provocan el rechazo del envío completo
         4102 => 'El XML no cumple el esquema. Falta informar campo obligatorio.',
         4103 => 'Se ha producido un error inesperado al parsear el XML.',
@@ -259,7 +261,6 @@ class ErrorRegistry
     /**
      * Devuelve la descripción del error según el código.
      * @param int|string $id
-     * @return string|null
      */
     public static function getDescription($id): ?string
     {

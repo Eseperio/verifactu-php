@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace eseperio\verifactu\models\enums;
 
 /**
@@ -7,7 +10,7 @@ namespace eseperio\verifactu\models\enums;
 enum HashType: string
 {
     /**
-     * SHA-256 hash algorithm
+     * SHA-256 hash algorithm.
      */
     case SHA_256 = '01';
 }

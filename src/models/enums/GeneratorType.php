@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace eseperio\verifactu\models\enums;
 
 /**
@@ -7,17 +10,17 @@ namespace eseperio\verifactu\models\enums;
 enum GeneratorType: string
 {
     /**
-     * Issuer (obliged to issue the cancelled invoice)
+     * Issuer (obliged to issue the cancelled invoice).
      */
     case ISSUER = 'E';
-    
+
     /**
-     * Recipient
+     * Recipient.
      */
     case RECIPIENT = 'D';
-    
+
     /**
-     * Third party
+     * Third party.
      */
     case THIRD_PARTY = 'T';
 }

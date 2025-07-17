@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace eseperio\verifactu\services;
 
 use eseperio\verifactu\models\InvoiceCancellation;
@@ -15,24 +17,22 @@ use eseperio\verifactu\models\QueryResponse;
  */
 class VerifactuService
 {
-
-
     /**
      * WSDL parameter name.
      */
-    const WSDL_ENDPOINT = 'wsdl';
+    public const WSDL_ENDPOINT = 'wsdl';
     /**
      * Certificate path parameter name.
      */
-    const CERT_PATH_KEY = 'certPath';
+    public const CERT_PATH_KEY = 'certPath';
     /**
      * Certificate password parameter name.
      */
-    const CERT_PASSWORD_KEY = 'certPassword';
+    public const CERT_PASSWORD_KEY = 'certPassword';
     /**
      * Environment: production.
      */
-    const QR_VERIFICATION_URL = 'qrValidationUrl';
+    public const QR_VERIFICATION_URL = 'qrValidationUrl';
 
     /**
      * Global configuration for Verifactu service.
@@ -44,13 +44,13 @@ class VerifactuService
      * Soap instance for communication with AEAT.
      * @var \SoapClient|null
      */
-    protected static $client = null;
+    protected static $client;
 
     /**
      * Establece la configuración global.
      * @param array $data
      */
-    public static function config($data)
+    public static function config($data): void
     {
         self::$config = $data;
         self::$client = null;
@@ -67,6 +67,7 @@ class VerifactuService
         if (!isset(self::$config[$param])) {
             throw new \InvalidArgumentException("El parámetro de configuración '$param' no está definido.");
         }
+
         return self::$config[$param];
     }
 
@@ -83,13 +84,13 @@ class VerifactuService
                 self::getConfig(self::CERT_PASSWORD_KEY)
             );
         }
+
         return self::$client;
     }
 
     /**
      * Registers a new invoice with AEAT via VERI*FACTU.
      *
-     * @param InvoiceSubmission $invoice
      * @return InvoiceResponse
      * @throws \DOMException
      * @throws \SoapFault
@@ -98,15 +99,17 @@ class VerifactuService
     {
         // 1. Validate input (excluding hash which will be generated)
         $validation = $invoice->validateExceptHash();
+
         if ($validation !== true) {
             throw new \InvalidArgumentException('InvoiceSubmission validation failed: ' . print_r($validation, true));
         }
 
         // 2. Generate hash (huella)
         $invoice->hash = HashGeneratorService::generate($invoice);
-        
+
         // 3. Final validation including hash
         $finalValidation = $invoice->validate();
+
         if ($finalValidation !== true) {
             throw new \InvalidArgumentException('InvoiceSubmission final validation failed: ' . print_r($finalValidation, true));
         }
@@ -135,22 +138,23 @@ class VerifactuService
     /**
      * Cancels an invoice with AEAT via VERI*FACTU.
      *
-     * @param InvoiceCancellation $cancellation
      * @return InvoiceResponse
      */
     public static function cancelInvoice(InvoiceCancellation $cancellation)
     {
         // 1. Validate input (excluding hash which will be generated)
         $validation = $cancellation->validateExceptHash();
+
         if ($validation !== true) {
             throw new \InvalidArgumentException('InvoiceCancellation validation failed: ' . print_r($validation, true));
         }
-        
+
         // 2. Generate hash (huella)
         $cancellation->hash = HashGeneratorService::generate($cancellation);
-        
+
         // 3. Final validation including hash
         $finalValidation = $cancellation->validate();
+
         if ($finalValidation !== true) {
             throw new \InvalidArgumentException('InvoiceCancellation final validation failed: ' . print_r($finalValidation, true));
         }
@@ -163,19 +167,20 @@ class VerifactuService
         $client = self::getClient();
         $params = ['RegistroAnulacion' => $signedXml];
         $responseXml = $client->__soapCall('SuministroLR', [$params]);
+
         return ResponseParserService::parseInvoiceResponse($responseXml);
     }
 
     /**
      * Queries submitted invoices from AEAT via VERI*FACTU.
      *
-     * @param InvoiceQuery $query
      * @return QueryResponse
      * @throws \SoapFault
      */
     public static function queryInvoices(InvoiceQuery $query)
     {
         $validation = $query->validate();
+
         if ($validation !== true) {
             throw new \InvalidArgumentException('InvoiceQuery validation failed: ' . print_r($validation, true));
         }
@@ -183,13 +188,13 @@ class VerifactuService
         $client = self::getClient();
         $params = ['ConsultaFactuSistemaFacturacion' => $xml];
         $responseXml = $client->__soapCall('ConsultaLR', [$params]);
+
         return ResponseParserService::parseQueryResponse($responseXml);
     }
 
     /**
      * Generates a QR code for the provided invoice.
      *
-     * @param InvoiceRecord $record
      * @param string|null $baseUrl
      * @param string $destination Destination type (file or string)
      * @param int $size Resolution of the QR code
@@ -198,53 +203,51 @@ class VerifactuService
      */
     public static function generateInvoiceQr(
         InvoiceRecord $record,
-                      $destination = QrGeneratorService::DESTINATION_STRING,
-                      $size = 300,
-                      $engine = QrGeneratorService::RENDERER_GD
-    )
-    {
+        $destination = QrGeneratorService::DESTINATION_STRING,
+        $size = 300,
+        $engine = QrGeneratorService::RENDERER_GD
+    ) {
         $baseUrl = self::getConfig(self::QR_VERIFICATION_URL);
+
         return QrGeneratorService::generateQr($record, $baseUrl, $destination, $size, $engine);
     }
 
     /**
      * Serializes an InvoiceSubmission to AEAT-compliant RegistroAlta XML.
-     * @param InvoiceSubmission $invoice
      * @return string XML string
      * @throws \DOMException
      */
-    protected static function buildInvoiceXml(InvoiceSubmission $invoice)
+    protected static function buildInvoiceXml(InvoiceSubmission $invoice): string|false
     {
         $invoiceDom = $invoice->toXml();
+
         return $invoiceDom->saveXML();
     }
 
     /**
      * Serializes an InvoiceCancellation to AEAT-compliant RegistroAnulacion XML.
      *
-     * @param InvoiceCancellation $cancellation
      * @return string XML string
      * @throws \DOMException
      */
-    protected static function buildCancellationXml(InvoiceCancellation $cancellation)
+    protected static function buildCancellationXml(InvoiceCancellation $cancellation): string|false
     {
         // Get the XML element from the model
         $cancellationDom = $cancellation->toXml();
+
         return $cancellationDom->saveXML();
     }
-
 
     /**
      * Serializes an InvoiceQuery to AEAT-compliant ConsultaFactuSistemaFacturacion XML.
      *
-     * @param InvoiceQuery $query
      * @return string XML string
      * @throws \DOMException
      */
-    protected static function buildQueryXml(InvoiceQuery $query)
+    protected static function buildQueryXml(InvoiceQuery $query): string|false
     {
         $queryDom = $query->toXml();
+
         return $queryDom->saveXML();
     }
-
 }

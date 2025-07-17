@@ -1,16 +1,26 @@
 <?php
 
+declare(strict_types=1);
+
 namespace eseperio\verifactu\tests\Unit\Models;
 
+use eseperio\verifactu\models\InvoiceId;
+use eseperio\verifactu\models\Chaining;
+use eseperio\verifactu\models\ComputerSystem;
+use eseperio\verifactu\models\enums\YesNoType;
+use eseperio\verifactu\models\enums\HashType;
+use eseperio\verifactu\models\Breakdown;
+use eseperio\verifactu\models\BreakdownDetail;
+use eseperio\verifactu\models\enums\OperationQualificationType;
 use eseperio\verifactu\models\InvoiceSubmission;
 use PHPUnit\Framework\TestCase;
 
 class InvoiceSubmissionTest extends TestCase
 {
     /**
-     * Test que la clase InvoiceSubmission existe y hereda de InvoiceRecord
+     * Test que la clase InvoiceSubmission existe y hereda de InvoiceRecord.
      */
-    public function testClassStructure()
+    public function testClassStructure(): void
     {
         $this->assertTrue(class_exists(InvoiceSubmission::class));
 
@@ -26,9 +36,9 @@ class InvoiceSubmissionTest extends TestCase
     }
 
     /**
-     * Test que las propiedades heredadas de InvoiceRecord están presentes
+     * Test que las propiedades heredadas de InvoiceRecord están presentes.
      */
-    public function testInheritedProperties()
+    public function testInheritedProperties(): void
     {
         $submission = new InvoiceSubmission();
         $reflection = new \ReflectionClass($submission);
@@ -40,9 +50,9 @@ class InvoiceSubmissionTest extends TestCase
     }
 
     /**
-     * Test que el método rules() existe y devuelve un array
+     * Test que el método rules() existe y devuelve un array.
      */
-    public function testRulesMethod()
+    public function testRulesMethod(): void
     {
         $submission = new InvoiceSubmission();
         $rules = $submission->rules();
@@ -52,9 +62,9 @@ class InvoiceSubmissionTest extends TestCase
     }
 
     /**
-     * Test that the model has a toXml method and can be populated with required properties
+     * Test that the model has a toXml method and can be populated with required properties.
      */
-    public function testToXmlMethodExists()
+    public function testToXmlMethodExists(): void
     {
         // Create a submission with required properties
         $submission = new InvoiceSubmission();
@@ -70,45 +80,45 @@ class InvoiceSubmissionTest extends TestCase
         $submission->totalAmount = 121.00;
 
         // Set InvoiceId
-        $invoiceId = new \eseperio\verifactu\models\InvoiceId();
+        $invoiceId = new InvoiceId();
         $invoiceId->issuerNif = 'B12345678';
         $invoiceId->seriesNumber = 'FACT-001';
         $invoiceId->issueDate = '2023-01-01';
         $submission->setInvoiceId($invoiceId);
 
         // Set Chaining as first record
-        $chaining = new \eseperio\verifactu\models\Chaining();
+        $chaining = new Chaining();
         $chaining->setAsFirstRecord();
         $submission->setChaining($chaining);
 
         // Set System Info
-        $computerSystem = new \eseperio\verifactu\models\ComputerSystem();
+        $computerSystem = new ComputerSystem();
         $computerSystem->providerName = 'Test System';
         $computerSystem->setProviderId([
-            'name' => 'Test Provider', 
-            'nif' => 'B12345678'
+            'name' => 'Test Provider',
+            'nif' => 'B12345678',
         ]);
         $computerSystem->systemName = 'Test System Name';
         $computerSystem->systemId = '01';
         $computerSystem->version = '1.0';
         $computerSystem->installationNumber = '001';
-        $computerSystem->onlyVerifactu = \eseperio\verifactu\models\enums\YesNoType::YES;
-        $computerSystem->multipleObligations = \eseperio\verifactu\models\enums\YesNoType::NO;
-        $computerSystem->hasMultipleObligations = \eseperio\verifactu\models\enums\YesNoType::NO;
+        $computerSystem->onlyVerifactu = YesNoType::YES;
+        $computerSystem->multipleObligations = YesNoType::NO;
+        $computerSystem->hasMultipleObligations = YesNoType::NO;
         $submission->setSystemInfo($computerSystem);
 
         // Set other required fields
         $submission->recordTimestamp = '2023-01-01T12:00:00+01:00';
-        $submission->hashType = \eseperio\verifactu\models\enums\HashType::SHA_256;
+        $submission->hashType = HashType::SHA_256;
         $submission->hash = 'abcdef1234567890abcdef1234567890';
 
         // Create a breakdown
-        $breakdown = new \eseperio\verifactu\models\Breakdown();
-        $detail = new \eseperio\verifactu\models\BreakdownDetail();
+        $breakdown = new Breakdown();
+        $detail = new BreakdownDetail();
         $detail->taxableBase = 100.00;
         $detail->taxRate = 21.00;
         $detail->taxAmount = 21.00;
-        $detail->operationQualification = \eseperio\verifactu\models\enums\OperationQualificationType::SUBJECT_NO_EXEMPT_NO_REVERSE;
+        $detail->operationQualification = OperationQualificationType::SUBJECT_NO_EXEMPT_NO_REVERSE;
         $breakdown->addDetail($detail);
         $submission->setBreakdown($breakdown);
 
@@ -118,7 +128,7 @@ class InvoiceSubmissionTest extends TestCase
         $this->assertEquals('F1', $submission->invoiceType);
         $this->assertEquals(21.00, $submission->taxAmount);
         $this->assertEquals(121.00, $submission->totalAmount);
-        $this->assertInstanceOf(\eseperio\verifactu\models\InvoiceId::class, $submission->getInvoiceId());
+        $this->assertInstanceOf(InvoiceId::class, $submission->getInvoiceId());
         $this->assertEquals('B12345678', $submission->getInvoiceId()->issuerNif);
         $this->assertEquals('FACT-001', $submission->getInvoiceId()->seriesNumber);
         $this->assertEquals('2023-01-01', $submission->getInvoiceId()->issueDate);

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace eseperio\verifactu\models\enums;
 
 /**
@@ -7,12 +10,12 @@ namespace eseperio\verifactu\models\enums;
 enum RectificationType: string
 {
     /**
-     * Substitutive rectification
+     * Substitutive rectification.
      */
     case SUBSTITUTIVE = 'S';
-    
+
     /**
-     * Incremental rectification
+     * Incremental rectification.
      */
     case INCREMENTAL = 'I';
 }

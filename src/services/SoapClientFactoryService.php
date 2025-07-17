@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace eseperio\verifactu\services;
 
 /**
@@ -14,10 +17,9 @@ class SoapClientFactoryService
      * @param string $certPath Path to the X.509 certificate (PEM or PFX)
      * @param string $certPassword Certificate password (if any)
      * @param array $options  Additional SoapClient options (optional)
-     * @return \SoapClient
      * @throws \RuntimeException
      */
-    public static function createSoapClient($wsdl, $certPath, $certPassword = '', $options = [])
+    public static function createSoapClient($wsdl, $certPath, $certPassword = '', $options = []): \SoapClient
     {
         if (!file_exists($certPath)) {
             throw new \RuntimeException("Certificate file not found: $certPath");

@@ -1,33 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace eseperio\verifactu\tests\Unit\Examples;
 
-use PHPUnit\Framework\TestCase;
-use eseperio\verifactu\Verifactu;
-use eseperio\verifactu\models\InvoiceSubmission;
-use eseperio\verifactu\models\InvoiceCancellation;
-use eseperio\verifactu\models\InvoiceId;
 use eseperio\verifactu\models\Breakdown;
 use eseperio\verifactu\models\BreakdownDetail;
 use eseperio\verifactu\models\Chaining;
 use eseperio\verifactu\models\ComputerSystem;
-use eseperio\verifactu\models\LegalPerson;
+use eseperio\verifactu\models\enums\GeneratorType;
+use eseperio\verifactu\models\enums\HashType;
 use eseperio\verifactu\models\enums\InvoiceType;
-use eseperio\verifactu\models\enums\RectificationType;
 use eseperio\verifactu\models\enums\OperationQualificationType;
 use eseperio\verifactu\models\enums\YesNoType;
-use eseperio\verifactu\models\enums\HashType;
-use eseperio\verifactu\models\enums\GeneratorType;
+use eseperio\verifactu\models\InvoiceCancellation;
+use eseperio\verifactu\models\InvoiceId;
+use eseperio\verifactu\models\InvoiceSubmission;
+use eseperio\verifactu\models\LegalPerson;
+use PHPUnit\Framework\TestCase;
 
 /**
- * Test cases based on README.md examples to ensure they work correctly
+ * Test cases based on README.md examples to ensure they work correctly.
  */
 class ReadmeExamplesTest extends TestCase
 {
     /**
-     * Test the invoice registration example from README.md
+     * Test the invoice registration example from README.md.
      */
-    public function testInvoiceRegistrationExample()
+    public function testInvoiceRegistrationExample(): void
     {
         // Create invoice exactly as shown in README example
         $invoice = new InvoiceSubmission();
@@ -103,7 +103,7 @@ class ReadmeExamplesTest extends TestCase
         }
 
         // Assertions to verify the example works
-        $this->assertTrue($validationResult === true, 'Invoice validation should pass');
+        $this->assertTrue($validationResult, 'Invoice validation should pass');
         $this->assertInstanceOf(InvoiceId::class, $invoice->getInvoiceId());
         $this->assertEquals('B12345678', $invoice->getInvoiceId()->issuerNif);
         $this->assertEquals('FA2024/001', $invoice->getInvoiceId()->seriesNumber);
@@ -116,9 +116,9 @@ class ReadmeExamplesTest extends TestCase
     }
 
     /**
-     * Test the invoice cancellation example from README.md
+     * Test the invoice cancellation example from README.md.
      */
-    public function testInvoiceCancellationExample()
+    public function testInvoiceCancellationExample(): void
     {
         // Create cancellation exactly as shown in README example
         $cancellation = new InvoiceCancellation();
@@ -137,7 +137,7 @@ class ReadmeExamplesTest extends TestCase
             'seriesNumber' => 'FA2024/000',
             'issuerNif' => 'B12345678',
             'issueDate' => '2024-06-30',
-            'hash' => '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
+            'hash' => '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         ]);
         $cancellation->setChaining($chaining);
 
@@ -179,7 +179,7 @@ class ReadmeExamplesTest extends TestCase
         }
 
         // Assertions to verify the example works
-        $this->assertTrue($validationResult === true, 'Cancellation validation should pass');
+        $this->assertTrue($validationResult, 'Cancellation validation should pass');
         $this->assertInstanceOf(InvoiceId::class, $cancellation->getInvoiceId());
         $this->assertEquals('B12345678', $cancellation->getInvoiceId()->issuerNif);
         $this->assertEquals('FA2024/001', $cancellation->getInvoiceId()->seriesNumber);

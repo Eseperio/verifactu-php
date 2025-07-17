@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace eseperio\verifactu\models;
 
 /**
@@ -25,7 +28,6 @@ abstract class Model
      */
     abstract public function rules();
 
-
     /**
      * Validates model properties based on rules().
      * Returns true if all validations pass, otherwise returns an array of error messages.
@@ -35,6 +37,7 @@ abstract class Model
     public function validate()
     {
         $errors = [];
+
         foreach ($this->rules() as $rule) {
             $properties = $rule[0];
             $validator = $rule[1];
@@ -44,22 +47,20 @@ abstract class Model
 
             foreach ($properties as $property) {
                 // Try to get value using getter method first
-                $getter = 'get' . ucfirst($property);
-                if (method_exists($this, $getter)) {
-                    $value = $this->$getter();
-                } else {
-                    $value = isset($this->$property) ? $this->$property : null;
-                }
+                $getter = 'get' . ucfirst((string) $property);
+
+                $value = method_exists($this, $getter) ? $this->$getter() : $this->$property ?? null;
 
                 if ($validator === 'required') {
-                    if ($value === null || $value === '' || (is_array($value) && empty($value))) {
-                        $errors[$property][] = "This field is required.";
+                    if ($value === null || $value === '' || ($value === [])) {
+                        $errors[$property][] = 'This field is required.';
                     }
                     continue;
                 }
 
                 if (is_callable($validator)) {
                     $result = call_user_func($validator, $value, $this);
+
                     if ($result !== true) {
                         $errors[$property][] = is_string($result) ? $result : "Validation failed for $property.";
                     }
@@ -68,26 +69,26 @@ abstract class Model
                     if ($value === null && in_array($validator, ['string', 'integer', 'float', 'email'])) {
                         continue;
                     }
-                    
+
                     switch ($validator) {
                         case 'string':
                             if (!is_string($value)) {
-                                $errors[$property][] = "Must be a string.";
+                                $errors[$property][] = 'Must be a string.';
                             }
                             break;
                         case 'integer':
                             if (!is_int($value)) {
-                                $errors[$property][] = "Must be an integer.";
+                                $errors[$property][] = 'Must be an integer.';
                             }
                             break;
                         case 'float':
                             if (!is_float($value) && !is_int($value)) {
-                                $errors[$property][] = "Must be a float.";
+                                $errors[$property][] = 'Must be a float.';
                             }
                             break;
                         case 'email':
                             if (!is_string($value) || !filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                                $errors[$property][] = "Must be a valid email address.";
+                                $errors[$property][] = 'Must be a valid email address.';
                             }
                             break;
                         default:
@@ -97,7 +98,7 @@ abstract class Model
             }
         }
 
-        return empty($errors) ? true : $errors;
+        return $errors === [] ? true : $errors;
     }
 
     /**
@@ -110,6 +111,7 @@ abstract class Model
     public function validateExceptHash()
     {
         $errors = [];
+
         foreach ($this->rules() as $rule) {
             $properties = $rule[0];
             $validator = $rule[1];
@@ -122,24 +124,22 @@ abstract class Model
                 if ($property === 'hash') {
                     continue;
                 }
-                
+
                 // Try to get value using getter method first
-                $getter = 'get' . ucfirst($property);
-                if (method_exists($this, $getter)) {
-                    $value = $this->$getter();
-                } else {
-                    $value = isset($this->$property) ? $this->$property : null;
-                }
+                $getter = 'get' . ucfirst((string) $property);
+
+                $value = method_exists($this, $getter) ? $this->$getter() : $this->$property ?? null;
 
                 if ($validator === 'required') {
-                    if ($value === null || $value === '' || (is_array($value) && empty($value))) {
-                        $errors[$property][] = "This field is required.";
+                    if ($value === null || $value === '' || ($value === [])) {
+                        $errors[$property][] = 'This field is required.';
                     }
                     continue;
                 }
 
                 if (is_callable($validator)) {
                     $result = call_user_func($validator, $value, $this);
+
                     if ($result !== true) {
                         $errors[$property][] = is_string($result) ? $result : "Validation failed for $property.";
                     }
@@ -148,26 +148,26 @@ abstract class Model
                     if ($value === null && in_array($validator, ['string', 'integer', 'float', 'email'])) {
                         continue;
                     }
-                    
+
                     switch ($validator) {
                         case 'string':
                             if (!is_string($value)) {
-                                $errors[$property][] = "Must be a string.";
+                                $errors[$property][] = 'Must be a string.';
                             }
                             break;
                         case 'integer':
                             if (!is_int($value)) {
-                                $errors[$property][] = "Must be an integer.";
+                                $errors[$property][] = 'Must be an integer.';
                             }
                             break;
                         case 'float':
                             if (!is_float($value) && !is_int($value)) {
-                                $errors[$property][] = "Must be a float.";
+                                $errors[$property][] = 'Must be a float.';
                             }
                             break;
                         case 'email':
                             if (!is_string($value) || !filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                                $errors[$property][] = "Must be a valid email address.";
+                                $errors[$property][] = 'Must be a valid email address.';
                             }
                             break;
                         default:
@@ -177,6 +177,6 @@ abstract class Model
             }
         }
 
-        return empty($errors) ? true : $errors;
+        return $errors === [] ? true : $errors;
     }
 }

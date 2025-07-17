@@ -1,21 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit;
 
-use eseperio\verifactu\services\HashGeneratorService;
-use eseperio\verifactu\models\InvoiceSubmission;
-use eseperio\verifactu\models\InvoiceCancellation;
-use eseperio\verifactu\models\InvoiceId;
 use eseperio\verifactu\models\Breakdown;
 use eseperio\verifactu\models\BreakdownDetail;
 use eseperio\verifactu\models\Chaining;
 use eseperio\verifactu\models\ComputerSystem;
-use eseperio\verifactu\models\LegalPerson;
+use eseperio\verifactu\models\enums\HashType;
 use eseperio\verifactu\models\enums\InvoiceType;
+use eseperio\verifactu\models\enums\OperationQualificationType;
 use eseperio\verifactu\models\enums\TaxType;
 use eseperio\verifactu\models\enums\YesNoType;
-use eseperio\verifactu\models\enums\HashType;
-use eseperio\verifactu\models\enums\OperationQualificationType;
+use eseperio\verifactu\models\InvoiceCancellation;
+use eseperio\verifactu\models\InvoiceId;
+use eseperio\verifactu\models\InvoiceSubmission;
+use eseperio\verifactu\models\LegalPerson;
+use eseperio\verifactu\services\HashGeneratorService;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -93,10 +95,10 @@ class HashGeneratorEncapsulationTest extends TestCase
         // Verify that a hash was generated
         $this->assertIsString($hash, 'Hash should be generated as a string');
         $this->assertNotEmpty($hash, 'Hash should not be empty');
-        
+
         // Verify it's a proper base64 encoded hash
         $this->assertMatchesRegularExpression('/^[A-Za-z0-9+\/]+=*$/', $hash, 'Hash should be base64 encoded');
-        
+
         // Verify the hash has a reasonable length for SHA-256 base64
         $decodedLength = strlen(base64_decode($hash));
         $this->assertEquals(32, $decodedLength, 'Decoded hash should be 32 bytes (SHA-256)');
@@ -145,10 +147,10 @@ class HashGeneratorEncapsulationTest extends TestCase
         // Verify that a hash was generated
         $this->assertIsString($hash, 'Hash should be generated as a string');
         $this->assertNotEmpty($hash, 'Hash should not be empty');
-        
+
         // Verify it's a proper base64 encoded hash
         $this->assertMatchesRegularExpression('/^[A-Za-z0-9+\/]+=*$/', $hash, 'Hash should be base64 encoded');
-        
+
         // Verify the hash has a reasonable length for SHA-256 base64
         $decodedLength = strlen(base64_decode($hash));
         $this->assertEquals(32, $decodedLength, 'Decoded hash should be 32 bytes (SHA-256)');

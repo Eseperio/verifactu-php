@@ -1,19 +1,21 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit;
 
-use eseperio\verifactu\models\InvoiceSubmission;
-use eseperio\verifactu\models\InvoiceId;
 use eseperio\verifactu\models\Breakdown;
 use eseperio\verifactu\models\BreakdownDetail;
 use eseperio\verifactu\models\Chaining;
 use eseperio\verifactu\models\ComputerSystem;
-use eseperio\verifactu\models\LegalPerson;
+use eseperio\verifactu\models\enums\HashType;
 use eseperio\verifactu\models\enums\InvoiceType;
+use eseperio\verifactu\models\enums\OperationQualificationType;
 use eseperio\verifactu\models\enums\TaxType;
 use eseperio\verifactu\models\enums\YesNoType;
-use eseperio\verifactu\models\enums\HashType;
-use eseperio\verifactu\models\enums\OperationQualificationType;
+use eseperio\verifactu\models\InvoiceId;
+use eseperio\verifactu\models\InvoiceSubmission;
+use eseperio\verifactu\models\LegalPerson;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -40,7 +42,7 @@ class HashValidationFixTest extends TestCase
         $invoice->operationDescription = 'Venta de productos';
         $invoice->taxAmount = 21.00;
         $invoice->totalAmount = 121.00;
-        $invoice->simplifiedInvoice = YesNoType::NO; // Changed from selfEmployment 
+        $invoice->simplifiedInvoice = YesNoType::NO; // Changed from selfEmployment
         $invoice->invoiceWithoutRecipient = YesNoType::NO; // Changed from simplifiedRegime
 
         // Add tax breakdown
@@ -87,6 +89,7 @@ class HashValidationFixTest extends TestCase
 
         return $invoice;
     }
+
     public function testInvoiceValidationWorksWithoutHashBeforeGeneration(): void
     {
         // Create a complete invoice without hash
@@ -111,14 +114,14 @@ class HashValidationFixTest extends TestCase
     {
         // Create a minimal invoice with missing required fields
         $invoice = new InvoiceSubmission();
-        
+
         // Only set a few fields, leaving most required fields empty
         $invoice->issuerName = 'Test Company';
-        
+
         // validateExceptHash should still find other missing required fields
         $validationResult = $invoice->validateExceptHash();
         $this->assertIsArray($validationResult, 'validateExceptHash should find other missing required fields');
-        
+
         // But it should NOT complain about missing hash
         $this->assertArrayNotHasKey('hash', $validationResult, 'validateExceptHash should not complain about missing hash');
     }

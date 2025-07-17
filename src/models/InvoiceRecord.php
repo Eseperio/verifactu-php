@@ -1,13 +1,16 @@
 <?php
 
+declare(strict_types=1);
+
 namespace eseperio\verifactu\models;
 
+use eseperio\verifactu\models\enums\YesNoType;
 use eseperio\verifactu\models\enums\HashType;
 
 /**
  * Abstract base class for invoice records (submissions and cancellations).
  * Contains common fields and validation rules for RegistroAlta and RegistroAnulacion.
- * Original schema: RegistroType
+ * Original schema: RegistroType.
  * @see docs/aeat/esquemas/SuministroInformacion.xsd.xml
  */
 abstract class InvoiceRecord extends Model
@@ -21,31 +24,31 @@ abstract class InvoiceRecord extends Model
     public $versionId = '1.0';
 
     /**
-     * Invoice identification data (<IDFactura> or <IDFacturaAnulada>)
-     * @var \eseperio\verifactu\models\InvoiceId
+     * Invoice identification data (<IDFactura> or <IDFacturaAnulada>).
+     * @var InvoiceId
      */
     protected $invoiceId;
 
     /**
-     * External reference (RefExterna, optional)
+     * External reference (RefExterna, optional).
      * @var string
      */
     public $externalRef;
 
     /**
-     * Chaining data (Encadenamiento), for hash linkage with previous record
-     * @var \eseperio\verifactu\models\Chaining
+     * Chaining data (Encadenamiento), for hash linkage with previous record.
+     * @var Chaining
      */
     protected $chaining;
 
     /**
-     * System information (SistemaInformatico)
-     * @var \eseperio\verifactu\models\ComputerSystem
+     * System information (SistemaInformatico).
+     * @var ComputerSystem
      */
     protected $systemInfo;
 
     /**
-     * Record timestamp with timezone (FechaHoraHusoGenRegistro)
+     * Record timestamp with timezone (FechaHoraHusoGenRegistro).
      * @var string
      */
     public $recordTimestamp;
@@ -53,25 +56,25 @@ abstract class InvoiceRecord extends Model
     /**
      * Hash type (TipoHuella)
      * Always SHA-256 as per AEAT specification.
-     * @var \eseperio\verifactu\models\enums\HashType
+     * @var HashType
      */
     public $hashType = HashType::SHA_256;
 
     /**
-     * Record hash (Huella)
+     * Record hash (Huella).
      * @var string
      */
     public $hash;
 
     /**
-     * XML Signature block (optional, for signed XML)
+     * XML Signature block (optional, for signed XML).
      * @var string
      */
     public $xmlSignature;
 
     /**
-     * Get the invoice ID
-     * @return \eseperio\verifactu\models\InvoiceId
+     * Get the invoice ID.
+     * @return InvoiceId
      */
     public function getInvoiceId()
     {
@@ -79,8 +82,8 @@ abstract class InvoiceRecord extends Model
     }
 
     /**
-     * Set the invoice ID
-     * @param \eseperio\verifactu\models\InvoiceId|array $invoiceId InvoiceId object or array with issuerNif, seriesNumber, and issueDate
+     * Set the invoice ID.
+     * @param InvoiceId|array $invoiceId InvoiceId object or array with issuerNif, seriesNumber, and issueDate
      * @return $this
      */
     public function setInvoiceId($invoiceId)
@@ -94,12 +97,13 @@ abstract class InvoiceRecord extends Model
         } else {
             $this->invoiceId = $invoiceId;
         }
+
         return $this;
     }
 
     /**
-     * Get the chaining data
-     * @return \eseperio\verifactu\models\Chaining
+     * Get the chaining data.
+     * @return Chaining
      */
     public function getChaining()
     {
@@ -107,8 +111,8 @@ abstract class InvoiceRecord extends Model
     }
 
     /**
-     * Set the chaining data
-     * @param \eseperio\verifactu\models\Chaining|array $chaining Chaining data
+     * Set the chaining data.
+     * @param Chaining|array $chaining Chaining data
      * @return $this
      */
     public function setChaining($chaining)
@@ -138,11 +142,12 @@ abstract class InvoiceRecord extends Model
         } else {
             $this->chaining = $chaining;
         }
+
         return $this;
     }
 
     /**
-     * Set this as the first record in a chain
+     * Set this as the first record in a chain.
      * @return $this
      */
     public function setAsFirstRecord()
@@ -150,12 +155,13 @@ abstract class InvoiceRecord extends Model
         $chainingObj = new Chaining();
         $chainingObj->setAsFirstRecord();
         $this->chaining = $chainingObj;
+
         return $this;
     }
 
     /**
-     * Get the system information
-     * @return \eseperio\verifactu\models\ComputerSystem
+     * Get the system information.
+     * @return ComputerSystem
      */
     public function getSystemInfo()
     {
@@ -163,8 +169,8 @@ abstract class InvoiceRecord extends Model
     }
 
     /**
-     * Set the system information
-     * @param \eseperio\verifactu\models\ComputerSystem|array $systemInfo System information
+     * Set the system information.
+     * @param ComputerSystem|array $systemInfo System information
      * @return $this
      */
     public function setSystemInfo($systemInfo)
@@ -179,9 +185,9 @@ abstract class InvoiceRecord extends Model
                 $computerSystem->providerName = $systemInfo['providerName'] ?? 'Default Provider';
                 $computerSystem->systemId = $systemInfo['systemId'] ?? '01';
                 $computerSystem->installationNumber = $systemInfo['installationNumber'] ?? '1';
-                $computerSystem->onlyVerifactu = $systemInfo['onlyVerifactu'] ?? \eseperio\verifactu\models\enums\YesNoType::YES;
-                $computerSystem->multipleObligations = $systemInfo['multipleObligations'] ?? \eseperio\verifactu\models\enums\YesNoType::NO;
-                $computerSystem->hasMultipleObligations = $systemInfo['hasMultipleObligations'] ?? \eseperio\verifactu\models\enums\YesNoType::NO;
+                $computerSystem->onlyVerifactu = $systemInfo['onlyVerifactu'] ?? YesNoType::YES;
+                $computerSystem->multipleObligations = $systemInfo['multipleObligations'] ?? YesNoType::NO;
+                $computerSystem->hasMultipleObligations = $systemInfo['hasMultipleObligations'] ?? YesNoType::NO;
 
                 // Set provider ID if available
                 if (isset($systemInfo['providerId'])) {
@@ -198,6 +204,7 @@ abstract class InvoiceRecord extends Model
             } else {
                 // Array with system info data
                 $computerSystem = new ComputerSystem();
+
                 foreach ($systemInfo as $key => $value) {
                     if (property_exists($computerSystem, $key)) {
                         $computerSystem->$key = $value;
@@ -208,6 +215,7 @@ abstract class InvoiceRecord extends Model
         } else {
             $this->systemInfo = $systemInfo;
         }
+
         return $this;
     }
 
@@ -221,21 +229,11 @@ abstract class InvoiceRecord extends Model
         return [
             [['versionId', 'invoiceId', 'chaining', 'systemInfo', 'recordTimestamp', 'hashType', 'hash'], 'required'],
             [['versionId', 'recordTimestamp', 'hash', 'externalRef', 'xmlSignature'], 'string'],
-            ['invoiceId', function($value) {
-                return ($value instanceof InvoiceId) ? true : 'Must be an instance of InvoiceId.';
-            }],
-            ['chaining', function($value) {
-                return ($value instanceof Chaining) ? true : 'Must be an instance of Chaining.';
-            }],
-            ['systemInfo', function($value) {
-                return ($value instanceof ComputerSystem) ? true : 'Must be an instance of ComputerSystem.';
-            }],
-            ['hashType', function($value) {
-                return ($value instanceof HashType) ? true : 'Must be an instance of HashType.';
-            }],
-            [['externalRef', 'xmlSignature'], function ($value) {
-                return (is_null($value) || is_string($value)) ? true : 'Must be string or null.';
-            }],
+            ['invoiceId', fn($value): bool|string => ($value instanceof InvoiceId) ? true : 'Must be an instance of InvoiceId.'],
+            ['chaining', fn($value): bool|string => ($value instanceof Chaining) ? true : 'Must be an instance of Chaining.'],
+            ['systemInfo', fn($value): bool|string => ($value instanceof ComputerSystem) ? true : 'Must be an instance of ComputerSystem.'],
+            ['hashType', fn($value): bool|string => ($value instanceof HashType) ? true : 'Must be an instance of HashType.'],
+            [['externalRef', 'xmlSignature'], fn($value): bool|string => (is_null($value) || is_string($value)) ? true : 'Must be string or null.'],
         ];
     }
 }
