@@ -86,10 +86,13 @@ class VerifactuService
     protected static function getClient()
     {
         if (self::$client === null) {
+            $environment = self::$config['environment'] ?? null;
             self::$client = SoapClientFactoryService::createSoapClient(
                 self::getConfig(self::WSDL_ENDPOINT),
                 self::getConfig(self::CERT_PATH_KEY),
-                self::getConfig(self::CERT_PASSWORD_KEY)
+                self::getConfig(self::CERT_PASSWORD_KEY),
+                [],
+                $environment
             );
         }
 

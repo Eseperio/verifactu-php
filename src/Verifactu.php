@@ -106,6 +106,7 @@ class Verifactu
             VerifactuService::CERT_PASSWORD_KEY => $certPassword,
             VerifactuService::WSDL_ENDPOINT => $endpoint,
             VerifactuService::QR_VERIFICATION_URL => $qrValidationUrl,
+            'environment' => $environment,
         ]);
     }
 
@@ -140,6 +141,7 @@ class Verifactu
             VerifactuService::CERT_CONTENT_TYPE_KEY => $certType,
             VerifactuService::WSDL_ENDPOINT => $endpoint,
             VerifactuService::QR_VERIFICATION_URL => $qrValidationUrl,
+            'environment' => $environment,
         ]);
     }
 

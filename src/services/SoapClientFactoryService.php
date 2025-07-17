@@ -70,4 +70,16 @@ class SoapClientFactoryService
             throw new \RuntimeException('Unable to create SoapClient: ' . $e->getMessage(), 0, $e);
         }
     }
+
+    /**
+     * Returns the WSDL path or URL that would be used for the given environment.
+     * For testing purposes only.
+     */
+    public static function getWsdlForTest($wsdl, $environment)
+    {
+        if ($environment === 'sandbox') {
+            return realpath(__DIR__ . '/../../docs/aeat/SistemaFacturacion.wsdl.xml');
+        }
+        return $wsdl;
+    }
 }
