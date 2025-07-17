@@ -52,10 +52,23 @@ class Verifactu
     public const TYPE_SEAL = 'seal';
 
     /**
-     * @param $certPath string Path to the certificate file.
-     * @param $certPassword string Password for the certificate.
-     * @param $certType string Type of certificate, either 'certificate' or 'seal'.
-     * @param $environment string Environment to use, either 'production' or 'sandbox'.
+     * Certificate content (PEM/PFX/P12).
+     * @var string|null
+     */
+    protected static ?string $certContent = null;
+
+    /**
+     * Certificate type ('certificate' or 'seal').
+     * @var string|null
+     */
+    protected static ?string $certContentType = null;
+
+    /**
+     * Configuration using certificate file path (backward compatibility).
+     * @param string $certPath Path to the certificate file.
+     * @param string $certPassword Password for the certificate.
+     * @param string $certType Type of certificate, either 'certificate' or 'seal'.
+     * @param string $environment Environment to use, either 'production' or 'sandbox'.
      */
     public static function config($certPath, $certPassword, $certType, $environment = self::ENVIRONMENT_PRODUCTION): void
     {
@@ -71,9 +84,46 @@ class Verifactu
             default => throw new \InvalidArgumentException("Invalid environment: $environment")
         };
 
+        self::$certContent = null;
+        self::$certContentType = null;
+
         VerifactuService::config([
             VerifactuService::CERT_PATH_KEY => $certPath,
             VerifactuService::CERT_PASSWORD_KEY => $certPassword,
+            VerifactuService::WSDL_ENDPOINT => $endpoint,
+            VerifactuService::QR_VERIFICATION_URL => $qrValidationUrl,
+        ]);
+    }
+
+    /**
+     * Alternative configuration using certificate content string.
+     * @param string $certContent Certificate content (PEM/PFX/P12)
+     * @param string $certPassword Certificate password
+     * @param string $certType Type of certificate ('certificate' or 'seal')
+     * @param string $environment Environment ('production' or 'sandbox')
+     */
+    public static function configWithContent($certContent, $certPassword, $certType, $environment = self::ENVIRONMENT_PRODUCTION): void
+    {
+        $endpoint = match ($environment) {
+            self::ENVIRONMENT_PRODUCTION => $certType === self::TYPE_SEAL ? self::URL_PRODUCTION_SEAL : self::URL_PRODUCTION,
+            self::ENVIRONMENT_SANDBOX => $certType === self::TYPE_SEAL ? self::URL_TEST_SEAL : self::URL_TEST,
+            default => throw new \InvalidArgumentException("Invalid environment: $environment")
+        };
+
+        $qrValidationUrl = match ($environment) {
+            self::ENVIRONMENT_PRODUCTION => self::QR_VERIFICATION_URL_PRODUCTION,
+            self::ENVIRONMENT_SANDBOX => self::QR_VERIFICATION_URL_TEST,
+            default => throw new \InvalidArgumentException("Invalid environment: $environment")
+        };
+
+        self::$certContent = $certContent;
+        self::$certContentType = $certType;
+
+        VerifactuService::config([
+            VerifactuService::CERT_PATH_KEY => null,
+            VerifactuService::CERT_PASSWORD_KEY => $certPassword,
+            VerifactuService::CERT_CONTENT_KEY => $certContent,
+            VerifactuService::CERT_CONTENT_TYPE_KEY => $certType,
             VerifactuService::WSDL_ENDPOINT => $endpoint,
             VerifactuService::QR_VERIFICATION_URL => $qrValidationUrl,
         ]);

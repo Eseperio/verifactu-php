@@ -11,8 +11,55 @@ namespace eseperio\verifactu\services;
 class CertificateManagerService
 {
     /**
-     * Loads and returns the X.509 certificate contents.
-     *
+     * Loads and returns the X.509 certificate contents from certificate content string.
+     * @param string $certContent Certificate content (PEM or PFX)
+     * @param string $certPassword Certificate password (if required)
+     * @return string Certificate contents (PEM format)
+     * @throws \RuntimeException
+     */
+    public static function getCertificateFromContent($certContent, $certPassword = ''): string|false
+    {
+        // Try to detect format
+        if (str_contains($certContent, '-----BEGIN CERTIFICATE-----')) {
+            // PEM format
+            return $certContent;
+        }
+        // Try PFX/P12
+        $certs = [];
+        if (!openssl_pkcs12_read($certContent, $certs, $certPassword)) {
+            throw new \RuntimeException('Unable to read PFX/P12 certificate from content. Wrong password or format?');
+        }
+        return $certs['cert'] . ($certs['pkey'] ?? '');
+    }
+
+    /**
+     * Loads and returns the private key from certificate content string.
+     * @param string $certContent Certificate content (PEM or PFX)
+     * @param string $certPassword Certificate password (if required)
+     * @return string Private key in PEM format
+     * @throws \RuntimeException
+     */
+    public static function getPrivateKeyFromContent($certContent, $certPassword = ''): string|false
+    {
+        if (str_contains($certContent, '-----BEGIN')) {
+            // PEM format
+            $key = openssl_pkey_get_private($certContent, $certPassword);
+            if (!$key) {
+                throw new \RuntimeException('Unable to extract private key from PEM content.');
+            }
+            openssl_pkey_export($key, $outKey, $certPassword);
+            return $outKey;
+        }
+        // Try PFX/P12
+        $certs = [];
+        if (!openssl_pkcs12_read($certContent, $certs, $certPassword)) {
+            throw new \RuntimeException('Unable to read PFX/P12 certificate from content. Wrong password or format?');
+        }
+        return $certs['pkey'];
+    }
+
+    /**
+     * Loads and returns the X.509 certificate contents from a file path.
      * @param string $certPath Path to the certificate file (PEM or PFX)
      * @param string $certPassword Certificate password (if required)
      * @return string Certificate contents (PEM format)
@@ -46,8 +93,7 @@ class CertificateManagerService
     }
 
     /**
-     * Loads and returns the private key from the certificate.
-     *
+     * Loads and returns the private key from a certificate file path.
      * @param string $certPath Path to the certificate file (PEM or PFX)
      * @param string $certPassword Certificate password (if required)
      * @return string Private key in PEM format
@@ -78,12 +124,10 @@ class CertificateManagerService
         else {
             throw new \RuntimeException("Unsupported certificate format: $ext");
         }
-        return null;
     }
 
     /**
-     * Checks if a certificate is valid (by expiration).
-     *
+     * Checks if a certificate is valid by expiration date.
      * @param string $certPath Path to the certificate file
      * @param string $certPassword Certificate password
      * @return bool

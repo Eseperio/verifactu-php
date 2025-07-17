@@ -30,6 +30,14 @@ class VerifactuService
      */
     public const CERT_PASSWORD_KEY = 'certPassword';
     /**
+     * Certificate content parameter name (in-memory).
+     */
+    public const CERT_CONTENT_KEY = 'certContent';
+    /**
+     * Certificate content type parameter name (in-memory).
+     */
+    public const CERT_CONTENT_TYPE_KEY = 'certContentType';
+    /**
      * Environment: production.
      */
     public const QR_VERIFICATION_URL = 'qrValidationUrl';
@@ -118,11 +126,19 @@ class VerifactuService
         $xml = self::buildInvoiceXml($invoice);
 
         // 4. Sign XML
-        $signedXml = XmlSignerService::signXml(
-            $xml,
-            self::getConfig(self::CERT_PATH_KEY),
-            self::getConfig(self::CERT_PASSWORD_KEY)
-        );
+        if (!empty(self::$config[self::CERT_CONTENT_KEY])) {
+            $signedXml = XmlSignerService::signXmlWithContent(
+                $xml,
+                self::getConfig(self::CERT_CONTENT_KEY),
+                self::getConfig(self::CERT_PASSWORD_KEY)
+            );
+        } else {
+            $signedXml = XmlSignerService::signXml(
+                $xml,
+                self::getConfig(self::CERT_PATH_KEY),
+                self::getConfig(self::CERT_PASSWORD_KEY)
+            );
+        }
 
         // 5. Get SOAP client
         $client = self::getClient();
@@ -159,11 +175,19 @@ class VerifactuService
             throw new \InvalidArgumentException('InvoiceCancellation final validation failed: ' . print_r($finalValidation, true));
         }
         $xml = self::buildCancellationXml($cancellation);
-        $signedXml = XmlSignerService::signXml(
-            $xml,
-            self::getConfig(self::CERT_PATH_KEY),
-            self::getConfig(self::CERT_PASSWORD_KEY)
-        );
+        if (!empty(self::$config[self::CERT_CONTENT_KEY])) {
+            $signedXml = XmlSignerService::signXmlWithContent(
+                $xml,
+                self::getConfig(self::CERT_CONTENT_KEY),
+                self::getConfig(self::CERT_PASSWORD_KEY)
+            );
+        } else {
+            $signedXml = XmlSignerService::signXml(
+                $xml,
+                self::getConfig(self::CERT_PATH_KEY),
+                self::getConfig(self::CERT_PASSWORD_KEY)
+            );
+        }
         $client = self::getClient();
         $params = ['RegistroAnulacion' => $signedXml];
         $responseXml = $client->__soapCall('SuministroLR', [$params]);

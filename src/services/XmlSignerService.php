@@ -14,6 +14,47 @@ use RobRichards\XMLSecLibs\XMLSecurityKey;
 class XmlSignerService
 {
     /**
+     * Signs a given XML string with the provided certificate and private key from content string.
+     * The signature is embedded in the XML (enveloped).
+     *
+     * @param string $xml Original XML to be signed
+     * @param string $certContent Certificate content (PEM or PFX)
+     * @param string $certPassword Password for the certificate
+     * @return string Signed XML
+     * @throws \RuntimeException
+     */
+    public static function signXmlWithContent($xml, $certContent, $certPassword = ''): string|false
+    {
+        $pemCert = CertificateManagerService::getCertificateFromContent($certContent, $certPassword);
+        $privateKey = CertificateManagerService::getPrivateKeyFromContent($certContent, $certPassword);
+
+        if (!class_exists(XMLSecurityDSig::class)) {
+            throw new \RuntimeException('xmlseclibs library is required for XML signing.');
+        }
+
+        $doc = new \DOMDocument();
+        $doc->loadXML($xml);
+
+        $objDSig = new XMLSecurityDSig();
+        $objDSig->setCanonicalMethod(XMLSecurityDSig::EXC_C14N);
+        $objDSig->addReference(
+            $doc,
+            XMLSecurityDSig::SHA256,
+            ['http://www.w3.org/2000/09/xmldsig#enveloped-signature'],
+            ['force_uri' => true]
+        );
+
+        $objKey = new XMLSecurityKey(XMLSecurityKey::RSA_SHA256, ['type' => 'private']);
+        $objKey->loadKey($privateKey, false);
+
+        $objDSig->add509Cert($pemCert, true, false, ['subjectName' => true]);
+
+        $objDSig->sign($objKey);
+        $objDSig->appendSignature($doc->documentElement);
+
+        return $doc->saveXML();
+    }
+    /**
      * Signs a given XML string with the provided certificate and private key.
      * The signature is embedded in the XML (enveloped).
      *
