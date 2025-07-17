@@ -17,7 +17,8 @@ class VerifactuWsdlSelectionUnitTest extends TestCase
             $config[VerifactuService::WSDL_ENDPOINT],
             $config['environment']
         );
-        $this->assertStringContainsString('SistemaFacturacion.wsdl.xml', $wsdl);
+        $this->assertStringContainsString('docs/aeat/SistemaFacturacion.wsdl.xml', $wsdl);
+        $this->assertFalse(str_starts_with($wsdl, '/home/'), 'WSDL path should not be absolute');
     }
 
     public function testWsdlIsRemoteInProduction()

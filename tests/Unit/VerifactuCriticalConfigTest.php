@@ -22,6 +22,7 @@ class VerifactuCriticalConfigTest extends TestCase
         Verifactu::configWithContent('inmemorycert', 'dummy', Verifactu::TYPE_CERTIFICATE, Verifactu::ENVIRONMENT_SANDBOX);
         $config = (new \ReflectionClass(VerifactuService::class))->getStaticProperties()['config'];
         $wsdl = $config[VerifactuService::WSDL_ENDPOINT];
-        $this->assertStringContainsString('SistemaFacturacion.wsdl.xml', $wsdl);
+        $this->assertStringContainsString('docs/aeat/SistemaFacturacion.wsdl.xml', $wsdl);
+        $this->assertFalse(str_starts_with($wsdl, '/home/'), 'WSDL path should not be absolute');
     }
 }

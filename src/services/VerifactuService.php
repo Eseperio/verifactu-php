@@ -17,79 +17,54 @@ use eseperio\verifactu\models\QueryResponse;
  */
 class VerifactuService
 {
-    /**
-     * WSDL parameter name.
-     */
+    /** WSDL parameter name. Use the official AEAT WSDL provided in documentos api/SistemaFacturacion.wsdl.xml */
     public const WSDL_ENDPOINT = 'wsdl';
-    /**
-     * Certificate path parameter name.
-     */
+    /** Certificate path parameter name. */
     public const CERT_PATH_KEY = 'certPath';
-    /**
-     * Certificate password parameter name.
-     */
+    /** Certificate password parameter name. */
     public const CERT_PASSWORD_KEY = 'certPassword';
-    /**
-     * Certificate content parameter name (in-memory).
-     */
+    /** Certificate content parameter name. */
     public const CERT_CONTENT_KEY = 'certContent';
-    /**
-     * Certificate content type parameter name (in-memory).
-     */
+    /** Certificate content type parameter name. */
     public const CERT_CONTENT_TYPE_KEY = 'certContentType';
-    /**
-     * Environment: production.
-     */
+    /** QR verification URL parameter name. */
     public const QR_VERIFICATION_URL = 'qrValidationUrl';
 
-    /**
-     * Global configuration for Verifactu service.
-     * @var array
-     */
+    /** Global configuration for Verifactu service. @var array */
     protected static $config = [];
 
-    /**
-     * Soap instance for communication with AEAT.
-     * @var \SoapClient|null
-     */
+    /** Soap instance for communication with AEAT. @var \SoapClient|null */
     protected static $client;
 
-    /**
-     * Establece la configuración global.
-     * @param array $data
-     */
+    /** Sets the global configuration. @param array $data */
     public static function config($data): void
     {
+        // Use official AEAT WSDL from repo if not set in config
+        if (!isset($data[self::WSDL_ENDPOINT]) || empty($data[self::WSDL_ENDPOINT])) {
+            $data[self::WSDL_ENDPOINT] = __DIR__ . '/../docs/aeat/SistemaFacturacion.wsdl.xml';
+        }
         self::$config = $data;
         self::$client = null;
     }
 
-    /**
-     * Obtiene uns parámetro de configuración.
-     * @param string $param
-     * @return mixed
-     * @throws \InvalidArgumentException
-     */
+    /** Gets a configuration parameter. @param string $param @return mixed @throws \InvalidArgumentException */
     public static function getConfig($param)
     {
         if (!isset(self::$config[$param])) {
-            throw new \InvalidArgumentException("El parámetro de configuración '$param' no está definido.");
+            throw new \InvalidArgumentException("Configuration parameter '$param' is not defined.");
         }
 
         return self::$config[$param];
     }
 
-    /**
-     * Devuelve el cliente SOAP, creándolo si es necesario.
-     * @return \SoapClient
-     */
+    /** Returns the SOAP client, creating it if necessary. @return \SoapClient */
     protected static function getClient()
     {
         if (self::$client === null) {
             $environment = self::$config['environment'] ?? null;
             $certPath = self::$config[self::CERT_PATH_KEY] ?? null;
             $certContent = self::$config[self::CERT_CONTENT_KEY] ?? null;
-            // Si existe contenido de certificado, usarlo en vez de la ruta
+            // If certificate content exists, use it instead of the path
             if ($certContent) {
                 $certPath = $certContent;
             }
@@ -244,11 +219,7 @@ class VerifactuService
         return QrGeneratorService::generateQr($record, $baseUrl, $destination, $size, $engine);
     }
 
-    /**
-     * Serializes an InvoiceSubmission to AEAT-compliant RegistroAlta XML.
-     * @return string XML string
-     * @throws \DOMException
-     */
+    /** Serializes an InvoiceSubmission to AEAT-compliant RegistroAlta XML. @return string XML string @throws \DOMException */
     protected static function buildInvoiceXml(InvoiceSubmission $invoice): string|false
     {
         $invoiceDom = $invoice->toXml();
@@ -256,12 +227,7 @@ class VerifactuService
         return $invoiceDom->saveXML();
     }
 
-    /**
-     * Serializes an InvoiceCancellation to AEAT-compliant RegistroAnulacion XML.
-     *
-     * @return string XML string
-     * @throws \DOMException
-     */
+    /** Serializes an InvoiceCancellation to AEAT-compliant RegistroAnulacion XML. @return string XML string @throws \DOMException */
     protected static function buildCancellationXml(InvoiceCancellation $cancellation): string|false
     {
         // Get the XML element from the model
@@ -270,12 +236,7 @@ class VerifactuService
         return $cancellationDom->saveXML();
     }
 
-    /**
-     * Serializes an InvoiceQuery to AEAT-compliant ConsultaFactuSistemaFacturacion XML.
-     *
-     * @return string XML string
-     * @throws \DOMException
-     */
+    /** Serializes an InvoiceQuery to AEAT-compliant ConsultaFactuSistemaFacturacion XML. @return string XML string @throws \DOMException */
     protected static function buildQueryXml(InvoiceQuery $query): string|false
     {
         $queryDom = $query->toXml();
