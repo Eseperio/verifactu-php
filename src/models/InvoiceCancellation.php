@@ -98,6 +98,33 @@ class InvoiceCancellation extends InvoiceRecord
     }
 
     /**
+     * Helper method to rename a DOM element by creating a new one with the desired tag name
+     * and copying all children and attributes. This works around PHP 8.3's read-only tagName property.
+     * 
+     * @param \DOMDocument $doc The document
+     * @param \DOMElement $originalNode The original node to rename
+     * @param string $newTagName The new tag name
+     * @return \DOMElement The new element with the desired tag name
+     */
+    private function renameElement(\DOMDocument $doc, \DOMElement $originalNode, $newTagName)
+    {
+        // Create new element with correct tag name
+        $newElement = $doc->createElement($newTagName);
+        
+        // Copy all child nodes
+        foreach ($originalNode->childNodes as $child) {
+            $newElement->appendChild($child->cloneNode(true));
+        }
+        
+        // Copy all attributes
+        foreach ($originalNode->attributes as $attr) {
+            $newElement->setAttribute($attr->nodeName, $attr->nodeValue);
+        }
+        
+        return $newElement;
+    }
+
+    /**
      * Serializes the invoice cancellation to XML.
      *
      * @return \DOMDocument The root element of this model's XML representation
@@ -121,8 +148,8 @@ class InvoiceCancellation extends InvoiceRecord
         if (method_exists($this, 'getInvoiceId')) {
             $invoiceId = $this->getInvoiceId();
             if (method_exists($invoiceId, 'toXml')) {
-                $idFacturaNode = $invoiceId->toXml($doc);
-                $idFacturaNode->tagName = 'IDFactura';
+                $originalNode = $invoiceId->toXml($doc);
+                $idFacturaNode = $this->renameElement($doc, $originalNode, 'IDFactura');
                 $root->appendChild($idFacturaNode);
             }
         }
@@ -149,22 +176,22 @@ class InvoiceCancellation extends InvoiceRecord
 
         // Generador (optional)
         if (!empty($this->generatorData) && method_exists($this->generatorData, 'toXml')) {
-            $generadorNode = $this->generatorData->toXml($doc);
-            $generadorNode->tagName = 'Generador';
+            $originalNode = $this->generatorData->toXml($doc);
+            $generadorNode = $this->renameElement($doc, $originalNode, 'Generador');
             $root->appendChild($generadorNode);
         }
 
         // Encadenamiento (required, must be set by the user)
         if (!empty($this->chaining) && method_exists($this->chaining, 'toXml')) {
-            $encadenamientoNode = $this->chaining->toXml($doc);
-            $encadenamientoNode->tagName = 'Encadenamiento';
+            $originalNode = $this->chaining->toXml($doc);
+            $encadenamientoNode = $this->renameElement($doc, $originalNode, 'Encadenamiento');
             $root->appendChild($encadenamientoNode);
         }
 
         // SistemaInformatico (required)
         if (!empty($this->computerSystem) && method_exists($this->computerSystem, 'toXml')) {
-            $sistemaNode = $this->computerSystem->toXml($doc);
-            $sistemaNode->tagName = 'SistemaInformatico';
+            $originalNode = $this->computerSystem->toXml($doc);
+            $sistemaNode = $this->renameElement($doc, $originalNode, 'SistemaInformatico');
             $root->appendChild($sistemaNode);
         }
 
