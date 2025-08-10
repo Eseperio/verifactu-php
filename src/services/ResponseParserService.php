@@ -19,7 +19,7 @@ class ResponseParserService
      *
      * @param string $xmlResponse
      */
-    public static function parseInvoiceResponse($xmlResponse): InvoiceResponse
+    public static function parseInvoiceResponse(string $xmlResponse): InvoiceResponse
     {
         $doc = new \DOMDocument();
         $doc->loadXML($xmlResponse);
