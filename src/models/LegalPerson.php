@@ -1,35 +1,38 @@
 <?php
+
+declare(strict_types=1);
+
 namespace eseperio\verifactu\models;
 
 /**
  * Model representing a person or company (PersonaFisicaJuridicaType).
  * Can be used for Spanish entities (with NIF) or foreign entities (with OtherID).
- * Original schema: PersonaFisicaJuridicaType
+ * Original schema: PersonaFisicaJuridicaType.
  * @see docs/aeat/esquemas/SuministroInformacion.xsd.xml
  */
 class LegalPerson extends Model
 {
     /**
-     * Name or company name (NombreRazon)
+     * Name or company name (NombreRazon).
      * @var string
      */
     public $name;
 
     /**
-     * Spanish tax ID (NIF), used for Spanish entities
+     * Spanish tax ID (NIF), used for Spanish entities.
      * @var string|null
      */
     public $nif;
 
     /**
-     * Other ID data (IDOtro), used for foreign entities
-     * @var \eseperio\verifactu\models\OtherID|null
+     * Other ID data (IDOtro), used for foreign entities.
+     * @var OtherID|null
      */
     private $otherId;
 
     /**
-     * Get the other ID data
-     * @return \eseperio\verifactu\models\OtherID|null
+     * Get the other ID data.
+     * @return OtherID|null
      */
     public function getOtherId()
     {
@@ -37,11 +40,11 @@ class LegalPerson extends Model
     }
 
     /**
-     * Set the other ID data
-     * @param \eseperio\verifactu\models\OtherID|array $otherId Other ID data
+     * Set the other ID data.
+     * @param OtherID|array $otherId Other ID data
      * @return $this
      */
-    public function setOtherId($otherId)
+    public function setOtherId($otherId): static
     {
         if (is_array($otherId)) {
             $otherID = new OtherID();
@@ -52,24 +55,25 @@ class LegalPerson extends Model
         } else {
             $this->otherId = $otherId;
         }
+
         return $this;
     }
 
     /**
      * Returns validation rules for the person/company.
-     * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             [['name'], 'required'],
             [['name', 'nif'], 'string'],
             [['otherId'], 'array'],
-            [['nif', 'otherId'], function($value, $model) {
+            [['nif', 'otherId'], function ($value, $model): string|bool {
                 // Either NIF or otherId must be set
                 if ($model->nif === null && $model->otherId === null) {
                     return 'Either NIF or otherId must be provided.';
                 }
+
                 return true;
             }],
         ];

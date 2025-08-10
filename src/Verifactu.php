@@ -1,5 +1,8 @@
 <?php
+
+declare(strict_types=1);
 // Main entry point of the Verifactu library
+
 namespace eseperio\verifactu;
 
 use eseperio\verifactu\models\InvoiceCancellation;
@@ -12,9 +15,8 @@ use eseperio\verifactu\services\VerifactuService;
 
 class Verifactu
 {
-    const ENVIRONMENT_PRODUCTION = 'production';
-    const ENVIRONMENT_SANDBOX = 'sandbox';
-
+    public const ENVIRONMENT_PRODUCTION = 'production';
+    public const ENVIRONMENT_SANDBOX = 'sandbox';
 
     /**
      * Production environment URL.
@@ -39,27 +41,24 @@ class Verifactu
     /**
      * QR verification URL (production).
      */
-    const QR_VERIFICATION_URL_PRODUCTION = 'https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR';
+    public const QR_VERIFICATION_URL_PRODUCTION = 'https://www2.agenciatributaria.gob.es/wlpl/TIKE-CONT/ValidarQR';
 
     /**
      * QR verification URL (testing/homologation).
      */
-    const QR_VERIFICATION_URL_TEST = 'https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR';
+    public const QR_VERIFICATION_URL_TEST = 'https://prewww2.aeat.es/wlpl/TIKE-CONT/ValidarQR';
 
-
-    const TYPE_CERTIFICATE = 'certificate';
-    const TYPE_SEAL = 'seal';
+    public const TYPE_CERTIFICATE = 'certificate';
+    public const TYPE_SEAL = 'seal';
 
     /**
      * @param $certPath string Path to the certificate file.
      * @param $certPassword string Password for the certificate.
      * @param $certType string Type of certificate, either 'certificate' or 'seal'.
      * @param $environment string Environment to use, either 'production' or 'sandbox'.
-     * @return void
      */
-    public static function config($certPath, $certPassword, $certType, $environment = self::ENVIRONMENT_PRODUCTION)
+    public static function config($certPath, $certPassword, $certType, $environment = self::ENVIRONMENT_PRODUCTION): void
     {
-
         $endpoint = match ($environment) {
             self::ENVIRONMENT_PRODUCTION => $certType === self::TYPE_SEAL ? self::URL_PRODUCTION_SEAL : self::URL_PRODUCTION,
             self::ENVIRONMENT_SANDBOX => $certType === self::TYPE_SEAL ? self::URL_TEST_SEAL : self::URL_TEST,
@@ -83,8 +82,6 @@ class Verifactu
     /**
      * Registers a new invoice (Alta) with AEAT via VERI*FACTU.
      *
-     * @param InvoiceSubmission $invoice
-     * @return InvoiceResponse
      * @throws \DOMException
      * @throws \SoapFault
      */
@@ -95,9 +92,6 @@ class Verifactu
 
     /**
      * Cancels an invoice (Anulación) with AEAT via VERI*FACTU.
-     *
-     * @param InvoiceCancellation $cancellation
-     * @return InvoiceResponse
      */
     public static function cancelInvoice(InvoiceCancellation $cancellation): InvoiceResponse
     {
@@ -106,9 +100,6 @@ class Verifactu
 
     /**
      * Queries submitted invoices from AEAT via VERI*FACTU.
-     *
-     * @param InvoiceQuery $query
-     * @return QueryResponse
      */
     public static function queryInvoices(InvoiceQuery $query): QueryResponse
     {
@@ -118,12 +109,10 @@ class Verifactu
     /**
      * Generates a base64 QR code for the provided invoice.
      *
-     * @param InvoiceRecord $record
      * @return string base64-encoded PNG QR code
      */
     public static function generateInvoiceQr(InvoiceRecord $record): string
     {
         return VerifactuService::generateInvoiceQr($record);
     }
-
 }

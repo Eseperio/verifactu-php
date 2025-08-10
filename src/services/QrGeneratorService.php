@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace eseperio\verifactu\services;
 
 use BaconQrCode\Renderer\GDLibRenderer;
@@ -58,13 +60,13 @@ use eseperio\verifactu\models\InvoiceRecord;
 class QrGeneratorService
 {
     /**
-     * Destination constants
+     * Destination constants.
      */
     public const DESTINATION_FILE = 'file';
     public const DESTINATION_STRING = 'string';
 
     /**
-     * Renderer constants
+     * Renderer constants.
      */
     public const RENDERER_GD = 'gd';
     public const RENDERER_IMAGICK = 'imagick';
@@ -74,7 +76,6 @@ class QrGeneratorService
      * Generates a QR code for a given invoice record,
      * using the AEAT Verifactu QR specification (URL and fields).
      *
-     * @param InvoiceRecord $record
      * @param string $baseVerificationUrl Base URL for AEAT invoice verification
      * @param string $dest Destination type (file or string)
      * @param int $size Resolution of the QR code
@@ -84,12 +85,11 @@ class QrGeneratorService
      */
     public static function generateQr(
         InvoiceRecord $record,
-                      $baseVerificationUrl,
-                      $dest = self::DESTINATION_STRING,
-                      $size = 300,
-                      $engine = self::RENDERER_GD
-    )
-    {
+        $baseVerificationUrl,
+        $dest = self::DESTINATION_STRING,
+        $size = 300,
+        $engine = self::RENDERER_GD
+    ) {
         $qrContent = self::buildQrContent($record, $baseVerificationUrl);
         $writer = self::createWriter($engine, $size);
         $qrData = $writer->writeString($qrContent);
@@ -97,6 +97,7 @@ class QrGeneratorService
         if ($dest === self::DESTINATION_FILE) {
             $filePath = sys_get_temp_dir() . '/qr_' . uniqid() . self::getFileExtension($engine);
             file_put_contents($filePath, $qrData);
+
             return $filePath;
         }
 
@@ -106,11 +107,9 @@ class QrGeneratorService
     /**
      * Builds the QR content string according to AEAT specification.
      *
-     * @param InvoiceRecord $record
      * @param string $baseVerificationUrl
-     * @return string
      */
-    protected static function buildQrContent(InvoiceRecord $record, $baseVerificationUrl)
+    protected static function buildQrContent(InvoiceRecord $record, $baseVerificationUrl): string
     {
         $invoiceId = $record->getInvoiceId();
         $nif = $invoiceId->issuerNif;
@@ -133,10 +132,9 @@ class QrGeneratorService
      *
      * @param string $renderer
      * @param int $resolution
-     * @return Writer
      * @throws \RuntimeException
      */
-    protected static function createWriter($renderer, $resolution)
+    protected static function createWriter($renderer, $resolution): Writer
     {
         switch ($renderer) {
             case self::RENDERER_GD:
@@ -147,6 +145,7 @@ class QrGeneratorService
                     new RendererStyle($resolution),
                     new ImagickImageBackEnd()
                 );
+
                 return new Writer($imageRenderer);
 
             case self::RENDERER_SVG:
@@ -154,6 +153,7 @@ class QrGeneratorService
                     new RendererStyle($resolution),
                     new SvgImageBackEnd()
                 );
+
                 return new Writer($imageRenderer);
 
             default:
@@ -165,17 +165,12 @@ class QrGeneratorService
      * Gets the file extension for the specified renderer.
      *
      * @param string $renderer
-     * @return string
      */
-    protected static function getFileExtension($renderer)
+    protected static function getFileExtension($renderer): string
     {
-        switch ($renderer) {
-            case self::RENDERER_SVG:
-                return '.svg';
-            case self::RENDERER_GD:
-            case self::RENDERER_IMAGICK:
-            default:
-                return '.png';
-        }
+        return match ($renderer) {
+            self::RENDERER_SVG => '.svg',
+            default => '.png',
+        };
     }
 }

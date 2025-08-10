@@ -1,51 +1,52 @@
 <?php
+
+declare(strict_types=1);
+
 namespace eseperio\verifactu\models;
 
 /**
  * Model representing invoice identification data (<IDFactura> node).
  * Fields: issuer NIF, series+number, issue date.
- * Original schema: IDFacturaType
+ * Original schema: IDFacturaType.
  * @see docs/aeat/esquemas/SuministroInformacion.xsd.xml
  */
 class InvoiceId extends Model
 {
     /**
-     * Issuer NIF (IDEmisorFactura)
+     * Issuer NIF (IDEmisorFactura).
      * @var string
      */
     public $issuerNif;
 
     /**
-     * Series and invoice number (NumSerieFactura)
+     * Series and invoice number (NumSerieFactura).
      * @var string
      */
     public $seriesNumber;
 
     /**
-     * Issue date (FechaExpedicionFactura), format YYYY-MM-DD
+     * Issue date (FechaExpedicionFactura), format YYYY-MM-DD.
      * @var string
      */
     public $issueDate;
 
     /**
      * Returns validation rules for the invoice ID.
-     * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             [['issuerNif', 'seriesNumber', 'issueDate'], 'required'],
             [['issuerNif', 'seriesNumber', 'issueDate'], 'string'],
-            ['issueDate', function($value) {
+            ['issueDate', fn($value): bool|string =>
                 // Checks for format YYYY-MM-DD (simple regex)
-                return (preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $value)) ? true : 'Must be a valid date (YYYY-MM-DD).';
-            }],
+                (preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', (string) $value)) ? true : 'Must be a valid date (YYYY-MM-DD).'],
         ];
     }
 
     /**
      * Serializes the invoice ID to XML.
-     * 
+     *
      * @param \DOMDocument $doc The XML document to use for creating elements
      * @return \DOMElement The root element of this model's XML representation
      */

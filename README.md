@@ -24,6 +24,7 @@ querying, and events) according to the official regulatory technical specificati
 * [Main Models](#main-models)
 * [Service Reference](#service-reference)
 * [Error Handling](#error-handling)
+* [Developing and testing](#developing-and-testing)
 * [Contributing](#contributing)
 * [License](#license)
 * [Acknowledgements](#acknowledgements)
@@ -113,13 +114,14 @@ use eseperio\verifactu\models\BreakdownDetail;
 use eseperio\verifactu\models\Chaining;
 use eseperio\verifactu\models\ComputerSystem;
 use eseperio\verifactu\models\LegalPerson;
+use eseperio\verifactu\models\Recipient;
 use eseperio\verifactu\models\enums\InvoiceType;
-use eseperio\verifactu\models\enums\RectificationType;
-use eseperio\verifactu\models\enums\OperationQualificationType;
+use eseperio\verifactu\models\enums\TaxType;
 use eseperio\verifactu\models\enums\YesNoType;
 use eseperio\verifactu\models\enums\HashType;
+use eseperio\verifactu\models\enums\OperationQualificationType;
 
-// Después de llamar a Verifactu::config(...)
+// After calling Verifactu::config(...)
 
 $invoice = new InvoiceSubmission();
 
@@ -132,22 +134,27 @@ $invoice->setInvoiceId($invoiceId);
 
 // Set basic invoice data
 $invoice->issuerName = 'Empresa Ejemplo SL';
-$invoice->invoiceType = InvoiceType::NORMAL; // Using enum instead of string
+$invoice->invoiceType = InvoiceType::STANDARD; // Using corrected enum value
 $invoice->operationDescription = 'Venta de productos';
-$invoice->taxAmount = 21.00; // Cuota total de impuestos
-$invoice->totalAmount = 121.00; // Importe total de la factura
+$invoice->taxAmount = 21.00; // Total tax amount
+$invoice->totalAmount = 121.00; // Total invoice amount
+$invoice->simplifiedInvoice = YesNoType::NO; // Corrected property name
+$invoice->invoiceWithoutRecipient = YesNoType::NO; // Corrected property name
 
 // Add tax breakdown (using object-oriented approach)
-$breakdownDetail = new BreakdownDetail();
-$breakdownDetail->taxRate = 21.0;
-$breakdownDetail->taxableBase = 100.00;
-$breakdownDetail->taxAmount = 21.00;
-$breakdownDetail->operationQualification = OperationQualificationType::SUBJECT_NO_EXEMPT_NO_REVERSE;
-$invoice->addBreakdownDetail($breakdownDetail);
+$breakdown = new Breakdown();
+$detail = new BreakdownDetail();
+$detail->taxType = TaxType::IVA;
+$detail->taxRate = 21.00;
+$detail->taxableBase = 100.00; // Corrected property name
+$detail->taxAmount = 21.00;
+$detail->operationQualification = OperationQualificationType::SUBJECT_NO_EXEMPT_NO_REVERSE;
+$breakdown->addDetail($detail);
+$invoice->setBreakdown($breakdown);
 
 // Set chaining data (using object-oriented approach)
 $chaining = new Chaining();
-$chaining->setAsFirstRecord(); // For the first invoice in a chain
+$chaining->firstRecord = YesNoType::YES; // Corrected property name - For the first invoice in a chain
 // Or for subsequent invoices:
 // $chaining->setPreviousInvoice([
 //     'seriesNumber' => 'FA2024/000',
@@ -176,21 +183,23 @@ $computerSystem->setProviderId($provider);
 $invoice->setSystemInfo($computerSystem);
 
 // Set other required fields
-$invoice->recordTimestamp = '2024-07-01T12:00:00+02:00'; // Fecha y hora con zona horaria
+$invoice->recordTimestamp = '2024-07-01T12:00:00+02:00'; // Date and time with timezone
 $invoice->hashType = HashType::SHA_256;
-$invoice->hash = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'; // Huella calculada
+$invoice->hash = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'; // Calculated hash
 
 // Optional fields
-$invoice->operationDate = '2024-07-01'; // Fecha de operación
-$invoice->externalRef = 'REF123'; // Referencia externa
-$invoice->simplifiedInvoice = YesNoType::NO; // No es factura simplificada
-$invoice->invoiceWithoutRecipient = YesNoType::NO; // Tiene destinatario identificado
+$invoice->operationDate = '2024-07-01'; // Operation date
+$invoice->externalRef = 'REF123'; // External reference
+$invoice->simplifiedInvoice = YesNoType::NO; // Not a simplified invoice
+$invoice->invoiceWithoutRecipient = YesNoType::NO; // Has identified recipient
 
 // Add recipients (using object-oriented approach)
-$recipient = new LegalPerson();
-$recipient->name = 'Cliente Ejemplo SL';
-$recipient->nif = '12345678Z';
-$invoice->addRecipient($recipient);
+$recipient = new Recipient();
+$recipientPerson = new LegalPerson();
+$recipientPerson->name = 'Cliente Ejemplo SL';
+$recipientPerson->nif = 'A98765432';
+$recipient->setLegalPerson($recipientPerson);
+$invoice->setRecipient($recipient);
 
 // Validate the invoice before submission
 $validationResult = $invoice->validate();
@@ -206,7 +215,7 @@ $response = Verifactu::registerInvoice($invoice);
 if ($response->submissionStatus === \eseperio\verifactu\models\InvoiceResponse::STATUS_OK) {
     echo "AEAT CSV: " . $response->csv;
 } else {
-    // Consulta los códigos y mensajes de error en $response->lineResponses
+    // Check error codes and messages in $response->lineResponses
     foreach ($response->lineResponses as $lineResponse) {
         echo "Error code: " . $lineResponse->errorCode . " - " . $lineResponse->errorMessage . "\n";
     }
@@ -228,7 +237,7 @@ use eseperio\verifactu\models\enums\YesNoType;
 use eseperio\verifactu\models\enums\HashType;
 use eseperio\verifactu\models\enums\GeneratorType;
 
-// Después de llamar a Verifactu::config(...)
+// After calling Verifactu::config(...)
 
 $cancellation = new InvoiceCancellation();
 
@@ -269,15 +278,15 @@ $computerSystem->setProviderId($provider);
 $cancellation->setSystemInfo($computerSystem);
 
 // Set other required fields
-$cancellation->recordTimestamp = '2024-07-01T12:00:00+02:00'; // Fecha y hora con zona horaria
+$cancellation->recordTimestamp = '2024-07-01T12:00:00+02:00'; // Date and time with timezone
 $cancellation->hashType = HashType::SHA_256;
-$cancellation->hash = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'; // Huella calculada
+$cancellation->hash = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'; // Calculated hash
 
 // Optional fields
-$cancellation->noPreviousRecord = YesNoType::NO; // No es anulación sin registro previo
-$cancellation->previousRejection = YesNoType::NO; // No es anulación por rechazo previo
-$cancellation->generator = GeneratorType::ISSUER; // Generado por el emisor
-$cancellation->externalRef = 'REF-CANCEL-123'; // Referencia externa
+$cancellation->noPreviousRecord = YesNoType::NO; // Not a cancellation without previous record
+$cancellation->previousRejection = YesNoType::NO; // Not a cancellation due to previous rejection
+$cancellation->generator = GeneratorType::ISSUER; // Generated by the issuer
+$cancellation->externalRef = 'REF-CANCEL-123'; // External reference
 
 // Validate the cancellation before submission
 $validationResult = $cancellation->validate();
@@ -293,7 +302,7 @@ $response = Verifactu::cancelInvoice($cancellation);
 if ($response->submissionStatus === \eseperio\verifactu\models\InvoiceResponse::STATUS_OK) {
     echo "AEAT CSV: " . $response->csv;
 } else {
-    // Consulta los códigos y mensajes de error en $response->lineResponses
+    // Check error codes and messages in $response->lineResponses
     foreach ($response->lineResponses as $lineResponse) {
         echo "Error code: " . $lineResponse->errorCode . " - " . $lineResponse->errorMessage . "\n";
     }
@@ -312,7 +321,7 @@ use eseperio\verifactu\models\LegalPerson;
 use eseperio\verifactu\models\enums\YesNoType;
 use eseperio\verifactu\models\enums\PeriodType;
 
-// Después de llamar a Verifactu::config(...)
+// After calling Verifactu::config(...)
 
 $query = new InvoiceQuery();
 
@@ -493,6 +502,7 @@ if ($response->submissionStatus === \eseperio\verifactu\models\InvoiceResponse::
     - `QrGeneratorService::RENDERER_SVG`: Generates SVG format (vector-based)
 
 - **Resolution**: Size in pixels (default: 300)
+```
 
 ---
 
@@ -813,6 +823,23 @@ See [LICENSE](LICENSE) file.
 *For more information on the Verifactu regulation, see the [AEAT website](https://www.agenciatributaria.es/)*
 
 ## Developing and testing
+
+### Testing
+
+This library includes comprehensive tests to ensure code quality and that documentation examples work correctly:
+
+```bash
+# Run all tests
+composer test
+
+# Test only README examples
+composer test-readme
+
+# Run unit tests
+composer test-unit
+```
+
+### Development
 
 See the [CONTRIBUTING.md](CONTRIBUTING.md) file for guidelines on how to contribute to this project, including setting
 up your development environment, running tests, and submitting pull requests.

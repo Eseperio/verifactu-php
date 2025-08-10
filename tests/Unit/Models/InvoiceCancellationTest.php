@@ -1,16 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace eseperio\verifactu\tests\Unit\Models;
 
+use eseperio\verifactu\models\InvoiceId;
+use eseperio\verifactu\models\LegalPerson;
+use eseperio\verifactu\models\Chaining;
+use eseperio\verifactu\models\ComputerSystem;
+use eseperio\verifactu\models\enums\YesNoType;
+use eseperio\verifactu\models\enums\HashType;
 use eseperio\verifactu\models\InvoiceCancellation;
 use PHPUnit\Framework\TestCase;
 
 class InvoiceCancellationTest extends TestCase
 {
     /**
-     * Test que la clase InvoiceCancellation existe y hereda de InvoiceRecord
+     * Test que la clase InvoiceCancellation existe y hereda de InvoiceRecord.
      */
-    public function testClassStructure()
+    public function testClassStructure(): void
     {
         $this->assertTrue(class_exists(InvoiceCancellation::class));
 
@@ -25,9 +33,9 @@ class InvoiceCancellationTest extends TestCase
     }
 
     /**
-     * Test que las propiedades heredadas de InvoiceRecord están presentes
+     * Test que las propiedades heredadas de InvoiceRecord están presentes.
      */
-    public function testInheritedProperties()
+    public function testInheritedProperties(): void
     {
         $cancellation = new InvoiceCancellation();
         $reflection = new \ReflectionClass($cancellation);
@@ -39,9 +47,9 @@ class InvoiceCancellationTest extends TestCase
     }
 
     /**
-     * Test que el método rules() existe y devuelve un array
+     * Test que el método rules() existe y devuelve un array.
      */
-    public function testRulesMethod()
+    public function testRulesMethod(): void
     {
         $cancellation = new InvoiceCancellation();
         $rules = $cancellation->rules();
@@ -51,9 +59,9 @@ class InvoiceCancellationTest extends TestCase
     }
 
     /**
-     * Test that the model has a toXml method and can be populated with required properties
+     * Test that the model has a toXml method and can be populated with required properties.
      */
-    public function testToXmlMethodExists()
+    public function testToXmlMethodExists(): void
     {
         // Create a cancellation with required properties
         $cancellation = new InvoiceCancellation();
@@ -62,7 +70,7 @@ class InvoiceCancellationTest extends TestCase
         $this->assertTrue(method_exists($cancellation, 'toXml'), 'toXml method should exist');
 
         // Set InvoiceId
-        $invoiceId = new \eseperio\verifactu\models\InvoiceId();
+        $invoiceId = new InvoiceId();
         $invoiceId->issuerNif = 'B12345678';
         $invoiceId->seriesNumber = 'FACT-001';
         $invoiceId->issueDate = '2023-01-01';
@@ -74,43 +82,46 @@ class InvoiceCancellationTest extends TestCase
         $cancellation->generator = 'E'; // Expedidor
 
         // Set generator data
-        $generatorData = new \eseperio\verifactu\models\LegalPerson();
+        $generatorData = new LegalPerson();
         $generatorData->name = 'Test Generator';
         $generatorData->nif = 'B12345678';
         $cancellation->setGeneratorData($generatorData);
 
         // Set Chaining as first record
-        $chaining = new \eseperio\verifactu\models\Chaining();
+        $chaining = new Chaining();
         $chaining->setAsFirstRecord();
         $cancellation->setChaining($chaining);
 
         // Set System Info
-        $computerSystem = new \eseperio\verifactu\models\ComputerSystem();
-        $computerSystem->name = 'Test System';
-        $computerSystem->nif = 'B12345678';
+        $computerSystem = new ComputerSystem();
+        $computerSystem->providerName = 'Test System';
+        $computerSystem->setProviderId([
+            'name' => 'Test Provider',
+            'nif' => 'B12345678',
+        ]);
         $computerSystem->systemName = 'Test System Name';
         $computerSystem->systemId = '01';
         $computerSystem->version = '1.0';
         $computerSystem->installationNumber = '001';
-        $computerSystem->onlyVerifactuUse = 'S';
-        $computerSystem->multipleOTUse = 'N';
-        $computerSystem->multipleOTIndicator = 'N';
+        $computerSystem->onlyVerifactu = YesNoType::YES;
+        $computerSystem->multipleObligations = YesNoType::NO;
+        $computerSystem->hasMultipleObligations = YesNoType::NO;
         $cancellation->setSystemInfo($computerSystem);
 
         // Set other required fields
-        $cancellation->generationDateTime = '2023-01-01T12:00:00+01:00';
-        $cancellation->hashType = '01';
-        $cancellation->hashValue = 'abcdef1234567890abcdef1234567890';
+        $cancellation->recordTimestamp = '2023-01-01T12:00:00+01:00';
+        $cancellation->hashType = HashType::SHA_256;
+        $cancellation->hash = 'abcdef1234567890abcdef1234567890';
 
         // Verify that all required properties are set
-        $this->assertInstanceOf(\eseperio\verifactu\models\InvoiceId::class, $cancellation->getInvoiceId());
+        $this->assertInstanceOf(InvoiceId::class, $cancellation->getInvoiceId());
         $this->assertEquals('B12345678', $cancellation->getInvoiceId()->issuerNif);
         $this->assertEquals('FACT-001', $cancellation->getInvoiceId()->seriesNumber);
         $this->assertEquals('2023-01-01', $cancellation->getInvoiceId()->issueDate);
         $this->assertEquals('N', $cancellation->noPreviousRecord);
         $this->assertEquals('N', $cancellation->previousRejection);
         $this->assertEquals('E', $cancellation->generator);
-        $this->assertInstanceOf(\eseperio\verifactu\models\LegalPerson::class, $cancellation->getGeneratorData());
+        $this->assertInstanceOf(LegalPerson::class, $cancellation->getGeneratorData());
         $this->assertEquals('Test Generator', $cancellation->getGeneratorData()->name);
         $this->assertEquals('B12345678', $cancellation->getGeneratorData()->nif);
 
