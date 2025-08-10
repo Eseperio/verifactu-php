@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Dummy XSD for AEAT sandbox, replace with official if available -->
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" targetNamespace="https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd" elementFormDefault="qualified">
-  <xs:element name="dummy" type="xs:string"/>
-</xs:schema>

@@ -19,40 +19,10 @@ class SoapClientFactoryService
      * @param array $options  Additional SoapClient options (optional)
      * @throws \RuntimeException
      */
-    public static function createSoapClient($wsdl, $certPath, $certPassword = '', $options = [], $environment = null): \SoapClient
+    public static function createSoapClient($wsdl, $certPath, $certPassword = '', $options = []): \SoapClient
     {
-        // Inicializamos $environment si no está definido
-        if (!isset($environment)) {
-            $environment = null;
-        }
-        // Detect environment from argument or config
-        if ($environment === null && class_exists('eseperio\\verifactu\\services\\VerifactuService')) {
-            // Intentamos obtener el entorno de la configuración global
-            $configClass = 'eseperio\\verifactu\\services\\VerifactuService';
-            if (method_exists($configClass, 'getConfig')) {
-                $env = null;
-                try {
-                    $env = $configClass::getConfig('environment');
-                } catch (\Throwable $e) {
-                    // Si no está definido, seguimos con null
-                }
-                if ($env !== null) {
-                    $environment = $env;
-                }
-            }
-        }
-
-        // Selección del WSDL según entorno
-        if ($environment === 'sandbox') {
-            // Forzamos el WSDL local para sandbox
-            $wsdl = realpath(__DIR__ . '/../../docs/aeat/SistemaFacturacion.wsdl.xml');
-        }
-
-        // Si el certificado es una ruta válida, comprobar existencia. Si es contenido, permitir string.
-        $isFile = is_string($certPath) && file_exists($certPath);
-        $isString = is_string($certPath) && !file_exists($certPath);
-        if (!$isFile && !$isString) {
-            throw new \RuntimeException("Certificate not found or invalid: $certPath");
+        if (!file_exists($certPath)) {
+            throw new \RuntimeException("Certificate file not found: $certPath");
         }
 
         $defaultOptions = [
@@ -72,17 +42,5 @@ class SoapClientFactoryService
         } catch (\Exception $e) {
             throw new \RuntimeException('Unable to create SoapClient: ' . $e->getMessage(), 0, $e);
         }
-    }
-
-    /**
-     * Returns the WSDL path or URL that would be used for the given environment.
-     * For testing purposes only.
-     */
-    public static function getWsdlForTest($wsdl, $environment)
-    {
-        if ($environment === 'sandbox') {
-            return realpath(__DIR__ . '/../../docs/aeat/SistemaFacturacion.wsdl.xml');
-        }
-        return $wsdl;
     }
 }

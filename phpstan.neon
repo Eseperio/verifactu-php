@@ -1,8 +1,0 @@
-parameters:
-    level: 6
-    paths:
-        - src
-    excludePaths:
-        - vendor
-    ignoreErrors:
-        # Ignore errors that are intentional or unavoidable
