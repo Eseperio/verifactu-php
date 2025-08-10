@@ -19,7 +19,7 @@ class SoapClientFactoryService
      * @param array $options  Additional SoapClient options (optional)
      * @throws \RuntimeException
      */
-    public static function createSoapClient($wsdl, $certPath, $certPassword = '', $options = []): \SoapClient
+    public static function createSoapClient(string $wsdl, string $certPath, string $certPassword = '', array $options = []): \SoapClient
     {
         if (!file_exists($certPath)) {
             throw new \RuntimeException("Certificate file not found: $certPath");
