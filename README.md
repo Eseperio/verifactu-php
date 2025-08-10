@@ -64,7 +64,7 @@ It is designed for easy Composer-based installation and seamless integration int
 Install via Composer:
 
 ```bash
-composer require eseperio/verifactu
+composer require eseperio/verifactu-php
 ```
 
 ```bash
