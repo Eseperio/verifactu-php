@@ -10,13 +10,6 @@
     <testsuites>
         <testsuite name="Unit">
             <directory suffix="Test.php">./tests/Unit</directory>
-            <exclude>./tests/Unit/HashGeneratorEncapsulationTest.php</exclude>
-            <exclude>./tests/Unit/HashValidationFixTest.php</exclude>
-            <exclude>./tests/Unit/VerifactuCertificateSourceTest.php</exclude>
-            <exclude>./tests/Unit/VerifactuConfigEnvironmentTest.php</exclude>
-            <exclude>./tests/Unit/VerifactuConfigWithContentTest.php</exclude>
-            <exclude>./tests/Unit/VerifactuCriticalConfigTest.php</exclude>
-            <exclude>./tests/Unit/VerifactuWsdlSelectionUnitTest.php</exclude>
         </testsuite>
     </testsuites>
     <source>
