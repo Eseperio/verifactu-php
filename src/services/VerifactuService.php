@@ -23,10 +23,6 @@ class VerifactuService
     public const CERT_PATH_KEY = 'certPath';
     /** Certificate password parameter name. */
     public const CERT_PASSWORD_KEY = 'certPassword';
-    /** Certificate content parameter name. */
-    public const CERT_CONTENT_KEY = 'certContent';
-    /** Certificate content type parameter name. */
-    public const CERT_CONTENT_TYPE_KEY = 'certContentType';
     /** QR verification URL parameter name. */
     public const QR_VERIFICATION_URL = 'qrValidationUrl';
 
@@ -62,12 +58,7 @@ class VerifactuService
     {
         if (self::$client === null) {
             $environment = self::$config['environment'] ?? null;
-            $certPath = self::$config[self::CERT_PATH_KEY] ?? null;
-            $certContent = self::$config[self::CERT_CONTENT_KEY] ?? null;
-            // If certificate content exists, use it instead of the path
-            if ($certContent) {
-                $certPath = $certContent;
-            }
+            $certPath = self::getConfig(self::CERT_PATH_KEY);
             self::$client = SoapClientFactoryService::createSoapClient(
                 self::getConfig(self::WSDL_ENDPOINT),
                 $certPath,
@@ -109,29 +100,11 @@ class VerifactuService
         $xml = self::buildInvoiceXml($invoice);
 
         // 4. Sign XML
-        $env = self::$config['environment'] ?? null;
-        $useContent = false;
-        // Decide signing method based on environment variable
-        if ($env === 'production') {
-            $useContent = false;
-        } elseif ($env === 'sandbox') {
-            $useContent = true;
-        } elseif (!empty(self::$config[self::CERT_CONTENT_KEY])) {
-            $useContent = true;
-        }
-        if ($useContent) {
-            $signedXml = XmlSignerService::signXmlWithContent(
-                $xml,
-                self::getConfig(self::CERT_CONTENT_KEY),
-                self::getConfig(self::CERT_PASSWORD_KEY)
-            );
-        } else {
-            $signedXml = XmlSignerService::signXml(
-                $xml,
-                self::getConfig(self::CERT_PATH_KEY),
-                self::getConfig(self::CERT_PASSWORD_KEY)
-            );
-        }
+        $signedXml = XmlSignerService::signXml(
+            $xml,
+            self::getConfig(self::CERT_PATH_KEY),
+            self::getConfig(self::CERT_PASSWORD_KEY)
+        );
 
         // 5. Get SOAP client
         $client = self::getClient();
@@ -168,28 +141,12 @@ class VerifactuService
             throw new \InvalidArgumentException('InvoiceCancellation final validation failed: ' . print_r($finalValidation, true));
         }
         $xml = self::buildCancellationXml($cancellation);
-        $useContent = false;
-        $env = self::$config['environment'] ?? null;
-        if ($env === 'production') {
-            $useContent = false;
-        } elseif ($env === 'sandbox') {
-            $useContent = true;
-        } elseif (!empty(self::$config[self::CERT_CONTENT_KEY])) {
-            $useContent = true;
-        }
-        if ($useContent) {
-            $signedXml = XmlSignerService::signXmlWithContent(
-                $xml,
-                self::getConfig(self::CERT_CONTENT_KEY),
-                self::getConfig(self::CERT_PASSWORD_KEY)
-            );
-        } else {
-            $signedXml = XmlSignerService::signXml(
-                $xml,
-                self::getConfig(self::CERT_PATH_KEY),
-                self::getConfig(self::CERT_PASSWORD_KEY)
-            );
-        }
+
+        $signedXml = XmlSignerService::signXml(
+            $xml,
+            self::getConfig(self::CERT_PATH_KEY),
+            self::getConfig(self::CERT_PASSWORD_KEY)
+        );
         $client = self::getClient();
         $params = ['RegistroAnulacion' => $signedXml];
         $responseXml = $client->__soapCall('SuministroLR', [$params]);
