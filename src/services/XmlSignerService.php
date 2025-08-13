@@ -1,5 +1,9 @@
 <?php
+
+declare(strict_types=1);
+
 namespace eseperio\verifactu\services;
+
 use RobRichards\XMLSecLibs\XMLSecurityDSig;
 use RobRichards\XMLSecLibs\XMLSecurityKey;
 
@@ -19,7 +23,7 @@ class XmlSignerService
      * @return string Signed XML
      * @throws \RuntimeException
      */
-    public static function signXml($xml, $certPath, $certPassword = '')
+    public static function signXml($xml, $certPath, $certPassword = ''): string|false
     {
         // --- 1. Load certificate and private key ---
         $pemCert = CertificateManagerService::getCertificate($certPath, $certPassword);
@@ -27,7 +31,7 @@ class XmlSignerService
 
         // --- 2. Use XMLSecurityDSig and XMLSecurityKey from the xmlseclibs library ---
         // xmlseclibs: https://github.com/robrichards/xmlseclibs
-        if (!class_exists('RobRichards\XMLSecLibs\XMLSecurityDSig')) {
+        if (!class_exists(XMLSecurityDSig::class)) {
             throw new \RuntimeException('xmlseclibs library is required for XML signing.');
         }
 

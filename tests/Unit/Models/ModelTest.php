@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace eseperio\verifactu\tests\Unit\Models;
 
 use eseperio\verifactu\models\Model;
@@ -8,22 +10,21 @@ use PHPUnit\Framework\TestCase;
 class ModelTest extends TestCase
 {
     /**
-     * Test for model validation
+     * Test for model validation.
      */
-    public function testValidation()
+    public function testValidation(): void
     {
         // Use a concrete implementation of the abstract Model class
-        $model = new class extends Model {
+        $model = new class () extends Model {
             public $requiredField;
+
             public $optionalField;
 
-            public function rules()
+            public function rules(): array
             {
                 return [
                     [['requiredField'], 'required'],
-                    [['optionalField'], function($value) {
-                        return is_null($value) || is_string($value) ? true : 'Must be string or null.';
-                    }]
+                    [['optionalField'], fn($value): bool|string => is_null($value) || is_string($value) ? true : 'Must be string or null.'],
                 ];
             }
         };

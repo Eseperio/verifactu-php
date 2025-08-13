@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace eseperio\verifactu\models\enums;
 
 /**
@@ -7,12 +10,12 @@ namespace eseperio\verifactu\models\enums;
 enum ThirdPartyOrRecipientType: string
 {
     /**
-     * Recipient
+     * Recipient.
      */
     case RECIPIENT = 'D';
-    
+
     /**
-     * Third party
+     * Third party.
      */
     case THIRD_PARTY = 'T';
 }

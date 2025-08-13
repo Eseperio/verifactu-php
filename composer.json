@@ -12,7 +12,10 @@
     "ext-dom": "*"
   },
   "require-dev": {
-    "phpunit/phpunit": "^10.0"
+    "phpunit/phpunit": "^10.0",
+    "phpstan/phpstan": "2.1.x-dev",
+    "friendsofphp/php-cs-fixer": "dev-master",
+    "rector/rector": "dev-main"
   },
   "license": "MIT",
   "autoload": {
@@ -33,9 +36,39 @@
   ],
   "minimum-stability": "dev",
   "scripts": {
-    "test": "phpunit"
+    "test": "phpunit",
+    "test-readme": "phpunit tests/Unit/Examples/",
+    "test-unit": "phpunit --testsuite=Unit",
+    "coverage": "phpunit --coverage-html var/coverage/html",
+    "phpstan": "phpstan analyse",
+    "phpstan-baseline": "phpstan analyse --generate-baseline",
+    "cs-fix": "php-cs-fixer fix --allow-risky=yes",
+    "cs-check": "php-cs-fixer fix --dry-run --diff --allow-risky=yes",
+    "rector": "rector process",
+    "rector-dry": "rector process --dry-run",
+    "quality": [
+      "@cs-check",
+      "@phpstan",
+      "@test"
+    ],
+    "quality-fix": [
+      "@cs-fix",
+      "@rector",
+      "@test"
+    ]
   },
   "scripts-descriptions": {
-    "test": "Run the unit tests using PHPUnit"
+    "test": "Run the unit tests using PHPUnit",
+    "test-readme": "Test that README.md examples work correctly",
+    "test-unit": "Run all unit tests",
+    "coverage": "Generate test coverage report",
+    "phpstan": "Run PHPStan static analysis",
+    "phpstan-baseline": "Generate PHPStan baseline file",
+    "cs-fix": "Fix code style issues using PHP CS Fixer",
+    "cs-check": "Check code style using PHP CS Fixer (dry run)",
+    "rector": "Apply Rector refactoring",
+    "rector-dry": "Preview Rector refactoring (dry run)",
+    "quality": "Run all quality checks (style, static analysis, tests)",
+    "quality-fix": "Fix all quality issues and run tests"
   }
 }

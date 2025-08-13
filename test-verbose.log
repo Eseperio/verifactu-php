@@ -1,0 +1,113 @@
+[00:00:00.000185360 / 00:00:00.000185360] [4194304 bytes] PHPUnit Started (PHPUnit 10.5.48 using PHP 8.3.23 (cli) on Linux)
+[00:00:00.010027377 / 00:00:00.009842017] [6291456 bytes] Test Runner Configured
+[00:00:00.010202357 / 00:00:00.000174980] [6291456 bytes] Bootstrap Finished (/var/www/html/vendor/autoload.php)
+[00:00:00.018044891 / 00:00:00.007842534] [6291456 bytes] Test Suite Loaded (2 tests)
+[00:00:00.025555359 / 00:00:00.007510468] [8388608 bytes] Event Facade Sealed
+[00:00:00.025917211 / 00:00:00.000361852] [8388608 bytes] Test Runner Started
+[00:00:00.026479279 / 00:00:00.000562068] [8388608 bytes] Test Suite Sorted
+[00:00:00.026883819 / 00:00:00.000404540] [8388608 bytes] Test Runner Execution Started (2 tests)
+[00:00:00.027042534 / 00:00:00.000158715] [8388608 bytes] Test Suite Started (Tests\Unit\HashValidationFixTest, 2 tests)
+[00:00:00.028393028 / 00:00:00.001350494] [8388608 bytes] Test Preparation Started (Tests\Unit\HashValidationFixTest::testValidateExceptHashSkipsOnlyHashField)
+[00:00:00.028584123 / 00:00:00.000191095] [8388608 bytes] Test Prepared (Tests\Unit\HashValidationFixTest::testValidateExceptHashSkipsOnlyHashField)
+[00:00:00.030065028 / 00:00:00.001480905] [8388608 bytes] Assertion Succeeded (Constraint: is of type array, Value: Array &0 [
+                                                              'invoiceId' => Array &1 [
+                                                                  0 => 'This field is required.',
+                                                                  1 => 'Must be an instance of InvoiceId.',
+                                                              ],
+                                                              'chaining' => Array &2 [
+                                                                  0 => 'This field is required.',
+                                                                  1 => 'Must be an instance of Chaining.',
+                                                              ],
+                                                              'systemInfo' => Array &3 [
+                                                                  0 => 'This field is required.',
+                                                                  1 => 'Must be an instance of ComputerSystem.',
+                                                              ],
+                                                              'recordTimestamp' => Array &4 [
+                                                                  0 => 'This field is required.',
+                                                              ],
+                                                              'invoiceType' => Array &5 [
+                                                                  0 => 'This field is required.',
+                                                                  1 => 'Must be an instance of InvoiceType.',
+                                                              ],
+                                                              'operationDescription' => Array &6 [
+                                                                  0 => 'This field is required.',
+                                                              ],
+                                                              'breakdown' => Array &7 [
+                                                                  0 => 'This field is required.',
+                                                                  1 => 'Must be an instance of Breakdown.',
+                                                              ],
+                                                              'taxAmount' => Array &8 [
+                                                                  0 => 'This field is required.',
+                                                                  1 => 'Must be a number.',
+                                                              ],
+                                                              'totalAmount' => Array &9 [
+                                                                  0 => 'This field is required.',
+                                                                  1 => 'Must be a number.',
+                                                              ],
+                                                          ], Message: validateExceptHash should find other missing required fields)
+[00:00:00.031100733 / 00:00:00.001035705] [8388608 bytes] Assertion Succeeded (Constraint: does not have the key 'hash', Value: Array &0 [
+                                                              'invoiceId' => Array &1 [
+                                                                  0 => 'This field is required.',
+                                                                  1 => 'Must be an instance of InvoiceId.',
+                                                              ],
+                                                              'chaining' => Array &2 [
+                                                                  0 => 'This field is required.',
+                                                                  1 => 'Must be an instance of Chaining.',
+                                                              ],
+                                                              'systemInfo' => Array &3 [
+                                                                  0 => 'This field is required.',
+                                                                  1 => 'Must be an instance of ComputerSystem.',
+                                                              ],
+                                                              'recordTimestamp' => Array &4 [
+                                                                  0 => 'This field is required.',
+                                                              ],
+                                                              'invoiceType' => Array &5 [
+                                                                  0 => 'This field is required.',
+                                                                  1 => 'Must be an instance of InvoiceType.',
+                                                              ],
+                                                              'operationDescription' => Array &6 [
+                                                                  0 => 'This field is required.',
+                                                              ],
+                                                              'breakdown' => Array &7 [
+                                                                  0 => 'This field is required.',
+                                                                  1 => 'Must be an instance of Breakdown.',
+                                                              ],
+                                                              'taxAmount' => Array &8 [
+                                                                  0 => 'This field is required.',
+                                                                  1 => 'Must be a number.',
+                                                              ],
+                                                              'totalAmount' => Array &9 [
+                                                                  0 => 'This field is required.',
+                                                                  1 => 'Must be a number.',
+                                                              ],
+                                                          ], Message: validateExceptHash should not complain about missing hash)
+[00:00:00.031558613 / 00:00:00.000457880] [8388608 bytes] Test Passed (Tests\Unit\HashValidationFixTest::testValidateExceptHashSkipsOnlyHashField)
+[00:00:00.033327969 / 00:00:00.001769356] [8388608 bytes] Test Finished (Tests\Unit\HashValidationFixTest::testValidateExceptHashSkipsOnlyHashField)
+[00:00:00.033526914 / 00:00:00.000198945] [8388608 bytes] Test Preparation Started (Tests\Unit\HashValidationFixTest::testInvoiceValidationWorksWithoutHashBeforeGeneration)
+[00:00:00.033655584 / 00:00:00.000128670] [8388608 bytes] Test Prepared (Tests\Unit\HashValidationFixTest::testInvoiceValidationWorksWithoutHashBeforeGeneration)
+[00:00:00.034214586 / 00:00:00.000559002] [8388608 bytes] Test Triggered PHP Deprecation (Tests\Unit\HashValidationFixTest::testInvoiceValidationWorksWithoutHashBeforeGeneration) in /var/www/html/tests/Unit/HashValidationFixTest.php:43
+                                                          Creation of dynamic property eseperio\verifactu\models\InvoiceSubmission::$selfEmployment is deprecated
+[00:00:00.034638947 / 00:00:00.000424361] [8388608 bytes] Test Triggered PHP Deprecation (Tests\Unit\HashValidationFixTest::testInvoiceValidationWorksWithoutHashBeforeGeneration) in /var/www/html/tests/Unit/HashValidationFixTest.php:44
+                                                          Creation of dynamic property eseperio\verifactu\models\InvoiceSubmission::$simplifiedRegime is deprecated
+[00:00:00.035468082 / 00:00:00.000829135] [8388608 bytes] Test Triggered PHP Deprecation (Tests\Unit\HashValidationFixTest::testInvoiceValidationWorksWithoutHashBeforeGeneration) in /var/www/html/tests/Unit/HashValidationFixTest.php:51
+                                                          Creation of dynamic property eseperio\verifactu\models\BreakdownDetail::$taxBase is deprecated
+[00:00:00.036041016 / 00:00:00.000572934] [8388608 bytes] Test Triggered PHP Deprecation (Tests\Unit\HashValidationFixTest::testInvoiceValidationWorksWithoutHashBeforeGeneration) in /var/www/html/tests/Unit/HashValidationFixTest.php:59
+                                                          Creation of dynamic property eseperio\verifactu\models\Chaining::$firstInvoice is deprecated
+[00:00:00.036834142 / 00:00:00.000793126] [8388608 bytes] Assertion Succeeded (Constraint: is true, Value: true, Message: validateExceptHash should pass when all fields except hash are valid)
+[00:00:00.037118862 / 00:00:00.000284720] [8388608 bytes] Assertion Succeeded (Constraint: is of type array, Value: Array &0 [
+                                                              'hash' => Array &1 [
+                                                                  0 => 'This field is required.',
+                                                              ],
+                                                          ], Message: Regular validate should fail when hash is missing)
+[00:00:00.037358729 / 00:00:00.000239867] [8388608 bytes] Assertion Succeeded (Constraint: has the key 'hash', Value: Array &0 [
+                                                              'hash' => Array &1 [
+                                                                  0 => 'This field is required.',
+                                                              ],
+                                                          ], Message: Validation should specifically complain about missing hash)
+[00:00:00.037651318 / 00:00:00.000292589] [8388608 bytes] Assertion Succeeded (Constraint: is true, Value: true, Message: Full validation should pass after hash is set)
+[00:00:00.037854571 / 00:00:00.000203253] [8388608 bytes] Test Passed (Tests\Unit\HashValidationFixTest::testInvoiceValidationWorksWithoutHashBeforeGeneration)
+[00:00:00.038171002 / 00:00:00.000316431] [8388608 bytes] Test Finished (Tests\Unit\HashValidationFixTest::testInvoiceValidationWorksWithoutHashBeforeGeneration)
+[00:00:00.038435150 / 00:00:00.000264148] [8388608 bytes] Test Suite Finished (Tests\Unit\HashValidationFixTest, 2 tests)
+[00:00:00.038838113 / 00:00:00.000402963] [8388608 bytes] Test Runner Execution Finished
+[00:00:00.039040373 / 00:00:00.000202260] [8388608 bytes] Test Runner Finished
+[00:00:00.040384367 / 00:00:00.001343994] [8388608 bytes] PHPUnit Finished (Shell Exit Code: 0)

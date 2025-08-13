@@ -1,10 +1,13 @@
 <?php
+
+declare(strict_types=1);
+
 namespace eseperio\verifactu\models;
 
 /**
  * Model representing chaining information (Encadenamiento).
  * Can represent either a first invoice in a chain or a link to a previous invoice.
- * Original schema: EncadenamientoType
+ * Original schema: EncadenamientoType.
  * @see docs/aeat/esquemas/SuministroInformacion.xsd.xml
  */
 class Chaining extends Model
@@ -17,14 +20,14 @@ class Chaining extends Model
     public $firstRecord;
 
     /**
-     * Previous invoice data (RegistroAnterior)
-     * @var \eseperio\verifactu\models\PreviousInvoiceChaining|null
+     * Previous invoice data (RegistroAnterior).
+     * @var PreviousInvoiceChaining|null
      */
     private $previousInvoice;
 
     /**
-     * Get the previous invoice data
-     * @return \eseperio\verifactu\models\PreviousInvoiceChaining|null
+     * Get the previous invoice data.
+     * @return PreviousInvoiceChaining|null
      */
     public function getPreviousInvoice()
     {
@@ -32,11 +35,11 @@ class Chaining extends Model
     }
 
     /**
-     * Set the previous invoice data
-     * @param \eseperio\verifactu\models\PreviousInvoiceChaining|array $previousInvoice Previous invoice data
+     * Set the previous invoice data.
+     * @param PreviousInvoiceChaining|array $previousInvoice Previous invoice data
      * @return $this
      */
-    public function setPreviousInvoice($previousInvoice)
+    public function setPreviousInvoice($previousInvoice): static
     {
         if (is_array($previousInvoice)) {
             $chaining = new PreviousInvoiceChaining();
@@ -48,46 +51,49 @@ class Chaining extends Model
         } else {
             $this->previousInvoice = $previousInvoice;
         }
-        
+
         // If we set a previous invoice, we can't be the first record
         $this->firstRecord = null;
-        
+
         return $this;
     }
 
     /**
-     * Set this as the first record in a chain
+     * Set this as the first record in a chain.
      * @return $this
      */
-    public function setAsFirstRecord()
+    public function setAsFirstRecord(): static
     {
         $this->firstRecord = 'S';
         $this->previousInvoice = null;
+
         return $this;
     }
 
     /**
      * Returns validation rules for the chaining information.
-     * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
-            [['firstRecord', 'previousInvoice'], function($value, $model) {
+            [['firstRecord', 'previousInvoice'], function ($value, $model): string|bool {
                 // Either firstRecord or previousInvoice must be set
                 if ($model->firstRecord === null && $model->previousInvoice === null) {
                     return 'Either firstRecord or previousInvoice must be provided.';
                 }
-                
+
                 // Both can't be set at the same time
                 if ($model->firstRecord !== null && $model->previousInvoice !== null) {
                     return 'Only one of firstRecord or previousInvoice can be provided.';
                 }
-                
+
                 return true;
             }],
-            ['firstRecord', function($value) {
-                if ($value === null) return true;
+            ['firstRecord', function ($value): bool|string {
+                if ($value === null) {
+                    return true;
+                }
+
                 return $value === 'S' ? true : 'First record indicator must be "S".';
             }],
         ];

@@ -1,7 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace eseperio\verifactu\tests\Unit;
 
+use BaconQrCode\Writer;
+use PHPUnit\Framework\MockObject\MockObject;
 use eseperio\verifactu\models\InvoiceId;
 use eseperio\verifactu\models\InvoiceRecord;
 use eseperio\verifactu\services\QrGeneratorService;
@@ -10,9 +14,9 @@ use PHPUnit\Framework\TestCase;
 class QrGeneratorServiceTest extends TestCase
 {
     /**
-     * Test that the QrGeneratorService::buildQrContent method builds the correct URL
+     * Test that the QrGeneratorService::buildQrContent method builds the correct URL.
      */
-    public function testBuildQrContent()
+    public function testBuildQrContent(): void
     {
         // Create a mock InvoiceRecord
         $mockInvoiceRecord = $this->getMockBuilder(InvoiceRecord::class)
@@ -52,9 +56,9 @@ class QrGeneratorServiceTest extends TestCase
     }
 
     /**
-     * Test that the QrGeneratorService::getFileExtension method returns the correct extension
+     * Test that the QrGeneratorService::getFileExtension method returns the correct extension.
      */
-    public function testGetFileExtension()
+    public function testGetFileExtension(): void
     {
         // Use reflection to access the protected method
         $reflectionClass = new \ReflectionClass(QrGeneratorService::class);
@@ -79,9 +83,9 @@ class QrGeneratorServiceTest extends TestCase
     }
 
     /**
-     * Test that the QrGeneratorService::createWriter method creates the correct writer
+     * Test that the QrGeneratorService::createWriter method creates the correct writer.
      */
-    public function testCreateWriter()
+    public function testCreateWriter(): void
     {
         // Use reflection to access the protected method
         $reflectionClass = new \ReflectionClass(QrGeneratorService::class);
@@ -90,15 +94,15 @@ class QrGeneratorServiceTest extends TestCase
 
         // Test GD renderer
         $writer = $method->invoke(null, QrGeneratorService::RENDERER_GD, 300);
-        $this->assertInstanceOf(\BaconQrCode\Writer::class, $writer);
+        $this->assertInstanceOf(Writer::class, $writer);
 
         // Test Imagick renderer
         $writer = $method->invoke(null, QrGeneratorService::RENDERER_IMAGICK, 300);
-        $this->assertInstanceOf(\BaconQrCode\Writer::class, $writer);
+        $this->assertInstanceOf(Writer::class, $writer);
 
         // Test SVG renderer
         $writer = $method->invoke(null, QrGeneratorService::RENDERER_SVG, 300);
-        $this->assertInstanceOf(\BaconQrCode\Writer::class, $writer);
+        $this->assertInstanceOf(Writer::class, $writer);
 
         // Test invalid renderer
         $this->expectException(\RuntimeException::class);
@@ -106,9 +110,9 @@ class QrGeneratorServiceTest extends TestCase
     }
 
     /**
-     * Test the main generateQr method with default parameters
+     * Test the main generateQr method with default parameters.
      */
-    public function testGenerateQrWithDefaultParameters()
+    public function testGenerateQrWithDefaultParameters(): void
     {
         // Create a mock InvoiceRecord
         $mockInvoiceRecord = $this->createMockInvoiceRecord();
@@ -124,9 +128,9 @@ class QrGeneratorServiceTest extends TestCase
     }
 
     /**
-     * Test the generateQr method with file destination
+     * Test the generateQr method with file destination.
      */
-    public function testGenerateQrWithFileDestination()
+    public function testGenerateQrWithFileDestination(): void
     {
         // Create a mock InvoiceRecord
         $mockInvoiceRecord = $this->createMockInvoiceRecord();
@@ -134,8 +138,8 @@ class QrGeneratorServiceTest extends TestCase
         // Call the method with file destination
         $baseUrl = 'https://example.com/verify';
         $result = QrGeneratorService::generateQr(
-            $mockInvoiceRecord, 
-            $baseUrl, 
+            $mockInvoiceRecord,
+            $baseUrl,
             QrGeneratorService::DESTINATION_FILE
         );
 
@@ -154,9 +158,9 @@ class QrGeneratorServiceTest extends TestCase
     }
 
     /**
-     * Test the generateQr method with SVG renderer
+     * Test the generateQr method with SVG renderer.
      */
-    public function testGenerateQrWithSvgRenderer()
+    public function testGenerateQrWithSvgRenderer(): void
     {
         // Create a mock InvoiceRecord
         $mockInvoiceRecord = $this->createMockInvoiceRecord();
@@ -164,8 +168,8 @@ class QrGeneratorServiceTest extends TestCase
         // Call the method with SVG renderer
         $baseUrl = 'https://example.com/verify';
         $result = QrGeneratorService::generateQr(
-            $mockInvoiceRecord, 
-            $baseUrl, 
+            $mockInvoiceRecord,
+            $baseUrl,
             QrGeneratorService::DESTINATION_STRING,
             300,
             QrGeneratorService::RENDERER_SVG
@@ -179,9 +183,9 @@ class QrGeneratorServiceTest extends TestCase
     }
 
     /**
-     * Test the generateQr method with different resolutions
+     * Test the generateQr method with different resolutions.
      */
-    public function testGenerateQrWithDifferentResolutions()
+    public function testGenerateQrWithDifferentResolutions(): void
     {
         // Create a mock InvoiceRecord
         $mockInvoiceRecord = $this->createMockInvoiceRecord();
@@ -189,16 +193,16 @@ class QrGeneratorServiceTest extends TestCase
 
         // Generate QR with small resolution
         $smallQr = QrGeneratorService::generateQr(
-            $mockInvoiceRecord, 
-            $baseUrl, 
+            $mockInvoiceRecord,
+            $baseUrl,
             QrGeneratorService::DESTINATION_STRING,
             100
         );
 
         // Generate QR with large resolution
         $largeQr = QrGeneratorService::generateQr(
-            $mockInvoiceRecord, 
-            $baseUrl, 
+            $mockInvoiceRecord,
+            $baseUrl,
             QrGeneratorService::DESTINATION_STRING,
             300
         );
@@ -212,9 +216,9 @@ class QrGeneratorServiceTest extends TestCase
     }
 
     /**
-     * Helper method to create a mock InvoiceRecord
+     * Helper method to create a mock InvoiceRecord.
      */
-    private function createMockInvoiceRecord()
+    private function createMockInvoiceRecord(): MockObject
     {
         $mockInvoiceRecord = $this->getMockBuilder(InvoiceRecord::class)
             ->disableOriginalConstructor()

@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace eseperio\verifactu\models\enums;
 
 /**
@@ -7,22 +10,22 @@ namespace eseperio\verifactu\models\enums;
 enum TaxType: string
 {
     /**
-     * Value Added Tax (IVA)
+     * Value Added Tax (IVA).
      */
     case IVA = '01';
-    
+
     /**
-     * Tax on Production, Services and Imports (IPSI) of Ceuta and Melilla
+     * Tax on Production, Services and Imports (IPSI) of Ceuta and Melilla.
      */
     case IPSI = '02';
-    
+
     /**
-     * General Indirect Tax of the Canary Islands (IGIC)
+     * General Indirect Tax of the Canary Islands (IGIC).
      */
     case IGIC = '03';
-    
+
     /**
-     * Other taxes
+     * Other taxes.
      */
     case OTHER = '05';
 }

@@ -1,29 +1,31 @@
 <?php
+
+declare(strict_types=1);
+
 namespace eseperio\verifactu\models;
 
 /**
  * Model representing a system event for submission to AEAT.
- * Based on: RegistroEvento (EventosSIF.xsd.xml)
+ * Based on: RegistroEvento (EventosSIF.xsd.xml).
  */
 class EventRecord extends Model
 {
     /**
-     * Event version identifier (IDVersion)
+     * Event version identifier (IDVersion).
      * @var string
      */
     public $versionId;
 
     /**
-     * Event data (Evento)
+     * Event data (Evento).
      * @var array
      */
     public $eventData;
 
     /**
      * Returns validation rules for event record.
-     * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             [['versionId', 'eventData'], 'required'],

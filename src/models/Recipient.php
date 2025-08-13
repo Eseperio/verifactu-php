@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 namespace eseperio\verifactu\models;
 
 /**
@@ -7,22 +10,21 @@ namespace eseperio\verifactu\models;
 class Recipient extends Model
 {
     /**
-     * Recipient NIF (NIF)
+     * Recipient NIF (NIF).
      * @var string
      */
     public $nif;
 
     /**
-     * Recipient name (Nombre)
+     * Recipient name (Nombre).
      * @var string
      */
     public $name;
 
     /**
      * Returns validation rules for the recipient.
-     * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             [['nif'], 'required'],

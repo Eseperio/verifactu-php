@@ -3,3 +3,7 @@ vendor
 composer.lock
 .phpunit.result.cache
 .phpunit.cache
+var
+.php-cs-fixer.cache
+.phpstan.cache
+.rector/

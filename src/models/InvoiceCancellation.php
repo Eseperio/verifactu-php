@@ -1,44 +1,48 @@
 <?php
+
+declare(strict_types=1);
+
 namespace eseperio\verifactu\models;
 
-use eseperio\verifactu\models\enums\YesNoType;
 use eseperio\verifactu\models\enums\GeneratorType;
+use eseperio\verifactu\models\enums\YesNoType;
 
 /**
  * Model representing an invoice cancellation ("Anulación").
  * Based on: RegistroAnulacion (SuministroInformacion.xsd.xml)
- * Original schema: RegistroAnulacionType
+ * Original schema: RegistroAnulacionType.
  * @see docs/aeat/esquemas/SuministroInformacion.xsd.xml
  */
 class InvoiceCancellation extends InvoiceRecord
 {
+    public $externalReference;
     /**
-     * No previous record found indicator (SinRegistroPrevio, optional)
-     * @var \eseperio\verifactu\models\enums\YesNoType|null
+     * No previous record found indicator (SinRegistroPrevio, optional).
+     * @var YesNoType|null
      */
     public $noPreviousRecord;
 
     /**
-     * Previous rejection indicator (RechazoPrevio, optional)
-     * @var \eseperio\verifactu\models\enums\YesNoType|null
+     * Previous rejection indicator (RechazoPrevio, optional).
+     * @var YesNoType|null
      */
     public $previousRejection;
 
     /**
-     * Generator (GeneradoPor, optional)
-     * @var \eseperio\verifactu\models\enums\GeneratorType|null
+     * Generator (GeneradoPor, optional).
+     * @var GeneratorType|null
      */
     public $generator;
 
     /**
-     * Generator data (Generador, optional)
-     * @var \eseperio\verifactu\models\LegalPerson|null
+     * Generator data (Generador, optional).
+     * @var LegalPerson|null
      */
     private $generatorData;
 
     /**
-     * Get the generator data
-     * @return \eseperio\verifactu\models\LegalPerson|null
+     * Get the generator data.
+     * @return LegalPerson|null
      */
     public function getGeneratorData()
     {
@@ -46,11 +50,11 @@ class InvoiceCancellation extends InvoiceRecord
     }
 
     /**
-     * Set the generator data
-     * @param \eseperio\verifactu\models\LegalPerson|array $generatorData Generator data
+     * Set the generator data.
+     * @param LegalPerson|array $generatorData Generator data
      * @return $this
      */
-    public function setGeneratorData($generatorData)
+    public function setGeneratorData($generatorData): static
     {
         if (is_array($generatorData)) {
             $legalPerson = new LegalPerson();
@@ -73,28 +77,66 @@ class InvoiceCancellation extends InvoiceRecord
     /**
      * Returns validation rules for invoice cancellation.
      * Merges parent rules with specific rules for cancellation.
-     * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return array_merge(parent::rules(), [
-            ['noPreviousRecord', function($value) {
-                if ($value === null) return true;
+            ['noPreviousRecord', function ($value): bool|string {
+                if ($value === null) {
+                    return true;
+                }
+
                 return ($value instanceof YesNoType) ? true : 'Must be an instance of YesNoType.';
             }],
-            ['previousRejection', function($value) {
-                if ($value === null) return true;
+            ['previousRejection', function ($value): bool|string {
+                if ($value === null) {
+                    return true;
+                }
+
                 return ($value instanceof YesNoType) ? true : 'Must be an instance of YesNoType.';
             }],
-            ['generator', function($value) {
-                if ($value === null) return true;
+            ['generator', function ($value): bool|string {
+                if ($value === null) {
+                    return true;
+                }
+
                 return ($value instanceof GeneratorType) ? true : 'Must be an instance of GeneratorType.';
             }],
-            ['generatorData', function($value) {
-                if ($value === null) return true;
+            ['generatorData', function ($value): bool|string {
+                if ($value === null) {
+                    return true;
+                }
+
                 return ($value instanceof LegalPerson) ? true : 'Must be an instance of LegalPerson.';
             }],
         ]);
+    }
+
+    /**
+     * Helper method to rename a DOM element by creating a new one with the desired tag name
+     * and copying all children and attributes. This works around PHP 8.3's read-only tagName property.
+     *
+     * @param \DOMDocument $doc The document
+     * @param \DOMElement $originalNode The original node to rename
+     * @param string $newTagName The new tag name
+     * @return \DOMElement The new element with the desired tag name
+     */
+    private function renameElement(\DOMDocument $doc, \DOMElement $originalNode, string $newTagName)
+    {
+        // Create new element with correct tag name
+        $newElement = $doc->createElement($newTagName);
+
+        // Copy all child nodes
+        foreach ($originalNode->childNodes as $child) {
+            $newElement->appendChild($child->cloneNode(true));
+        }
+
+        // Copy all attributes
+        foreach ($originalNode->attributes as $attr) {
+            $newElement->setAttribute($attr->nodeName, $attr->nodeValue);
+        }
+
+        return $newElement;
     }
 
     /**
@@ -103,7 +145,7 @@ class InvoiceCancellation extends InvoiceRecord
      * @return \DOMDocument The root element of this model's XML representation
      * @throws \DOMException
      */
-    public function toXml()
+    public function toXml(): \DOMDocument
     {
         // Create the XML document
         $doc = new \DOMDocument('1.0', 'UTF-8');
@@ -120,9 +162,10 @@ class InvoiceCancellation extends InvoiceRecord
         // IDFactura (required)
         if (method_exists($this, 'getInvoiceId')) {
             $invoiceId = $this->getInvoiceId();
+
             if (method_exists($invoiceId, 'toXml')) {
-                $idFacturaNode = $invoiceId->toXml($doc);
-                $idFacturaNode->tagName = 'IDFactura';
+                $originalNode = $invoiceId->toXml($doc);
+                $idFacturaNode = $this->renameElement($doc, $originalNode, 'IDFactura');
                 $root->appendChild($idFacturaNode);
             }
         }
@@ -134,53 +177,53 @@ class InvoiceCancellation extends InvoiceRecord
 
         // SinRegistroPrevio (optional)
         if (!empty($this->noPreviousRecord)) {
-            $root->appendChild($doc->createElement('SinRegistroPrevio', $this->noPreviousRecord));
+            $root->appendChild($doc->createElement('SinRegistroPrevio', $this->noPreviousRecord?->value));
         }
 
         // RechazoPrevio (optional)
         if (!empty($this->previousRejection)) {
-            $root->appendChild($doc->createElement('RechazoPrevio', $this->previousRejection));
+            $root->appendChild($doc->createElement('RechazoPrevio', $this->previousRejection?->value));
         }
 
         // GeneradoPor (optional)
         if (!empty($this->generator)) {
-            $root->appendChild($doc->createElement('GeneradoPor', $this->generator));
+            $root->appendChild($doc->createElement('GeneradoPor', $this->generator?->value));
         }
 
         // Generador (optional)
         if (!empty($this->generatorData) && method_exists($this->generatorData, 'toXml')) {
-            $generadorNode = $this->generatorData->toXml($doc);
-            $generadorNode->tagName = 'Generador';
+            $originalNode = $this->generatorData->toXml($doc);
+            $generadorNode = $this->renameElement($doc, $originalNode, 'Generador');
             $root->appendChild($generadorNode);
         }
 
         // Encadenamiento (required, must be set by the user)
         if (!empty($this->chaining) && method_exists($this->chaining, 'toXml')) {
-            $encadenamientoNode = $this->chaining->toXml($doc);
-            $encadenamientoNode->tagName = 'Encadenamiento';
+            $originalNode = $this->chaining->toXml($doc);
+            $encadenamientoNode = $this->renameElement($doc, $originalNode, 'Encadenamiento');
             $root->appendChild($encadenamientoNode);
         }
 
         // SistemaInformatico (required)
-        if (!empty($this->computerSystem) && method_exists($this->computerSystem, 'toXml')) {
-            $sistemaNode = $this->computerSystem->toXml($doc);
-            $sistemaNode->tagName = 'SistemaInformatico';
+        if (!empty($this->systemInfo) && method_exists($this->systemInfo, 'toXml')) {
+            $originalNode = $this->systemInfo->toXml($doc);
+            $sistemaNode = $this->renameElement($doc, $originalNode, 'SistemaInformatico');
             $root->appendChild($sistemaNode);
         }
 
         // FechaHoraHusoGenRegistro (required, must be set by the user)
-        if (!empty($this->generationDateTime)) {
-            $root->appendChild($doc->createElement('FechaHoraHusoGenRegistro', $this->generationDateTime));
+        if (!empty($this->recordTimestamp)) {
+            $root->appendChild($doc->createElement('FechaHoraHusoGenRegistro', $this->recordTimestamp));
         }
 
         // TipoHuella (required, must be set by the user)
         if (!empty($this->hashType)) {
-            $root->appendChild($doc->createElement('TipoHuella', $this->hashType));
+            $root->appendChild($doc->createElement('TipoHuella', $this->hashType?->value));
         }
 
         // Huella (required, must be set by the user)
-        if (!empty($this->hashValue)) {
-            $root->appendChild($doc->createElement('Huella', $this->hashValue));
+        if (!empty($this->hash)) {
+            $root->appendChild($doc->createElement('Huella', $this->hash));
         }
 
         // ds:Signature (optional, to be added after signing)
