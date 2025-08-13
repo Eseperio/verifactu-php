@@ -9,7 +9,8 @@
     "ext-soap": "*",
     "ext-libxml": "*",
     "ext-openssl": "*",
-    "ext-dom": "*"
+    "ext-dom": "*",
+    "vlucas/phpdotenv": "^5.5"
   },
   "require-dev": {
     "phpunit/phpunit": "^10.0",
@@ -34,10 +35,27 @@
   ],
   "minimum-stability": "dev",
   "scripts": {
-    "test": "phpunit",
-    "test-readme": "phpunit tests/Unit/Examples/",
-    "test-unit": "phpunit --testsuite=Unit",
-    "coverage": "phpunit --coverage-html var/coverage/html",
+    "check-env": "php -r \"if (!file_exists('.env') && file_exists('.env.example')) { copy('.env.example', '.env'); echo PHP_EOL . '⚠️  No .env file found. Created from .env.example. Please edit .env with your certificate details.' . PHP_EOL . PHP_EOL; }\"",
+    "test": [
+      "@check-env",
+      "phpunit"
+    ],
+    "test-readme": [
+      "@check-env",
+      "phpunit tests/Unit/Examples/"
+    ],
+    "test-unit": [
+      "@check-env",
+      "phpunit --testsuite=Unit"
+    ],
+    "test-sandbox": [
+      "@check-env",
+      "phpunit --testsuite=Integration"
+    ],
+    "coverage": [
+      "@check-env",
+      "phpunit --coverage-html var/coverage/html"
+    ],
     "phpstan": "phpstan analyse",
     "phpstan-baseline": "phpstan analyse --generate-baseline",
     "cs-fix": "php-cs-fixer fix",

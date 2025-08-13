@@ -9,3 +9,5 @@ var
 .rector/
 *.log
 *.bak
+.env
+.env.local

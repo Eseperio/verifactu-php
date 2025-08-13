@@ -837,7 +837,40 @@ composer test-readme
 
 # Run unit tests
 composer test-unit
+
+# Run sandbox environment tests (requires certificate)
+composer test-sandbox
 ```
+
+#### Setting up for Sandbox Testing
+
+To run tests that interact with the AEAT Verifactu sandbox environment, you need to provide a valid certificate. The library uses a `.env` file to securely load certificate information without committing it to the repository.
+
+1. Copy the `.env.example` file to `.env` in the project root:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit the `.env` file and set the following variables:
+   ```
+   # Path to your certificate file (required for sandbox tests)
+   VERIFACTU_CERT_PATH=/path/to/your/certificate.p12
+
+   # Password for your certificate (required for sandbox tests)
+   VERIFACTU_CERT_PASSWORD=your_certificate_password
+
+   # Certificate type: 'certificate' or 'seal'
+   VERIFACTU_CERT_TYPE=certificate
+
+   # Environment: 'production' or 'sandbox'
+   VERIFACTU_ENVIRONMENT=sandbox
+   ```
+
+3. When you run any test command, the library will automatically check if the `.env` file exists and create it from `.env.example` if it doesn't. If the file is created automatically, you'll see a warning message indicating that you need to configure it.
+
+4. Tests that require a certificate will be skipped if the `.env` file is not properly configured.
+
+> **Note:** The `.env` file is excluded from version control by `.gitignore` to prevent accidentally committing sensitive information.
 
 ### Development
 
