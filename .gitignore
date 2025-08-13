@@ -7,3 +7,5 @@ var
 .php-cs-fixer.cache
 .phpstan.cache
 .rector/
+*.log
+*.bak
