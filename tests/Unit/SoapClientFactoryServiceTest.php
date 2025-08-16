@@ -39,7 +39,7 @@ class SoapClientFactoryServiceTest extends TestCase
         
         // Create a SOAP client
         $client = $method->invokeArgs(null, [
-            __DIR__ . '/../../src/docs/aeat/SistemaFacturacion.wsdl.xml',
+            __DIR__ . '/../../docs/aeat/SistemaFacturacion.wsdl.xml',
             $certPath,
             $certPassword,
             [],
@@ -62,7 +62,7 @@ class SoapClientFactoryServiceTest extends TestCase
         
         $this->expectException(\RuntimeException::class);
         $method->invokeArgs(null, [
-            __DIR__ . '/../../src/docs/aeat/SistemaFacturacion.wsdl.xml',
+            __DIR__ . '/../../docs/aeat/SistemaFacturacion.wsdl.xml',
             '/nonexistent/path/to/cert.p12',
             'password',
             [],
@@ -92,7 +92,7 @@ class SoapClientFactoryServiceTest extends TestCase
         
         $this->expectException(\Exception::class);
         $method->invokeArgs(null, [
-            __DIR__ . '/../../src/docs/aeat/SistemaFacturacion.wsdl.xml',
+            __DIR__ . '/../../docs/aeat/SistemaFacturacion.wsdl.xml',
             $certPath,
             'wrong_password',
             [],
