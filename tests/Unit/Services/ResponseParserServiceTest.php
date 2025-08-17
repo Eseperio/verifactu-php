@@ -22,7 +22,6 @@ class ResponseParserServiceTest extends TestCase
      */
     public function testParseSuccessfulInvoiceResponse(): void
     {
-        $this->markTestSkipped('Test skipped due to XML parsing issues that need to be resolved');
         $xml = $this->getSuccessfulInvoiceResponseXml();
         $response = ResponseParserService::parseInvoiceResponse($xml);
         
