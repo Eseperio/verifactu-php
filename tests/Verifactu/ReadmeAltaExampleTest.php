@@ -26,7 +26,12 @@ class ReadmeAltaExampleTest extends TestCase
         $certPass = getenv('VERIFACTU_CERT_PASS');
 
         if (empty($certPath) || empty($certPass)) {
-            $this->markTestSkipped('Certificate path and password must be set in environment variables (VERIFACTU_CERT_PATH, VERIFACTU_CERT_PASS)');
+            $this->markTestSkipped(
+                'Skipping integration test that requires a real certificate for connecting to the AEAT sandbox. ' .
+                'To run this test, set the following environment variables: ' .
+                'VERIFACTU_CERT_PATH (path to your .p12 certificate file) and ' .
+                'VERIFACTU_CERT_PASS (password for your certificate)'
+            );
         }
 
         Verifactu::config(

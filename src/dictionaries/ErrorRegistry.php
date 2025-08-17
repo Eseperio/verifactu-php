@@ -266,4 +266,13 @@ class ErrorRegistry
     {
         return self::$errors[$id] ?? null;
     }
+    
+    /**
+     * Alias for getDescription to maintain compatibility with existing code.
+     * @param int|string $id
+     */
+    public static function getErrorMessage($id): ?string
+    {
+        return self::getDescription($id);
+    }
 }

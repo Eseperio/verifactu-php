@@ -21,8 +21,29 @@ class ResponseParserService
      */
     public static function parseInvoiceResponse(string $xmlResponse): InvoiceResponse
     {
+        // Set internal errors handling to throw exceptions on XML parsing errors
+        $previousErrorSetting = libxml_use_internal_errors(true);
+        
         $doc = new \DOMDocument();
-        $doc->loadXML($xmlResponse);
+        $result = $doc->loadXML($xmlResponse);
+        
+        // If loading failed, throw an exception
+        if ($result === false) {
+            $errors = libxml_get_errors();
+            libxml_clear_errors();
+            libxml_use_internal_errors($previousErrorSetting);
+            
+            $errorMsg = 'XML parsing failed';
+            if (!empty($errors)) {
+                $firstError = reset($errors);
+                $errorMsg .= ': ' . $firstError->message . ' at line ' . $firstError->line;
+            }
+            
+            throw new \RuntimeException($errorMsg);
+        }
+        
+        // Restore previous error handling setting
+        libxml_use_internal_errors($previousErrorSetting);
 
         // Map DOM to model
         $model = new InvoiceResponse();
@@ -88,8 +109,29 @@ class ResponseParserService
      */
     public static function parseQueryResponse($xmlResponse): QueryResponse
     {
+        // Set internal errors handling to throw exceptions on XML parsing errors
+        $previousErrorSetting = libxml_use_internal_errors(true);
+        
         $doc = new \DOMDocument();
-        $doc->loadXML($xmlResponse);
+        $result = $doc->loadXML($xmlResponse);
+        
+        // If loading failed, throw an exception
+        if ($result === false) {
+            $errors = libxml_get_errors();
+            libxml_clear_errors();
+            libxml_use_internal_errors($previousErrorSetting);
+            
+            $errorMsg = 'XML parsing failed';
+            if (!empty($errors)) {
+                $firstError = reset($errors);
+                $errorMsg .= ': ' . $firstError->message . ' at line ' . $firstError->line;
+            }
+            
+            throw new \RuntimeException($errorMsg);
+        }
+        
+        // Restore previous error handling setting
+        libxml_use_internal_errors($previousErrorSetting);
 
         $model = new QueryResponse();
         $xpath = new \DOMXPath($doc);
@@ -134,12 +176,21 @@ class ResponseParserService
         $result = [];
 
         if ($node->hasChildNodes()) {
+            $hasElementNodes = false;
+            $textContent = '';
+            
             foreach ($node->childNodes as $child) {
                 if ($child->nodeType === XML_ELEMENT_NODE) {
+                    $hasElementNodes = true;
                     $result[$child->nodeName] = self::xmlNodeToArray($child);
                 } elseif ($child->nodeType === XML_TEXT_NODE) {
-                    return trim((string) $child->nodeValue);
+                    $textContent .= $child->nodeValue;
                 }
+            }
+            
+            // If we only have text nodes (no element nodes), return the trimmed text content
+            if (!$hasElementNodes && !empty(trim($textContent))) {
+                return trim($textContent);
             }
         }
 

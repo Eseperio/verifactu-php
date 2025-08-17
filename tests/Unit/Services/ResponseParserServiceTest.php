@@ -22,6 +22,7 @@ class ResponseParserServiceTest extends TestCase
      */
     public function testParseSuccessfulInvoiceResponse(): void
     {
+        // Test enabled to diagnose XML parsing issues
         $xml = $this->getSuccessfulInvoiceResponseXml();
         $response = ResponseParserService::parseInvoiceResponse($xml);
         
@@ -47,7 +48,7 @@ class ResponseParserServiceTest extends TestCase
      */
     public function testParseErrorInvoiceResponse(): void
     {
-        $this->markTestSkipped('Test skipped due to XML parsing issues that need to be resolved');
+        // Test enabled after fixing XML parsing issues
         $xml = $this->getErrorInvoiceResponseXml();
         $response = ResponseParserService::parseInvoiceResponse($xml);
         
@@ -87,7 +88,7 @@ class ResponseParserServiceTest extends TestCase
      */
     public function testParseSuccessfulQueryResponse(): void
     {
-        $this->markTestSkipped('Test skipped due to XML parsing issues that need to be resolved');
+        // Test enabled after fixing XML parsing issues
         $xml = $this->getSuccessfulQueryResponseXml();
         $response = ResponseParserService::parseQueryResponse($xml);
         
@@ -124,7 +125,7 @@ class ResponseParserServiceTest extends TestCase
      */
     public function testParseErrorQueryResponse(): void
     {
-        $this->markTestSkipped('Test skipped due to XML parsing issues that need to be resolved');
+        // Test enabled after fixing XML parsing issues
         $xml = $this->getErrorQueryResponseXml();
         $response = ResponseParserService::parseQueryResponse($xml);
         
@@ -163,7 +164,7 @@ class ResponseParserServiceTest extends TestCase
      */
     public function testParseInvalidXml(): void
     {
-        $this->markTestSkipped('Test skipped due to XML parsing issues that need to be resolved');
+        // Test enabled after fixing XML parsing issues
         $invalidXml = '<InvalidXml><UnclosedTag>';
         
         // Need to use the \Throwable interface to catch both \Exception and \Error

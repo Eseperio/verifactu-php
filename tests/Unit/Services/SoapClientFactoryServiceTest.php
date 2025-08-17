@@ -20,26 +20,9 @@ class SoapClientFactoryServiceTest extends TestCase
      */
     public function testCreateSoapClient(): void
     {
-        // Skip the test if no certificate is available
-        EnvLoader::load();
-        $certPath = EnvLoader::getCertPath();
-        $certPassword = EnvLoader::getCertPassword();
-        
-        if (empty($certPath) || empty($certPassword) || !file_exists($certPath)) {
-            $this->markTestSkipped(
-                'SOAP client creation test skipped. Make sure to set VERIFACTU_CERT_PATH and ' .
-                'VERIFACTU_CERT_PASSWORD in your .env file.'
-            );
-        }
-        
-        // Use reflection to access the protected method
-        $reflectionClass = new \ReflectionClass(SoapClientFactoryService::class);
-        $method = $reflectionClass->getMethod('createSoapClient');
-        $method->setAccessible(true);
-        
-        // Verify local AEAT WSDL and XSDs exist and are non-empty; otherwise skip (schemas may not be bundled for tests)
-        $base = realpath(__DIR__ . '/../../docs/aeat/esquemas');
-        $wsdlPath = $base . '/SistemaFacturacion.wsdl.xml';
+        // Verify local AEAT WSDL and XSDs exist and are non-empty
+        $base = realpath(__DIR__ . '/../../../docs/aeat/esquemas');
+        $wsdlPath = $base . '/SistemaFacturacion.wsdl';
         $xsds = [
             $base . '/SuministroInformacion.xsd',
             $base . '/SuministroLR.xsd',
@@ -47,14 +30,36 @@ class SoapClientFactoryServiceTest extends TestCase
             $base . '/RespuestaConsultaLR.xsd',
             $base . '/RespuestaSuministro.xsd',
         ];
+        
         if ($base === false || !file_exists($wsdlPath)) {
             $this->markTestSkipped('Local AEAT WSDL not found; skipping SOAP client creation test.');
         }
+        
         foreach ($xsds as $xsd) {
             if (!file_exists($xsd) || filesize($xsd) === 0) {
                 $this->markTestSkipped('AEAT XSD schemas not available or empty; skipping SOAP client creation test.');
             }
         }
+        
+        // Try to load real certificate if available
+        EnvLoader::load();
+        $certPath = EnvLoader::getCertPath();
+        $certPassword = EnvLoader::getCertPassword();
+        
+        if (empty($certPath) || empty($certPassword) || !file_exists($certPath)) {
+            // Skip the test when no certificate is available - with a more informative message
+            $this->markTestSkipped(
+                'Skipping test that requires a real certificate. ' .
+                'In a production environment, make sure to set VERIFACTU_CERT_PATH and ' .
+                'VERIFACTU_CERT_PASSWORD environment variables to a valid certificate.'
+            );
+        }
+        
+        // Use reflection to access the protected method with real certificate
+        $reflectionClass = new \ReflectionClass(SoapClientFactoryService::class);
+        $method = $reflectionClass->getMethod('createSoapClient');
+        $method->setAccessible(true);
+        
         // Create a SOAP client
         $client = $method->invokeArgs(null, [
             $wsdlPath,
@@ -80,7 +85,7 @@ class SoapClientFactoryServiceTest extends TestCase
         
         $this->expectException(\RuntimeException::class);
         $method->invokeArgs(null, [
-            __DIR__ . '/../../docs/aeat/SistemaFacturacion.wsdl.xml',
+            realpath(__DIR__ . '/../../../docs/aeat/esquemas/SistemaFacturacion.wsdl'),
             '/nonexistent/path/to/cert.p12',
             'password',
             [],
@@ -99,7 +104,9 @@ class SoapClientFactoryServiceTest extends TestCase
         
         if (empty($certPath) || !file_exists($certPath)) {
             $this->markTestSkipped(
-                'SOAP client creation test skipped. Make sure to set VERIFACTU_CERT_PATH in your .env file.'
+                'Skipping test that requires a real certificate. ' .
+                'In a production environment, make sure to set VERIFACTU_CERT_PATH ' .
+                'environment variable to a valid certificate.'
             );
         }
         
@@ -110,7 +117,7 @@ class SoapClientFactoryServiceTest extends TestCase
         
         $this->expectException(\Exception::class);
         $method->invokeArgs(null, [
-            __DIR__ . '/../../docs/aeat/SistemaFacturacion.wsdl.xml',
+            realpath(__DIR__ . '/../../../docs/aeat/esquemas/SistemaFacturacion.wsdl'),
             $certPath,
             'wrong_password',
             [],
@@ -130,8 +137,9 @@ class SoapClientFactoryServiceTest extends TestCase
         
         if (empty($certPath) || empty($certPassword) || !file_exists($certPath)) {
             $this->markTestSkipped(
-                'SOAP client creation test skipped. Make sure to set VERIFACTU_CERT_PATH and ' .
-                'VERIFACTU_CERT_PASSWORD in your .env file.'
+                'Skipping test that requires a real certificate. ' .
+                'In a production environment, make sure to set VERIFACTU_CERT_PATH and ' .
+                'VERIFACTU_CERT_PASSWORD environment variables to a valid certificate.'
             );
         }
         

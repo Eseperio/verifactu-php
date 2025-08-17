@@ -28,8 +28,9 @@ class XmlSignerServiceTest extends TestCase
         
         if (empty($certPath) || empty($certPassword) || !file_exists($certPath)) {
             $this->markTestSkipped(
-                'XML signing test skipped. Make sure to set VERIFACTU_CERT_PATH and ' .
-                'VERIFACTU_CERT_PASSWORD in your .env file.'
+                'Skipping test that requires a real certificate. ' .
+                'In a production environment, make sure to set VERIFACTU_CERT_PATH and ' .
+                'VERIFACTU_CERT_PASSWORD environment variables to a valid certificate.'
             );
         }
         
@@ -67,8 +68,9 @@ class XmlSignerServiceTest extends TestCase
         
         if (empty($certPath) || empty($certPassword) || !file_exists($certPath)) {
             $this->markTestSkipped(
-                'XML signing test skipped. Make sure to set VERIFACTU_CERT_PATH and ' .
-                'VERIFACTU_CERT_PASSWORD in your .env file.'
+                'Skipping test that requires a real certificate. ' .
+                'In a production environment, make sure to set VERIFACTU_CERT_PATH and ' .
+                'VERIFACTU_CERT_PASSWORD environment variables to a valid certificate.'
             );
         }
         
@@ -89,7 +91,9 @@ class XmlSignerServiceTest extends TestCase
         
         if (empty($certPath) || !file_exists($certPath)) {
             $this->markTestSkipped(
-                'XML signing test skipped. Make sure to set VERIFACTU_CERT_PATH in your .env file.'
+                'Skipping test that requires a real certificate. ' .
+                'In a production environment, make sure to set VERIFACTU_CERT_PATH ' .
+                'environment variable to a valid certificate.'
             );
         }
         
