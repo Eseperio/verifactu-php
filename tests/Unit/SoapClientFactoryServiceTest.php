@@ -37,9 +37,28 @@ class SoapClientFactoryServiceTest extends TestCase
         $method = $reflectionClass->getMethod('createSoapClient');
         $method->setAccessible(true);
         
+        // Verify local AEAT WSDL and XSDs exist and are non-empty; otherwise skip (schemas may not be bundled for tests)
+        $base = realpath(__DIR__ . '/../../docs/aeat/esquemas');
+        $wsdlPath = $base . '/SistemaFacturacion.wsdl.xml';
+        $xsds = [
+            $base . '/SuministroInformacion.xsd',
+            $base . '/SuministroLR.xsd',
+            $base . '/ConsultaLR.xsd',
+            $base . '/RespuestaConsultaLR.xsd',
+            $base . '/RespuestaSuministro.xsd',
+        ];
+        if ($base === false || !file_exists($wsdlPath)) {
+            $this->markTestSkipped('Local AEAT WSDL not found; skipping SOAP client creation test.');
+        }
+        foreach ($xsds as $xsd) {
+            if (!file_exists($xsd) || filesize($xsd) === 0) {
+                die(var_dump($xsd));
+                $this->markTestSkipped('AEAT XSD schemas not available or empty; skipping SOAP client creation test.');
+            }
+        }
         // Create a SOAP client
         $client = $method->invokeArgs(null, [
-            __DIR__ . '/../../docs/aeat/SistemaFacturacion.wsdl.xml',
+            $wsdlPath,
             $certPath,
             $certPassword,
             [],

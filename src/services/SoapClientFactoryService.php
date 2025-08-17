@@ -38,7 +38,15 @@ class SoapClientFactoryService
         $soapOptions = array_merge($defaultOptions, $options);
 
         try {
-            return new \SoapClient($wsdl, $soapOptions);
+            // If WSDL is a local file path, prefix with file:// to help libxml resolve relative imports
+            $wsdlPath = $wsdl;
+            if (is_string($wsdl) && file_exists($wsdl) && !str_starts_with($wsdl, 'file://')) {
+                $real = realpath($wsdl);
+                if ($real !== false) {
+                    $wsdlPath = 'file://' . $real;
+                }
+            }
+            return new \SoapClient($wsdlPath, $soapOptions);
         } catch (\Exception $e) {
             throw new \RuntimeException('Unable to create SoapClient: ' . $e->getMessage(), 0, $e);
         }

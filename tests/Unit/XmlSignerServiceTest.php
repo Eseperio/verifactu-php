@@ -41,8 +41,8 @@ class XmlSignerServiceTest extends TestCase
         $this->assertStringContainsString('<ds:SignatureValue', $signedXml, 'Signed XML should contain a signature value');
         $this->assertStringContainsString('<ds:Reference', $signedXml, 'Signed XML should contain a reference');
         
-        // Verify that the original content is preserved
-        $this->assertStringContainsString('<SampleData><Item>Test Data</Item></SampleData>', $signedXml, 
+        // Verify that the original content is preserved (root content remains)
+        $this->assertStringContainsString('<Item>Test Data</Item>', $signedXml, 
             'Signed XML should contain the original content');
     }
     

@@ -36,7 +36,10 @@ class XmlSignerService
         }
 
         $doc = new \DOMDocument();
-        $doc->loadXML($xml);
+        $loaded = @$doc->loadXML($xml);
+        if ($loaded === false) {
+            throw new \Exception('Invalid XML provided for signing.');
+        }
 
         $objDSig = new XMLSecurityDSig();
         $objDSig->setCanonicalMethod(XMLSecurityDSig::EXC_C14N);
