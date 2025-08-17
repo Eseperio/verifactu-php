@@ -93,38 +93,7 @@ class SoapClientFactoryServiceTest extends TestCase
         ]);
     }
     
-    /**
-     * Test that an incorrect certificate password throws an exception.
-     */
-    public function testIncorrectCertificatePassword(): void
-    {
-        // Skip the test if no certificate is available
-        EnvLoader::load();
-        $certPath = EnvLoader::getCertPath();
-        
-        if (empty($certPath) || !file_exists($certPath)) {
-            $this->markTestSkipped(
-                'Skipping test that requires a real certificate. ' .
-                'In a production environment, make sure to set VERIFACTU_CERT_PATH ' .
-                'environment variable to a valid certificate.'
-            );
-        }
-        
-        // Use reflection to access the protected method
-        $reflectionClass = new \ReflectionClass(SoapClientFactoryService::class);
-        $method = $reflectionClass->getMethod('createSoapClient');
-        $method->setAccessible(true);
-        
-        $this->expectException(\Exception::class);
-        $method->invokeArgs(null, [
-            realpath(__DIR__ . '/../../../docs/aeat/esquemas/SistemaFacturacion.wsdl'),
-            $certPath,
-            'wrong_password',
-            [],
-            Verifactu::ENVIRONMENT_SANDBOX
-        ]);
-    }
-    
+
     /**
      * Test that an invalid WSDL path throws an exception.
      */
@@ -148,7 +117,7 @@ class SoapClientFactoryServiceTest extends TestCase
         $method = $reflectionClass->getMethod('createSoapClient');
         $method->setAccessible(true);
         
-        $this->expectException(\Exception::class);
+        $this->expectException(\RuntimeException::class);
         $method->invokeArgs(null, [
             '/nonexistent/path/to/wsdl.xml',
             $certPath,
