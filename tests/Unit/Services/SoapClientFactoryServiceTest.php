@@ -52,7 +52,6 @@ class SoapClientFactoryServiceTest extends TestCase
         }
         foreach ($xsds as $xsd) {
             if (!file_exists($xsd) || filesize($xsd) === 0) {
-                die(var_dump($xsd));
                 $this->markTestSkipped('AEAT XSD schemas not available or empty; skipping SOAP client creation test.');
             }
         }
