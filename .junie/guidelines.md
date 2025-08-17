@@ -8,10 +8,10 @@ This document provides guidelines and information for developers working on the 
 
 - PHP 8.1 or higher
 - Required PHP extensions:
-  - soap
-  - libxml
-  - openssl
-  - dom
+    - soap
+    - libxml
+    - openssl
+    - dom
 
 ### Installation
 
@@ -59,11 +59,14 @@ To run a specific test method:
 ./vendor/bin/phpunit --filter testMethodName tests/Unit/SomeTest.php
 ```
 
+> IMPORTANT: Test must pass, and if thew do not, and there is no clear solution, a call to markTestSkipped, but a
+> detailed explanation must be registered in code as a comment or the message of markTestSkipped.
+
 ### Adding New Tests
 
 1. Create a new test file in the appropriate directory:
-   - Unit tests go in `tests/Unit/`
-   - Model tests go in `tests/Unit/Models/`
+    - Unit tests go in `tests/Unit/`
+    - Model tests go in `tests/Unit/Models/`
 
 2. Name your test file with the suffix `Test.php` (e.g., `MyServiceTest.php`)
 
@@ -156,8 +159,10 @@ The library uses exceptions for error handling:
 
 ### QR Code Generation
 
-The library uses the bacon/bacon-qr-code library to generate QR codes for invoices. The QR codes follow the AEAT Verifactu specification.
+The library uses the bacon/bacon-qr-code library to generate QR codes for invoices. The QR codes follow the AEAT
+Verifactu specification.
 
 ### SOAP API Integration
 
-The library communicates with the AEAT Verifactu SOAP API. The API has different endpoints for production and sandbox environments, and for certificate and seal authentication types.
+The library communicates with the AEAT Verifactu SOAP API. The API has different endpoints for production and sandbox
+environments, and for certificate and seal authentication types.
