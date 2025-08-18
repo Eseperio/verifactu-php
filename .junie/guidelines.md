@@ -60,7 +60,8 @@ To run a specific test method:
 ```
 
 > IMPORTANT: Test must pass, and if thew do not, and there is no clear solution, a call to markTestSkipped, but a
-> detailed explanation must be registered in code as a comment or the message of markTestSkipped.
+> detailed explanation must be registered in code as a comment or the message of markTestSkipped. Cannot degrade
+> security.
 
 ### Adding New Tests
 
