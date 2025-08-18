@@ -69,7 +69,7 @@ class VerifactuService
             if ($soapEndpoint !== null) {
                 $options['location'] = $soapEndpoint;
             }
-            
+
             self::$client = SoapClientFactoryService::createSoapClient(
                 self::getConfig(self::WSDL_ENDPOINT),
                 $certPath,
@@ -108,7 +108,6 @@ class VerifactuService
 
         // 3. Prepare XML (you would build this as per AEAT XSD, example below is placeholder)
         $xml = self::buildInvoiceXml($invoice);
-        error_log($xml);
 
         // 4. Sign XML
         $signedXml = XmlSignerService::signXml(
@@ -121,8 +120,18 @@ class VerifactuService
         $client = self::getClient();
 
         // 6. Call AEAT web service: pasar XML firmado como ANYXML para evitar el encoder
-        $soapVar = new \SoapVar($signedXml, XSD_ANYXML);
-        $responseXml = $client->__soapCall('RegFactuSistemaFacturacion', [$soapVar]);
+        try {
+            $soapVar = new \SoapVar($signedXml, XSD_ANYXML);
+            $responseXml = $client->__soapCall('RegFactuSistemaFacturacion', [$soapVar]);
+        } catch (\SoapFault $e) {
+            // Handle SOAP faults gracefully
+            error_log('SOAP Fault: ' . $e->getMessage());
+//            error_log('Última petición SOAP: ' . $client->__getLastRequest());
+            error_log('Última respuesta SOAP: ' . $client->__getLastResponse());
+            error_log('ültima reuqest headers: ' . print_r($client->__getLastRequestHeaders(), true));
+            error_log('última response headers: ' . print_r($client->__getLastResponseHeaders(), true));
+            throw new \RuntimeException('Error calling AEAT service: ' . $e->getMessage());
+        }
 
         // 7. Parse AEAT response
         return ResponseParserService::parseInvoiceResponse($responseXml);
