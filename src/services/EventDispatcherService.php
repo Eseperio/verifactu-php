@@ -36,8 +36,9 @@ class EventDispatcherService
         // 3. Sign XML
         $signedXml = XmlSignerService::signXml($xml, $config['certPath'], $config['certPassword']);
 
-        // 4. Create SOAP client
-        $client = SoapClientFactoryService::createSoapClient($config['wsdl'], $config['certPath'], $config['certPassword']);
+        // 4. Create SOAP client usando PEM temporal compatible
+        $soapPemPath = CertificateManagerService::createSoapCompatiblePemTemp($config['certPath'], $config['certPassword']);
+        $client = SoapClientFactoryService::createSoapClient($config['wsdl'], $soapPemPath, $config['certPassword']);
 
         // 5. Call AEAT web service for event submission
         $params = ['RegistroEvento' => $signedXml];

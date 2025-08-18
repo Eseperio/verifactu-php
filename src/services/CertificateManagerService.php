@@ -27,16 +27,21 @@ class CertificateManagerService
         $ext = strtolower(pathinfo($certPath, PATHINFO_EXTENSION));
         $certContent = file_get_contents($certPath);
         if ($ext === 'pem') {
-            // Return as is
-            return $certContent;
+            // Only extract the X.509 certificate block from PEM
+            if (preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $certContent, $m)) {
+                return $m[0] . (str_ends_with($m[0], "\n") ? '' : "\n");
+            }
+            throw new \RuntimeException('No X.509 certificate found in PEM file.');
         }
 
         if ($ext === 'pfx' || $ext === 'p12') {
-            // Convert PFX to PEM (try PHP first, fallback to CLI with -legacy when needed)
+            // Convertir PFX a PEM (intenta PHP, hace fallback a CLI con -legacy si hace falta)
             $certs = self::readPkcs12($certPath, $certPassword);
-            return ($certs['cert'] ?? '') . ($certs['pkey'] ?? '');
-        }
-        else {
+            if (empty($certs['cert']) && empty($certs['pkey'])) {
+                throw new \RuntimeException('Unable to read PFX/P12 certificate. Check password or OpenSSL legacy support for RC2-40.');
+            }
+            return $certs['cert'];
+        } else {
             throw new \RuntimeException("Unsupported certificate format: $ext");
         }
     }
@@ -54,22 +59,36 @@ class CertificateManagerService
         $ext = strtolower(pathinfo($certPath, PATHINFO_EXTENSION));
         $certContent = file_get_contents($certPath);
         if ($ext === 'pem') {
-            // Extract private key from PEM
-            $key = openssl_pkey_get_private($certContent, $certPassword);
-            if (!$key) {
-                throw new \RuntimeException('Unable to extract private key from PEM.');
+            // Detect if PEM private key is encrypted
+            $isEncrypted =
+                (strpos($certContent, '-----BEGIN ENCRYPTED PRIVATE KEY-----') !== false) ||
+                (preg_match('/-----BEGIN RSA PRIVATE KEY-----.*?DEK-Info:/s', $certContent) === 1) ||
+                (preg_match('/Proc-Type:\s*4,ENCRYPTED/i', $certContent) === 1);
+
+            if ($isEncrypted && ($certPassword === '' || $certPassword === null)) {
+                throw new \RuntimeException('PEM private key is encrypted. A password is required.');
             }
-            // Export private key to string
-            openssl_pkey_export($key, $outKey, $certPassword);
+
+            // Extraer la clave privada (soporta cifrado con $certPassword)
+            $key = @openssl_pkey_get_private($certContent, (string)$certPassword);
+            if (!$key) {
+                $err = openssl_error_string() ?: 'Unable to extract private key from PEM.';
+                throw new \RuntimeException($err);
+            }
+            // Exportar la clave privada a string (si $certPassword vacío => sin cifrar)
+            $outKey = null;
+            if (!@openssl_pkey_export($key, $outKey, $certPassword ?: null)) {
+                $err = openssl_error_string() ?: 'Unable to export private key.';
+                throw new \RuntimeException($err);
+            }
             return $outKey;
         }
 
         if ($ext === 'pfx' || $ext === 'p12') {
-            // Try PHP first, fallback to CLI if needed (legacy/RC2-40)
+            // PHP primero, fallback a CLI si hace falta (legacy/RC2-40)
             $certs = self::readPkcs12($certPath, $certPassword);
             return $certs['pkey'] ?? null;
-        }
-        else {
+        } else {
             throw new \RuntimeException("Unsupported certificate format: $ext");
         }
     }
@@ -127,7 +146,8 @@ class CertificateManagerService
     private static function pkcs12ReadWithPhp(string $certContent, string $password, array &$out): bool
     {
         // Clear previous OpenSSL errors
-        while (openssl_error_string() !== false) {}
+        while (openssl_error_string() !== false) {
+        }
 
         $certs = [];
         if (@openssl_pkcs12_read($certContent, $certs, $password)) {
@@ -192,8 +212,10 @@ class CertificateManagerService
             // No escribimos nada a stdin; cerramos para no bloquear
             fclose($pipes[0]);
 
-            $stdout = stream_get_contents($pipes[1]); fclose($pipes[1]);
-            $stderr = stream_get_contents($pipes[2]); fclose($pipes[2]);
+            $stdout = stream_get_contents($pipes[1]);
+            fclose($pipes[1]);
+            $stderr = stream_get_contents($pipes[2]);
+            fclose($pipes[2]);
 
             $exitCode = proc_close($proc);
 
@@ -252,8 +274,10 @@ class CertificateManagerService
         try {
             fclose($pipes[0]);
 
-            $stdout = stream_get_contents($pipes[1]); fclose($pipes[1]);
-            $stderr = stream_get_contents($pipes[2]); fclose($pipes[2]);
+            $stdout = stream_get_contents($pipes[1]);
+            fclose($pipes[1]);
+            $stderr = stream_get_contents($pipes[2]);
+            fclose($pipes[2]);
 
             $exitCode = proc_close($proc);
             if ($exitCode !== 0) {
@@ -277,16 +301,16 @@ class CertificateManagerService
     {
         $out = [];
 
-        // Capture first certificate
-        if (preg_match('/-----BEGIN CERTIFICATE-----(.*?)-----END CERTIFICATE-----/s', $pem, $m)) {
-            $out['cert'] = "-----BEGIN CERTIFICATE-----" . $m[1] . "-----END CERTIFICATE-----\n";
+        // Extract certificate block as-is
+        if (preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pem, $m)) {
+            $out['cert'] = $m[0] . (str_ends_with($m[0], "\n") ? '' : "\n");
         }
 
-        // Capture private key (PKCS#8 or traditional)
-        if (preg_match('/-----BEGIN (?:ENCRYPTED )?PRIVATE KEY-----(.*?)-----END (?:ENCRYPTED )?PRIVATE KEY-----/s', $pem, $m)) {
-            $out['pkey'] = "-----BEGIN PRIVATE KEY-----" . $m[1] . "-----END PRIVATE KEY-----\n";
-        } elseif (preg_match('/-----BEGIN RSA PRIVATE KEY-----(.*?)-----END RSA PRIVATE KEY-----/s', $pem, $m)) {
-            $out['pkey'] = "-----BEGIN RSA PRIVATE KEY-----" . $m[1] . "-----END RSA PRIVATE KEY-----\n";
+        // Extract private key block, preserving ENCRYPTED PRIVATE KEY header if present
+        if (preg_match('/-----BEGIN (?:ENCRYPTED )?PRIVATE KEY-----.*?-----END (?:ENCRYPTED )?PRIVATE KEY-----/s', $pem, $m)) {
+            $out['pkey'] = $m[0] . (str_ends_with($m[0], "\n") ? '' : "\n");
+        } elseif (preg_match('/-----BEGIN RSA PRIVATE KEY-----.*?-----END RSA PRIVATE KEY-----/s', $pem, $m)) {
+            $out['pkey'] = $m[0] . (str_ends_with($m[0], "\n") ? '' : "\n");
         }
 
         return $out;
@@ -306,5 +330,72 @@ class CertificateManagerService
             return (int)$m[1];
         }
         return null;
+    }
+
+    /**
+     * Crea un archivo PEM temporal combinando certificado y clave privada, compatible con SoapClient.
+     * Devuelve la ruta absoluta al archivo temporal (con permisos 0600) y programa su eliminación al shutdown.
+     *
+     * @param string $certPath Ruta al certificado original (PEM o PFX/P12)
+     * @param string $certPassword Contraseña del certificado (si aplica)
+     * @return string Ruta al archivo PEM temporal
+     * @throws \RuntimeException
+     */
+    public static function createSoapCompatiblePemTemp(string $certPath, string $certPassword = ''): string
+    {
+        if (!file_exists($certPath)) {
+            throw new \RuntimeException("Certificate file not found: $certPath");
+        }
+
+        // Obtener bloques en PEM
+        $certPem = self::getCertificate($certPath, $certPassword);
+        $keyPem = self::getPrivateKey($certPath, $certPassword);
+
+        if (!\is_string($certPem) || $certPem === '') {
+            throw new \RuntimeException('Failed to extract certificate in PEM format.');
+        }
+        if (!\is_string($keyPem) || $keyPem === '') {
+            throw new \RuntimeException('Failed to extract private key in PEM format.');
+        }
+
+        // Asegurar salto de línea final
+        if (!str_ends_with($certPem, "\n")) {
+            $certPem .= "\n";
+        }
+        if (!str_ends_with($keyPem, "\n")) {
+            $keyPem .= "\n";
+        }
+
+        $combined = $certPem . $keyPem;
+
+        // Crear archivo temporal seguro
+        $base = tempnam(sys_get_temp_dir(), 'verifactu_cert_');
+        if ($base === false) {
+            throw new \RuntimeException('Unable to create temporary file for certificate.');
+        }
+
+        // Preferimos extensión .pem para compatibilidad
+        $tmpPemPath = $base . '.pem';
+        // Renombrar el archivo temporal base al .pem; si falla, usamos el base sin extensión
+        if (!@rename($base, $tmpPemPath)) {
+            $tmpPemPath = $base; // fallback
+        }
+
+        // Escribir contenido y fijar permisos 0600
+        $bytes = @file_put_contents($tmpPemPath, $combined);
+        if ($bytes === false || $bytes < strlen($combined)) {
+            @unlink($tmpPemPath);
+            throw new \RuntimeException('Failed to write combined PEM to temporary file.');
+        }
+        @chmod($tmpPemPath, 0600);
+
+        // Programar eliminación en shutdown
+        register_shutdown_function(static function () use ($tmpPemPath): void {
+            if (is_file($tmpPemPath)) {
+                @unlink($tmpPemPath);
+            }
+        });
+
+        return $tmpPemPath;
     }
 }

@@ -1,0 +1,31 @@
+services:
+  unit:
+    build: .
+    working_dir: /app
+    environment:
+      COMPOSER_CACHE_DIR: /tmp/composer-cache
+    volumes:
+      - ./:/app:delegated
+    command: >-
+      sh -lc "composer install --no-interaction --prefer-dist && composer test-unit"
+    tty: true
+    stdin_open: true
+
+  integration:
+    build: .
+    working_dir: /app
+    # Carga variables del .env del proyecto (host)
+    env_file:
+      - .env
+    environment:
+      # En el contenedor, usaremos esta ruta estándar
+      VERIFACTU_CERT_PATH: /certs/cert.p12
+      COMPOSER_CACHE_DIR: /tmp/composer-cache
+    volumes:
+      - ./:/app:delegated
+      # Sustituye con ruta del host desde .env (Compose lee .env para la sustitución)
+      - ${VERIFACTU_CERT_PATH}:/certs/cert.p12:ro
+    command: >-
+      sh -lc "composer install --no-interaction --prefer-dist && composer test-sandbox"
+    tty: true
+    stdin_open: true

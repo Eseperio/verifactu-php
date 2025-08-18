@@ -15,7 +15,11 @@
             <directory suffix="Test.php">./tests/Unit/Services</directory>
         </testsuite>
         <testsuite name="Verifactu">
-            <directory suffix="Test.php">./tests/Verifactu</directory>
+            <file>./tests/Verifactu/ReadmeAltaExampleTest.php</file>
+            <file>./tests/Verifactu/ReadmeExamplesTest.php</file>
+        </testsuite>
+        <testsuite name="Integration">
+            <file>./tests/Verifactu/VerifactuSandboxTest.php</file>
         </testsuite>
     </testsuites>
     <source>

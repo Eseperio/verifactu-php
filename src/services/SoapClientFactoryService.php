@@ -13,10 +13,10 @@ class SoapClientFactoryService
     /**
      * Creates a configured SoapClient instance for a given endpoint and certificate.
      *
-     * @param string $wsdl   The WSDL URL for the AEAT service (production or test)
+     * @param string $wsdl The WSDL URL for the AEAT service (production or test)
      * @param string $certPath Path to the X.509 certificate (PEM or PFX)
      * @param string $certPassword Certificate password (if any)
-     * @param array $options  Additional SoapClient options (optional)
+     * @param array $options Additional SoapClient options (optional)
      * @throws \RuntimeException
      */
     public static function createSoapClient(string $wsdl, string $certPath, string $certPassword = '', array $options = []): \SoapClient
@@ -31,7 +31,6 @@ class SoapClientFactoryService
             'local_cert' => $certPath,
             'passphrase' => $certPassword,
             'cache_wsdl' => WSDL_CACHE_NONE,
-            // 'connection_timeout' => 30, // uncomment if needed
         ];
 
         // Merge with user-provided options

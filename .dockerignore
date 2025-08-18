@@ -1,0 +1,14 @@
+# Docker context ignore
+.git
+.gitignore
+.idea
+.phpunit.cache
+.phpunit.result.cache
+vendor/.cache
+var/
+node_modules/
+.DS_Store
+*.log
+# Composer artifacts we can install in container (but keep vendor bind-mounted)
+composer.lock
+

@@ -59,12 +59,15 @@ class VerifactuService
     protected static function getClient()
     {
         if (self::$client === null) {
-            $environment = self::$config['environment'] ?? null;
             $certPath = self::getConfig(self::CERT_PATH_KEY);
-            
+            $certPassword = self::getConfig(self::CERT_PASSWORD_KEY);
+
+            // Generar PEM temporal compatible con SoapClient (cert + clave)
+            $soapPemPath = CertificateManagerService::createSoapCompatiblePemTemp($certPath, $certPassword);
+
             // Use SOAP_ENDPOINT if defined, otherwise default to null
             $soapEndpoint = isset(self::$config[self::SOAP_ENDPOINT]) ? self::getConfig(self::SOAP_ENDPOINT) : null;
-            
+
             $options = [];
             if ($soapEndpoint !== null) {
                 $options['location'] = $soapEndpoint;
@@ -72,8 +75,8 @@ class VerifactuService
 
             self::$client = SoapClientFactoryService::createSoapClient(
                 self::getConfig(self::WSDL_ENDPOINT),
-                $certPath,
-                self::getConfig(self::CERT_PASSWORD_KEY),
+                $soapPemPath,
+                $certPassword,
                 $options,
             );
         }
@@ -116,7 +119,7 @@ class VerifactuService
             self::getConfig(self::CERT_PASSWORD_KEY)
         );
 
-        // 5. Get SOAP client
+        // 5. Get SOAP clientce
         $client = self::getClient();
 
         // 6. Call AEAT web service: pasar XML firmado como ANYXML para evitar el encoder
@@ -130,6 +133,7 @@ class VerifactuService
             error_log('Última respuesta SOAP: ' . $client->__getLastResponse());
             error_log('ültima reuqest headers: ' . print_r($client->__getLastRequestHeaders(), true));
             error_log('última response headers: ' . print_r($client->__getLastResponseHeaders(), true));
+            error_log('Último XML enviado: ' . $signedXml);
             throw new \RuntimeException('Error calling AEAT service: ' . $e->getMessage());
         }
 
@@ -210,10 +214,11 @@ class VerifactuService
      */
     public static function generateInvoiceQr(
         InvoiceRecord $record,
-        $destination = QrGeneratorService::DESTINATION_STRING,
-        $size = 300,
-        $engine = QrGeneratorService::RENDERER_GD
-    ) {
+                      $destination = QrGeneratorService::DESTINATION_STRING,
+                      $size = 300,
+                      $engine = QrGeneratorService::RENDERER_GD
+    )
+    {
         $baseUrl = self::getConfig(self::QR_VERIFICATION_URL);
 
         return QrGeneratorService::generateQr($record, $baseUrl, $destination, $size, $engine);
@@ -221,7 +226,7 @@ class VerifactuService
 
     /**
      * Wraps an XML element in the proper RegFactuSistemaFacturacion structure with Cabecera.
-     * 
+     *
      * @param \DOMDocument $doc The document containing the XML element to wrap
      * @param string $nif The NIF (tax ID) to use in the ObligadoEmision element
      * @param string $name The name to use in the ObligadoEmision element
@@ -233,92 +238,92 @@ class VerifactuService
         // Create a new document
         $newDoc = new \DOMDocument('1.0', 'UTF-8');
         $newDoc->formatOutput = true;
-        
+
         // Create RegFactuSistemaFacturacion root element
         $root = $newDoc->createElement('RegFactuSistemaFacturacion');
         $newDoc->appendChild($root);
-        
+
         // Create Cabecera element
         $cabecera = $newDoc->createElement('Cabecera');
         $root->appendChild($cabecera);
-        
+
         // Create ObligadoEmision element
         $obligadoEmision = $newDoc->createElement('ObligadoEmision');
         $cabecera->appendChild($obligadoEmision);
-        
+
         // Add NIF and Nombre to ObligadoEmision
         $obligadoEmision->appendChild($newDoc->createElement('NIF', $nif));
         $obligadoEmision->appendChild($newDoc->createElement('NombreRazon', $name));
-        
+
         // Create RegistroFactura element
         $registroFactura = $newDoc->createElement('RegistroFactura');
         $root->appendChild($registroFactura);
-        
+
         // Import the original document's root element
         $originalRoot = $doc->documentElement;
         $importedNode = $newDoc->importNode($originalRoot, true);
         $registroFactura->appendChild($importedNode);
-        
+
         return $newDoc;
     }
 
-    /** 
-     * Serializes an InvoiceSubmission to AEAT-compliant XML. 
-     * @return string XML string 
-     * @throws \DOMException 
+    /**
+     * Serializes an InvoiceSubmission to AEAT-compliant XML.
+     * @return string XML string
+     * @throws \DOMException
      */
     protected static function buildInvoiceXml(InvoiceSubmission $invoice): string|false
     {
         // Get the RegistroAlta XML from the invoice
         $invoiceDom = $invoice->toXml();
-        
+
         // Get the issuer information for the Cabecera
         $invoiceId = $invoice->getInvoiceId();
         $nif = $invoiceId->issuerNif;
         $name = $invoice->issuerName;
-        
+
         // Wrap the XML with the proper structure
         $wrappedDom = self::wrapXmlWithRegFactuStructure($invoiceDom, $nif, $name);
-        
+
         return $wrappedDom->saveXML();
     }
 
-    /** 
-     * Serializes an InvoiceCancellation to AEAT-compliant XML. 
-     * @return string XML string 
-     * @throws \DOMException 
+    /**
+     * Serializes an InvoiceCancellation to AEAT-compliant XML.
+     * @return string XML string
+     * @throws \DOMException
      */
     protected static function buildCancellationXml(InvoiceCancellation $cancellation): string|false
     {
         // Get the RegistroAnulacion XML from the cancellation
         $cancellationDom = $cancellation->toXml();
-        
+
         // Get the issuer information for the Cabecera
         $invoiceId = $cancellation->getInvoiceId();
         $nif = $invoiceId->issuerNif;
-        
+
         // For cancellations, we don't have issuerName directly, so we'll use a placeholder or try to get it
         // This should be improved with a more accurate way to get the issuer name for cancellations
         $name = "Obligado Tributario"; // Placeholder
-        
+
         // Wrap the XML with the proper structure
         $wrappedDom = self::wrapXmlWithRegFactuStructure($cancellationDom, $nif, $name);
-        
+
         return $wrappedDom->saveXML();
     }
 
-    /** 
-     * Serializes an InvoiceQuery to AEAT-compliant XML. 
-     * @return string XML string 
-     * @throws \DOMException 
+    /**
+     * Serializes an InvoiceQuery to AEAT-compliant XML.
+     * @return string XML string
+     * @throws \DOMException
      */
     protected static function buildQueryXml(InvoiceQuery $query): string|false
     {
         $queryDom = $query->toXml();
-        
+
         // For queries, we don't need to wrap with RegFactuSistemaFacturacion
         // The query structure is already complete
-        
+
         return $queryDom->saveXML();
     }
 }
