@@ -17,8 +17,10 @@ use eseperio\verifactu\models\QueryResponse;
  */
 class VerifactuService
 {
-    /** WSDL parameter name. Use the official AEAT WSDL provided in documentos api/SistemaFacturacion.wsdl.xml */
+    /** WSDL parameter name. Use the official AEAT WSDL provided in schemas api/SistemaFacturacion.wsdl.xml */
     public const WSDL_ENDPOINT = 'wsdl';
+    /** SOAP endpoint URL parameter name. */
+    public const SOAP_ENDPOINT = 'soapEndpoint';
     /** Certificate path parameter name. */
     public const CERT_PATH_KEY = 'certPath';
     /** Certificate password parameter name. */
@@ -37,7 +39,7 @@ class VerifactuService
     {
         // Use official AEAT WSDL from repo if not set in config
         if (!isset($data[self::WSDL_ENDPOINT]) || empty($data[self::WSDL_ENDPOINT])) {
-            $data[self::WSDL_ENDPOINT] = __DIR__ . '/../docs/aeat/SistemaFacturacion.wsdl.xml';
+            $data[self::WSDL_ENDPOINT] = __DIR__ . '/../schemes/SistemaFacturacion.wsdl';
         }
         self::$config = $data;
         self::$client = null;
@@ -59,12 +61,20 @@ class VerifactuService
         if (self::$client === null) {
             $environment = self::$config['environment'] ?? null;
             $certPath = self::getConfig(self::CERT_PATH_KEY);
+            
+            // Use SOAP_ENDPOINT if defined, otherwise default to null
+            $soapEndpoint = isset(self::$config[self::SOAP_ENDPOINT]) ? self::getConfig(self::SOAP_ENDPOINT) : null;
+            
+            $options = [];
+            if ($soapEndpoint !== null) {
+                $options['location'] = $soapEndpoint;
+            }
+            
             self::$client = SoapClientFactoryService::createSoapClient(
                 self::getConfig(self::WSDL_ENDPOINT),
                 $certPath,
                 self::getConfig(self::CERT_PASSWORD_KEY),
-                [],
-                $environment
+                $options,
             );
         }
         return self::$client;
@@ -111,7 +121,7 @@ class VerifactuService
 
         // 6. Call AEAT web service
         $params = ['RegistroAlta' => $signedXml];
-        $responseXml = $client->__soapCall('SuministroLR', [$params]);
+        $responseXml = $client->__soapCall('RegFactuSistemaFacturacion', [$params]);
 
         // 7. Parse AEAT response
         return ResponseParserService::parseInvoiceResponse($responseXml);
@@ -149,7 +159,7 @@ class VerifactuService
         );
         $client = self::getClient();
         $params = ['RegistroAnulacion' => $signedXml];
-        $responseXml = $client->__soapCall('SuministroLR', [$params]);
+        $responseXml = $client->__soapCall('RegFactuSistemaFacturacion', [$params]);
 
         return ResponseParserService::parseInvoiceResponse($responseXml);
     }
@@ -170,7 +180,7 @@ class VerifactuService
         $xml = self::buildQueryXml($query);
         $client = self::getClient();
         $params = ['ConsultaFactuSistemaFacturacion' => $xml];
-        $responseXml = $client->__soapCall('ConsultaLR', [$params]);
+        $responseXml = $client->__soapCall('ConsultaFactuSistemaFacturacion', [$params]);
 
         return ResponseParserService::parseQueryResponse($responseXml);
     }

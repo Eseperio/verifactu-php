@@ -169,7 +169,6 @@ class VerifactuSandboxTest extends TestCase
      * This test is commented out because it would make real API calls to the AEAT service.
      * Uncomment and run manually when needed.
      */
-    /*
     public function testSubmitInvoiceToSandbox(): void
     {
         $invoice = $this->createTestInvoice();
@@ -180,5 +179,4 @@ class VerifactuSandboxTest extends TestCase
         $this->assertNotNull($response, 'Response should not be null');
         $this->assertTrue($response->isSuccessful(), 'Invoice submission should be successful');
     }
-    */
 }

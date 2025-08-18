@@ -74,7 +74,7 @@ class Verifactu
         VerifactuService::config([
             VerifactuService::CERT_PATH_KEY => $certPath,
             VerifactuService::CERT_PASSWORD_KEY => $certPassword,
-            VerifactuService::WSDL_ENDPOINT => $endpoint,
+            VerifactuService::SOAP_ENDPOINT => $endpoint,
             VerifactuService::QR_VERIFICATION_URL => $qrValidationUrl,
         ]);
     }
