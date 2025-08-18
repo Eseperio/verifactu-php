@@ -502,6 +502,7 @@ if ($response->submissionStatus === \eseperio\verifactu\models\InvoiceResponse::
     - `QrGeneratorService::RENDERER_SVG`: Generates SVG format (vector-based)
 
 - **Resolution**: Size in pixels (default: 300)
+
 ```
 
 ---
@@ -763,6 +764,20 @@ if ($response->submissionStatus !== \eseperio\verifactu\models\InvoiceResponse::
 All AEAT error codes are mapped to human-readable messages using the official code dictionary in
 `/src/dictionaries/ErrorRegistry.php`.
 
+### SOAP Communication Errors
+
+When making SOAP requests, any communication errors (network issues, timeouts, etc.) will throw a `SoapFault` exception.
+Also if soap validation does not pass in AEAT, a code will be returned by AEAT. Here is a list of common codes:
+
+| Code | Description                                                                           |
+|------|---------------------------------------------------------------------------------------|
+| 100  | The SOAP request signature is not valid                                               |
+| 101  | The SOAP request is empty                                                             |
+| 102  | The SOAP request is not well-formed: SOAP Envelope not found                          |
+| 103  | The SOAP request is not well-formed: SOAP Body not found                              |
+| 104  | The SOAP request is not well-formed: SOAP Header not found                            |
+| 106  | The certificate used in the SOAP signature is on a blocklist or is a test certificate |
+
 ### Exception Handling
 
 The library throws exceptions for various error conditions:
@@ -844,7 +859,8 @@ composer test-sandbox
 
 #### Setting up for Sandbox Testing
 
-To run tests that interact with the AEAT Verifactu sandbox environment, you need to provide a valid certificate. The library uses a `.env` file to securely load certificate information without committing it to the repository.
+To run tests that interact with the AEAT Verifactu sandbox environment, you need to provide a valid certificate. The
+library uses a `.env` file to securely load certificate information without committing it to the repository.
 
 1. Copy the `.env.example` file to `.env` in the project root:
    ```bash
@@ -866,11 +882,14 @@ To run tests that interact with the AEAT Verifactu sandbox environment, you need
    VERIFACTU_ENVIRONMENT=sandbox
    ```
 
-3. When you run any test command, the library will automatically check if the `.env` file exists and create it from `.env.example` if it doesn't. If the file is created automatically, you'll see a warning message indicating that you need to configure it.
+3. When you run any test command, the library will automatically check if the `.env` file exists and create it from
+   `.env.example` if it doesn't. If the file is created automatically, you'll see a warning message indicating that you
+   need to configure it.
 
 4. Tests that require a certificate will be skipped if the `.env` file is not properly configured.
 
-> **Note:** The `.env` file is excluded from version control by `.gitignore` to prevent accidentally committing sensitive information.
+> **Note:** The `.env` file is excluded from version control by `.gitignore` to prevent accidentally committing
+> sensitive information.
 
 ### Development
 
