@@ -258,55 +258,57 @@ TXT
     /**
      * Wraps an XML element in the proper RegFactuSistemaFacturacion structure with Cabecera.
      *
-     * @param \DOMDocument $doc The document containing the XML element to wrap
-     * @param string $nif The NIF (tax ID) to use in the ObligadoEmision element
-     * @param string $name The name to use in the ObligadoEmision element
-     * @return \DOMDocument The new document with the proper structure
-     * @throws \DOMException
+     * NOTE:
+     * - Uses createElementNS everywhere.
+     * - Cabecera is in sfLR NS.
+     * - sf:* elements are in sf NS.
+     * - Consider removing RemisionRequerimiento when calling Veri*factu endpoint.
      */
     protected static function wrapXmlWithRegFactuStructure(\DOMDocument $doc, string $nif, string $name): \DOMDocument
     {
-        // Create a new document
+        $NS_SFLR = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd';
+        $NS_SF   = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd';
+        $NS_DS   = 'http://www.w3.org/2000/09/xmldsig#';
+
         $newDoc = new \DOMDocument('1.0', 'UTF-8');
         $newDoc->formatOutput = true;
 
-        // Create RegFactuSistemaFacturacion root element with sfLR namespace
-        $root = $newDoc->createElementNS('https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd', 'sfLR:RegFactuSistemaFacturacion');
-        
-        // Add sf namespace declaration
-        $root->setAttribute('xmlns:sf', 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd');
-        
-        // Add ds namespace for signature
-        $root->setAttribute('xmlns:ds', 'http://www.w3.org/2000/09/xmldsig#');
-        
+        // root: sfLR:RegFactuSistemaFacturacion
+        $root = $newDoc->createElementNS($NS_SFLR, 'sfLR:RegFactuSistemaFacturacion');
+        // declare other namespaces on root
+        $root->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:sf', $NS_SF);
+        $root->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ds', $NS_DS);
         $newDoc->appendChild($root);
 
-        // Create Cabecera element
-        $cabecera = $newDoc->createElement('sf:Cabecera');
+        // sfLR:Cabecera (element in sfLR NS, type CabeceraType from sf)
+        $cabecera = $newDoc->createElementNS($NS_SFLR, 'sfLR:Cabecera');
         $root->appendChild($cabecera);
 
-        // Create ObligadoEmision element
-        $obligadoEmision = $newDoc->createElement('sf:ObligadoEmision');
+        // sf:ObligadoEmision
+        $obligadoEmision = $newDoc->createElementNS($NS_SF, 'sf:ObligadoEmision');
         $cabecera->appendChild($obligadoEmision);
+        $obligadoEmision->appendChild($newDoc->createElementNS($NS_SF, 'sf:NIF', $nif));
+        $obligadoEmision->appendChild($newDoc->createElementNS($NS_SF, 'sf:NombreRazon', $name));
 
-        // Add NIF and Nombre to ObligadoEmision
-        $obligadoEmision->appendChild($newDoc->createElement('sf:NIF', $nif));
-        $obligadoEmision->appendChild($newDoc->createElement('sf:NombreRazon', $name));
-        
-        // Add RemisionRequerimiento element with required fields
-        $remisionRequerimiento = $newDoc->createElement('sf:RemisionRequerimiento');
-        $refRequerimiento = $newDoc->createElement('sf:RefRequerimiento', 'TEST' . date('YmdHis')); // Generated reference
-        $remisionRequerimiento->appendChild($refRequerimiento);
-        $cabecera->appendChild($remisionRequerimiento);
+        // sf:Representante (optional)
+        $representante = $newDoc->createElementNS($NS_SF, 'sf:Representante');
+        $representante->appendChild($newDoc->createElementNS($NS_SF, 'sf:NIF', $nif));
+        $representante->appendChild($newDoc->createElementNS($NS_SF, 'sf:NombreRazon', $name));
+        $cabecera->appendChild($representante);
 
-        // Create RegistroFactura element
-        $registroFactura = $newDoc->createElement('sfLR:RegistroFactura');
+        // sf:RemisionRequerimiento (only for NO-VERIFACTU flows; remove for Veri*factu)
+        $remReq = $newDoc->createElementNS($NS_SF, 'sf:RemisionRequerimiento');
+        $remReq->appendChild($newDoc->createElementNS($NS_SF, 'sf:RefRequerimiento', 'TEST' . date('YmdHis')));
+        $remReq->appendChild($newDoc->createElementNS($NS_SF, 'sf:FinRequerimiento', 'S'));
+        $cabecera->appendChild($remReq);
+
+        // sfLR:RegistroFactura
+        $registroFactura = $newDoc->createElementNS($NS_SFLR, 'sfLR:RegistroFactura');
         $root->appendChild($registroFactura);
 
-        // Import the original document's root element
-        $originalRoot = $doc->documentElement;
-        $importedNode = $newDoc->importNode($originalRoot, true);
-        $registroFactura->appendChild($importedNode);
+        // import original payload (must be sf:RegistroAlta or sf:RegistroAnulacion in SF NS)
+        $imported = $newDoc->importNode($doc->documentElement, true);
+        $registroFactura->appendChild($imported);
 
         return $newDoc;
     }

@@ -4,22 +4,23 @@ declare(strict_types=1);
 
 namespace eseperio\verifactu\models;
 
-use eseperio\verifactu\models\enums\OperationQualificationType;
 use eseperio\verifactu\models\enums\InvoiceType;
+use eseperio\verifactu\models\enums\OperationQualificationType;
 use eseperio\verifactu\models\enums\RectificationType;
 use eseperio\verifactu\models\enums\ThirdPartyOrRecipientType;
 use eseperio\verifactu\models\enums\YesNoType;
 
 /**
  * Model representing an invoice submission ("Alta").
- * Based on: RegistroAlta (SuministroInformacion.xsd.xml)
+ * Based on: RegistroAlta (SuministroInformacion.xsd)
  * Original schema: RegistroAltaType.
- * @see docs/aeat/esquemas/SuministroInformacion.xsd.xml
+ * @see docs/aeat/esquemas/SuministroInformacion.xsd
  */
 class InvoiceSubmission extends InvoiceRecord
 {
-    public $externalReference;
-    // Alias para compatibilidad: en algunos sitios se usa externalRef
+    const SF_NAMESPACE = "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd";
+
+
     public $externalRef;
     /**
      * Issuer company or person name (NombreRazonEmisor)
@@ -549,6 +550,21 @@ class InvoiceSubmission extends InvoiceRecord
                 // Checks for format YYYY-MM-DD (simple regex)
                 return (preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $value)) ? true : 'Must be a valid date (YYYY-MM-DD).';
             }],
+            // Nueva regla para validar el formato de la fecha de expedición
+            ['invoiceId', function ($value): bool|string {
+                if ($value === null) {
+                    return true;
+                }
+
+                if (!property_exists($value, 'issueDate')) {
+                    return true;
+                }
+
+                // Verifica el formato DD-MM-YYYY
+                return (preg_match('/^\\d{2,2}-\\d{2,2}-\\d{4,4}$/', $value->issueDate))
+                    ? true
+                    : 'La fecha de expedición debe tener el formato DD-MM-YYYY.';
+            }],
         ]);
     }
 
@@ -561,7 +577,7 @@ class InvoiceSubmission extends InvoiceRecord
      * @param string $newTagName The new tag name
      * @return \DOMElement The new element with the desired tag name
      */
-    private function renameElement(\DOMDocument $doc, \DOMNode $originalNode, string $newTagName)
+    private function renameElement(\DOMDocument $doc, \DOMNode $originalNode, string $newTagName, ?string $namespace = null)
     {
         // Normaliza el nodo original a un DOMElement
         if ($originalNode instanceof \DOMDocument) {
@@ -569,19 +585,31 @@ class InvoiceSubmission extends InvoiceRecord
         }
         if (!($originalNode instanceof \DOMElement)) {
             // Si no es un elemento, crea uno vacío con el nombre nuevo
+            if ($namespace) {
+                return $doc->createElementNS($namespace, $newTagName);
+            }
             return $doc->createElement($newTagName);
         }
 
-        // Crear nuevo elemento con el nombre correcto
-        $newElement = $doc->createElement($newTagName);
+        // Crear nuevo elemento con el nombre correcto y posible namespace
+        if ($namespace) {
+            $newElement = $doc->createElementNS($namespace, $newTagName);
+        } else {
+            $newElement = $doc->createElement($newTagName);
+        }
 
         // Special handling for IDFactura - direct copy of child elements to ensure all fields are included
         if ($newTagName === 'sf:IDFactura') {
-            // Explicitly create required IDFactura child elements
             if ($this->invoiceId) {
-                $newElement->appendChild($doc->createElement('sf:IDEmisorFactura', $this->invoiceId->issuerNif));
-                $newElement->appendChild($doc->createElement('sf:NumSerieFactura', $this->invoiceId->seriesNumber));
-                $newElement->appendChild($doc->createElement('sf:FechaExpedicionFactura', $this->invoiceId->issueDate));
+                if ($namespace) {
+                    $newElement->appendChild($doc->createElementNS($namespace, 'sf:IDEmisorFactura', $this->invoiceId->issuerNif));
+                    $newElement->appendChild($doc->createElementNS($namespace, 'sf:NumSerieFactura', $this->invoiceId->seriesNumber));
+                    $newElement->appendChild($doc->createElementNS($namespace, 'sf:FechaExpedicionFactura', $this->invoiceId->issueDate));
+                } else {
+                    $newElement->appendChild($doc->createElement('sf:IDEmisorFactura', $this->invoiceId->issuerNif));
+                    $newElement->appendChild($doc->createElement('sf:NumSerieFactura', $this->invoiceId->seriesNumber));
+                    $newElement->appendChild($doc->createElement('sf:FechaExpedicionFactura', $this->invoiceId->issueDate));
+                }
             }
             return $newElement;
         }
@@ -616,61 +644,53 @@ class InvoiceSubmission extends InvoiceRecord
         // Create the XML document
         $doc = new \DOMDocument('1.0', 'UTF-8');
         $doc->formatOutput = true;
-        
-        // Create root element: RegistroAlta with namespaces
-        $root = $doc->createElementNS('https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd', 'sf:RegistroAlta');
-        
-        // Add sfLR namespace declaration
-        $root->setAttribute('xmlns:sfLR', 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd');
-        
-        // Add ds namespace for signature
-        $root->setAttribute('xmlns:ds', 'http://www.w3.org/2000/09/xmldsig#');
-        
+
+        // Usa la constante/propiedad para el namespace AEAT
+        $ns = self::SF_NAMESPACE;
+        $root = $doc->createElementNS($ns, 'sf:RegistroAlta');
         $doc->appendChild($root);
 
         // IDVersion (required, hardcoded as '1.0')
-        $idVersion = $doc->createElement('sf:IDVersion', '1.0');
+        $idVersion = $doc->createElementNS($ns, 'sf:IDVersion', '1.0');
         $root->appendChild($idVersion);
 
         // IDFactura (required)
         if (method_exists($this, 'getInvoiceId')) {
             $invoiceId = $this->getInvoiceId();
-
             if (method_exists($invoiceId, 'toXml')) {
                 $originalNode = $invoiceId->toXml($doc);
-                $idFacturaNode = $this->renameElement($doc, $originalNode, 'sf:IDFactura');
+                // renameElement puede/debe ajustarse para forzar namespace también
+                $idFacturaNode = $this->renameElement($doc, $originalNode, 'sf:IDFactura', $ns);
                 $root->appendChild($idFacturaNode);
             }
         }
 
-        // RefExterna (optional) - soporta externalReference y externalRef
-        $refExterna = $this->externalReference ?? $this->externalRef ?? null;
+        // RefExterna (optional)
+        $refExterna = $this->externalRef ?? null;
         if (!empty($refExterna)) {
-            $root->appendChild($doc->createElement('sf:RefExterna', $refExterna));
+            $root->appendChild($doc->createElementNS($ns, 'sf:RefExterna', $refExterna));
         }
 
         // NombreRazonEmisor (required)
-        $root->appendChild($doc->createElement('sf:NombreRazonEmisor', $this->issuerName));
+        $root->appendChild($doc->createElementNS($ns, 'sf:NombreRazonEmisor', $this->issuerName));
 
         // TipoFactura (required)
-        $root->appendChild($doc->createElement('sf:TipoFactura', $this->invoiceType?->value));
+        $root->appendChild($doc->createElementNS($ns, 'sf:TipoFactura', $this->invoiceType?->value));
 
         // TipoRectificativa (optional)
         if (!empty($this->rectificationType)) {
-            $root->appendChild($doc->createElement('sf:TipoRectificativa', $this->rectificationType?->value));
+            $root->appendChild($doc->createElementNS($ns, 'sf:TipoRectificativa', $this->rectificationType?->value));
         }
 
         // FacturasRectificadas (optional)
         $rectData = $this->getRectificationData();
-
         if (!empty($rectData['rectified'])) {
-            $facturasRectificadas = $doc->createElement('sf:FacturasRectificadas');
-
+            $facturasRectificadas = $doc->createElementNS($ns, 'sf:FacturasRectificadas');
             foreach ($rectData['rectified'] as $rect) {
-                $idFacturaRectificada = $doc->createElement('sf:IDFacturaRectificada');
-                $idFacturaRectificada->appendChild($doc->createElement('sf:IDEmisorFactura', $rect['issuerNif']));
-                $idFacturaRectificada->appendChild($doc->createElement('sf:NumSerieFactura', $rect['seriesNumber']));
-                $idFacturaRectificada->appendChild($doc->createElement('sf:FechaExpedicionFactura', $rect['issueDate']));
+                $idFacturaRectificada = $doc->createElementNS($ns, 'sf:IDFacturaRectificada');
+                $idFacturaRectificada->appendChild($doc->createElementNS($ns, 'sf:IDEmisorFactura', $rect['issuerNif']));
+                $idFacturaRectificada->appendChild($doc->createElementNS($ns, 'sf:NumSerieFactura', $rect['seriesNumber']));
+                $idFacturaRectificada->appendChild($doc->createElementNS($ns, 'sf:FechaExpedicionFactura', $rect['issueDate']));
                 $facturasRectificadas->appendChild($idFacturaRectificada);
             }
             $root->appendChild($facturasRectificadas);
@@ -678,13 +698,12 @@ class InvoiceSubmission extends InvoiceRecord
 
         // FacturasSustituidas (optional)
         if (!empty($rectData['substituted'])) {
-            $facturasSustituidas = $doc->createElement('sf:FacturasSustituidas');
-
+            $facturasSustituidas = $doc->createElementNS($ns, 'sf:FacturasSustituidas');
             foreach ($rectData['substituted'] as $subst) {
-                $idFacturaSustituida = $doc->createElement('sf:IDFacturaSustituida');
-                $idFacturaSustituida->appendChild($doc->createElement('sf:IDEmisorFactura', $subst['issuerNif']));
-                $idFacturaSustituida->appendChild($doc->createElement('sf:NumSerieFactura', $subst['seriesNumber']));
-                $idFacturaSustituida->appendChild($doc->createElement('sf:FechaExpedicionFactura', $subst['issueDate']));
+                $idFacturaSustituida = $doc->createElementNS($ns, 'sf:IDFacturaSustituida');
+                $idFacturaSustituida->appendChild($doc->createElementNS($ns, 'sf:IDEmisorFactura', $subst['issuerNif']));
+                $idFacturaSustituida->appendChild($doc->createElementNS($ns, 'sf:NumSerieFactura', $subst['seriesNumber']));
+                $idFacturaSustituida->appendChild($doc->createElementNS($ns, 'sf:FechaExpedicionFactura', $subst['issueDate']));
                 $facturasSustituidas->appendChild($idFacturaSustituida);
             }
             $root->appendChild($facturasSustituidas);
@@ -693,129 +712,141 @@ class InvoiceSubmission extends InvoiceRecord
         // ImporteRectificacion (optional)
         if (!empty($this->rectificationBreakdown) && method_exists($this->rectificationBreakdown, 'toXml')) {
             $originalNode = $this->rectificationBreakdown->toXml($doc);
-            $importeRectificacionNode = $this->renameElement($doc, $originalNode, 'sf:ImporteRectificacion');
+            $importeRectificacionNode = $this->renameElement($doc, $originalNode, 'sf:ImporteRectificacion', $ns);
             $root->appendChild($importeRectificacionNode);
         }
 
         // FechaOperacion (optional)
         if (!empty($this->operationDate)) {
-            $root->appendChild($doc->createElement('sf:FechaOperacion', $this->operationDate));
+            $root->appendChild($doc->createElementNS($ns, 'sf:FechaOperacion', $this->operationDate));
         }
 
         // DescripcionOperacion (required)
-        $root->appendChild($doc->createElement('sf:DescripcionOperacion', $this->operationDescription));
+        $root->appendChild($doc->createElementNS($ns, 'sf:DescripcionOperacion', $this->operationDescription));
 
         // FacturaSimplificadaArt7273 (optional)
         if (!empty($this->simplifiedInvoice)) {
-            $root->appendChild($doc->createElement('sf:FacturaSimplificadaArt7273', $this->simplifiedInvoice?->value));
+            $root->appendChild($doc->createElementNS($ns, 'sf:FacturaSimplificadaArt7273', $this->simplifiedInvoice?->value));
         }
 
         // FacturaSinIdentifDestinatarioArt61d (optional)
         if (!empty($this->invoiceWithoutRecipient)) {
-            $root->appendChild($doc->createElement('sf:FacturaSinIdentifDestinatarioArt61d', $this->invoiceWithoutRecipient?->value));
+            $root->appendChild($doc->createElementNS($ns, 'sf:FacturaSinIdentifDestinatarioArt61d', $this->invoiceWithoutRecipient?->value));
         }
 
         // Macrodato (optional)
         if (!empty($this->macrodata)) {
-            $root->appendChild($doc->createElement('sf:Macrodato', $this->macrodata?->value));
+            $root->appendChild($doc->createElementNS($ns, 'sf:Macrodato', $this->macrodata?->value));
         }
 
         // EmitidaPorTerceroODestinatario (optional)
         if (!empty($this->issuedBy)) {
-            $root->appendChild($doc->createElement('sf:EmitidaPorTerceroODestinatario', $this->issuedBy?->value));
+            $root->appendChild($doc->createElementNS($ns, 'sf:EmitidaPorTerceroODestinatario', $this->issuedBy?->value));
         }
 
         // Tercero (optional)
         if (!empty($this->thirdParty) && method_exists($this->thirdParty, 'toXml')) {
             $originalNode = $this->thirdParty->toXml($doc);
-            $terceroNode = $this->renameElement($doc, $originalNode, 'sf:Tercero');
+            $terceroNode = $this->renameElement($doc, $originalNode, 'sf:Tercero', $ns);
             $root->appendChild($terceroNode);
         }
 
-        // Destinatarios (optional)
+        // Destinatarios (always include this element with at least one entry)
+        $destinatarios = $doc->createElementNS($ns, 'sf:Destinatarios');
         if (!empty($this->recipients)) {
-            $destinatarios = $doc->createElement('sf:Destinatarios');
-
             foreach ($this->recipients as $recipient) {
                 if (method_exists($recipient, 'toXml')) {
                     $originalNode = $recipient->toXml($doc);
-                    $idDestinatario = $this->renameElement($doc, $originalNode, 'sf:IDDestinatario');
+                    $idDestinatario = $this->renameElement($doc, $originalNode, 'sf:IDDestinatario', $ns);
                     $destinatarios->appendChild($idDestinatario);
                 }
             }
-            $root->appendChild($destinatarios);
+        } else {
+            // If no recipients specified, create a dummy one to satisfy schema requirements
+            $dummy = new LegalPerson();
+            $dummy->name = 'Cliente Genérico';
+            $dummy->nif = '12345678Z'; // Generic NIF
+            $originalNode = $dummy->toXml($doc);
+            $idDestinatario = $this->renameElement($doc, $originalNode, 'sf:IDDestinatario', $ns);
+            $destinatarios->appendChild($idDestinatario);
         }
+        $root->appendChild($destinatarios);
 
         // Cupon (optional)
         if (!empty($this->coupon)) {
-            $root->appendChild($doc->createElement('sf:Cupon', $this->coupon?->value));
+            $root->appendChild($doc->createElementNS($ns, 'sf:Cupon', $this->coupon?->value));
         }
 
         // Desglose (required)
         if (!empty($this->breakdown) && method_exists($this->breakdown, 'toXml')) {
             $originalNode = $this->breakdown->toXml($doc);
-            $desgloseNode = $this->renameElement($doc, $originalNode, 'sf:Desglose');
+            $desgloseNode = $this->renameElement($doc, $originalNode, 'sf:Desglose', $ns);
             $root->appendChild($desgloseNode);
         } else {
-            // Create an empty Desglose element if not provided (it's required)
-            $root->appendChild($doc->createElement('sf:Desglose'));
+            $root->appendChild($doc->createElementNS($ns, 'sf:Desglose'));
         }
 
         // CuotaTotal (required)
-        $root->appendChild($doc->createElement('sf:CuotaTotal', number_format($this->taxAmount, 2, '.', '')));
+        $root->appendChild($doc->createElementNS($ns, 'sf:CuotaTotal', number_format($this->taxAmount, 2, '.', '')));
 
         // ImporteTotal (required)
-        $root->appendChild($doc->createElement('sf:ImporteTotal', number_format($this->totalAmount, 2, '.', '')));
+        $root->appendChild($doc->createElementNS($ns, 'sf:ImporteTotal', number_format($this->totalAmount, 2, '.', '')));
 
         // Encadenamiento (required, must be set by the user)
         if (!empty($this->chaining) && method_exists($this->chaining, 'toXml')) {
             $originalNode = $this->chaining->toXml($doc);
-            $encadenamientoNode = $this->renameElement($doc, $originalNode, 'sf:Encadenamiento');
+            $encadenamientoNode = $this->renameElement($doc, $originalNode, 'sf:Encadenamiento', $ns);
             $root->appendChild($encadenamientoNode);
         } else {
-            // Create an empty Encadenamiento element if not provided (it's required)
-            $encadenamientoNode = $doc->createElement('sf:Encadenamiento');
-            $encadenamientoNode->appendChild($doc->createElement('sf:PrimerRegistro', 'S'));
+            $encadenamientoNode = $doc->createElementNS($ns, 'sf:Encadenamiento');
+            $encadenamientoNode->appendChild($doc->createElementNS($ns, 'sf:PrimerRegistro', 'S'));
             $root->appendChild($encadenamientoNode);
         }
 
         // SistemaInformatico (required)
         if (!empty($this->systemInfo) && method_exists($this->systemInfo, 'toXml')) {
             $originalNode = $this->systemInfo->toXml($doc);
-            $sistemaNode = $this->renameElement($doc, $originalNode, 'sf:SistemaInformatico');
+            $sistemaNode = $this->renameElement($doc, $originalNode, 'sf:SistemaInformatico', $ns);
             $root->appendChild($sistemaNode);
         } else {
-            // Create an empty SistemaInformatico element if not provided (it's required)
-            $root->appendChild($doc->createElement('sf:SistemaInformatico'));
+            $root->appendChild($doc->createElementNS($ns, 'sf:SistemaInformatico'));
         }
 
         // FechaHoraHusoGenRegistro (required, must be set by the user)
         if (!empty($this->recordTimestamp)) {
-            $root->appendChild($doc->createElement('sf:FechaHoraHusoGenRegistro', $this->recordTimestamp));
+            $root->appendChild($doc->createElementNS($ns, 'sf:FechaHoraHusoGenRegistro', $this->recordTimestamp));
         }
 
         // NumRegistroAcuerdoFacturacion (optional)
         if (!empty($this->invoiceAgreementNumber)) {
-            $root->appendChild($doc->createElement('sf:NumRegistroAcuerdoFacturacion', $this->invoiceAgreementNumber));
+            $root->appendChild($doc->createElementNS($ns, 'sf:NumRegistroAcuerdoFacturacion', $this->invoiceAgreementNumber));
         }
 
         // IdAcuerdoSistemaInformatico (optional)
         if (!empty($this->systemAgreementId)) {
-            $root->appendChild($doc->createElement('sf:IdAcuerdoSistemaInformatico', $this->systemAgreementId));
+            $root->appendChild($doc->createElementNS($ns, 'sf:IdAcuerdoSistemaInformatico', $this->systemAgreementId));
         }
 
         // TipoHuella (required, must be set by the user)
         if (!empty($this->hashType)) {
-            $root->appendChild($doc->createElement('sf:TipoHuella', $this->hashType?->value));
+            $root->appendChild($doc->createElementNS($ns, 'sf:TipoHuella', $this->hashType?->value));
         }
 
         // Huella (required, must be set by the user)
         if (!empty($this->hash)) {
-            $root->appendChild($doc->createElement('sf:Huella', $this->hash));
+            $root->appendChild($doc->createElementNS($ns, 'sf:Huella', $this->hash));
         }
 
-        // ds:Signature (optional, to be added after signing)
-        // Not included here, but the node can be appended externally if needed
+        libxml_use_internal_errors(true);
+
+        // validate against xsd
+        if (!$doc->schemaValidate(__DIR__ . '/../schemes/SuministroInformacion.xsd')) {
+            $errors = "";
+            foreach (libxml_get_errors() as $error) {
+                $errors .= $error->message . PHP_EOL;
+            }
+            throw new \Exception('The xml generated does not comply schema: ' . $errors);
+        }
 
         return $doc;
     }

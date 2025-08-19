@@ -100,7 +100,7 @@ class VerifactuSandboxTest extends TestCase
         $invoiceId = new InvoiceId();
         $invoiceId->issuerNif = 'B12345678';
         $invoiceId->seriesNumber = 'TEST' . date('YmdHis');
-        $invoiceId->issueDate = date('Y-m-d');
+        $invoiceId->issueDate = date('d-m-Y');
         $invoice->setInvoiceId($invoiceId);
         
         // Set basic invoice data
@@ -161,11 +161,17 @@ class VerifactuSandboxTest extends TestCase
         $invoice->invoiceAgreementNumber = ''; // Set to empty string
         $invoice->systemAgreementId = ''; // Set to empty string
         
-        // Add recipients
+        // Add recipients with proper structure
         $recipient = new LegalPerson();
         $recipient->name = 'Cliente Test SL';
-        $recipient->nif = '12345678Z';
+        $recipient->nif = '12345678Z'; // Make sure NIF is set properly
         $invoice->addRecipient($recipient);
+        
+        // Check that the recipient was added correctly
+        $recipients = $invoice->getRecipients();
+        if (empty($recipients) || !isset($recipients[0]->nif) || $recipients[0]->nif !== '12345678Z') {
+            throw new \RuntimeException('Failed to add recipient with proper NIF');
+        }
 
         return $invoice;
     }
