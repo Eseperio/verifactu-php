@@ -154,6 +154,11 @@ class VerifactuSandboxTest extends TestCase
         $invoice->simplifiedInvoice = YesNoType::NO;
         $invoice->invoiceWithoutRecipient = YesNoType::NO;
         
+        // Set fields that caused validation errors
+        $invoice->xmlSignature = ''; // Set to empty string
+        $invoice->invoiceAgreementNumber = ''; // Set to empty string
+        $invoice->systemAgreementId = ''; // Set to empty string
+        
         // Add recipients
         $recipient = new LegalPerson();
         $recipient->name = 'Cliente Test SL';

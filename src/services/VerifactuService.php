@@ -93,7 +93,7 @@ class VerifactuService
     public static function registerInvoice(InvoiceSubmission $invoice)
     {
         // 1. Validate input (excluding hash which will be generated)
-        $validation = $invoice->validateExceptHash();
+        $validation = $invoice->validate();
 
         if ($validation !== true) {
             throw new \InvalidArgumentException('InvoiceSubmission validation failed: ' . print_r($validation, true));
@@ -109,31 +109,62 @@ class VerifactuService
             throw new \InvalidArgumentException('InvoiceSubmission final validation failed: ' . print_r($finalValidation, true));
         }
 
-        // 3. Prepare XML (you would build this as per AEAT XSD, example below is placeholder)
-        $xml = self::buildInvoiceXml($invoice);
+        // 3. Get the RegistroAlta XML from the invoice
+        $invoiceDom = $invoice->toXml();
 
-        // 4. Sign XML
-        $signedXml = XmlSignerService::signXml(
-            $xml,
+        die($invoiceDom->saveXML());
+        // 4. Sign the RegistroAlta XML first (so signature is inside RegistroAlta)
+        $signedInvoiceXml = XmlSignerService::signXml(
+            $invoiceDom->saveXML(),
             self::getConfig(self::CERT_PATH_KEY),
             self::getConfig(self::CERT_PASSWORD_KEY)
         );
+        
+        // 5. Create a temporary DOM document with the signed XML
+        $signedDom = new \DOMDocument();
+        $signedDom->loadXML($signedInvoiceXml);
+        
+        // 6. Get the issuer information for the Cabecera
+        $invoiceId = $invoice->getInvoiceId();
+        $nif = $invoiceId->issuerNif;
+        $name = $invoice->issuerName;
+        
+        // 7. Wrap the signed XML with the proper structure
+        $wrappedDom = self::wrapXmlWithRegFactuStructure($signedDom, $nif, $name);
+        
+        // Get XML without the XML declaration to avoid issues in SOAP body
+        $dom_xpath = new \DOMXPath($wrappedDom);
+        $root = $dom_xpath->query('/')->item(0)->firstChild;
+        $xml = $wrappedDom->saveXML($root);
 
-        // 5. Get SOAP clientce
+        // 8. Get SOAP client
         $client = self::getClient();
 
-        // 6. Call AEAT web service: pasar XML firmado como ANYXML para evitar el encoder
+        // 9. Call AEAT web service using SoapVar to avoid XML declaration issues
         try {
-            $soapVar = new \SoapVar($signedXml, XSD_ANYXML);
+            $soapVar = new \SoapVar($xml, XSD_ANYXML);
             $responseXml = $client->__soapCall('RegFactuSistemaFacturacion', [$soapVar]);
         } catch (\SoapFault $e) {
             // Handle SOAP faults gracefully
             error_log('SOAP Fault: ' . $e->getMessage());
-//            error_log('Última petición SOAP: ' . $client->__getLastRequest());
+            error_log('Xml enviado: '.PHP_EOL . $xml);
+            error_log('Última petición SOAP: ' . $client->__getLastRequest());
             error_log('Última respuesta SOAP: ' . $client->__getLastResponse());
             error_log('ültima reuqest headers: ' . print_r($client->__getLastRequestHeaders(), true));
             error_log('última response headers: ' . print_r($client->__getLastResponseHeaders(), true));
-            error_log('Último XML enviado: ' . $signedXml);
+            error_log(<<<TXT
+| Code | Description                                                                           |
+| ---- | ------------------------------------------------------------------------------------- |
+| 100  | The SOAP request signature is not valid                                               |
+| 101  | The SOAP request is empty                                                             |
+| 102  | The SOAP request is not well-formed: SOAP Envelope not found                          |
+| 103  | The SOAP request is not well-formed: SOAP Body not found                              |
+| 104  | The SOAP request is not well-formed: SOAP Header not found                            |
+| 106  | The certificate used in the SOAP signature is on a blocklist or is a test certificate |
+
+TXT
+);
+//            error_log('Último XML enviado: ' . $signedXml);
             throw new \RuntimeException('Error calling AEAT service: ' . $e->getMessage());
         }
 
@@ -149,7 +180,7 @@ class VerifactuService
     public static function cancelInvoice(InvoiceCancellation $cancellation)
     {
         // 1. Validate input (excluding hash which will be generated)
-        $validation = $cancellation->validateExceptHash();
+        $validation = $cancellation->validate();
 
         if ($validation !== true) {
             throw new \InvalidArgumentException('InvoiceCancellation validation failed: ' . print_r($validation, true));
@@ -239,24 +270,31 @@ class VerifactuService
         $newDoc = new \DOMDocument('1.0', 'UTF-8');
         $newDoc->formatOutput = true;
 
-        // Create RegFactuSistemaFacturacion root element
-        $root = $newDoc->createElement('RegFactuSistemaFacturacion');
+        // Create RegFactuSistemaFacturacion root element with sfLR namespace
+        $root = $newDoc->createElementNS('https://www.agenciatributaria.es/static_files/AEAT/Contenidos_Comunes/La_Agencia_Tributaria/Modelos_y_formularios/Declaraciones/Modelos_especiales_SF/sfLR/SistemaFacturacionLR', 'sfLR:RegFactuSistemaFacturacion');
+        
+        // Add sf namespace declaration
+        $root->setAttribute('xmlns:sf', 'https://www.agenciatributaria.es/static_files/AEAT/Contenidos_Comunes/La_Agencia_Tributaria/Modelos_y_formularios/Declaraciones/Modelos_especiales_SF/sf/SistemaFacturacion');
+        
+        // Add ds namespace for signature
+        $root->setAttribute('xmlns:ds', 'http://www.w3.org/2000/09/xmldsig#');
+        
         $newDoc->appendChild($root);
 
         // Create Cabecera element
-        $cabecera = $newDoc->createElement('Cabecera');
+        $cabecera = $newDoc->createElement('sf:Cabecera');
         $root->appendChild($cabecera);
 
         // Create ObligadoEmision element
-        $obligadoEmision = $newDoc->createElement('ObligadoEmision');
+        $obligadoEmision = $newDoc->createElement('sf:ObligadoEmision');
         $cabecera->appendChild($obligadoEmision);
 
         // Add NIF and Nombre to ObligadoEmision
-        $obligadoEmision->appendChild($newDoc->createElement('NIF', $nif));
-        $obligadoEmision->appendChild($newDoc->createElement('NombreRazon', $name));
+        $obligadoEmision->appendChild($newDoc->createElement('sf:NIF', $nif));
+        $obligadoEmision->appendChild($newDoc->createElement('sf:NombreRazon', $name));
 
         // Create RegistroFactura element
-        $registroFactura = $newDoc->createElement('RegistroFactura');
+        $registroFactura = $newDoc->createElement('sfLR:RegistroFactura');
         $root->appendChild($registroFactura);
 
         // Import the original document's root element

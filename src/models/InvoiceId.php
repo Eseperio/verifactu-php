@@ -52,16 +52,16 @@ class InvoiceId extends Model
      */
     public function toXml(\DOMDocument $doc)
     {
-        $root = $doc->createElement('IDFactura');
+        $root = $doc->createElement('sf:IDFactura');
 
         // IDEmisorFactura (required)
-        $root->appendChild($doc->createElement('IDEmisorFactura', $this->issuerNif));
+        $root->appendChild($doc->createElement('sf:IDEmisorFactura', $this->issuerNif));
 
         // NumSerieFactura (required)
-        $root->appendChild($doc->createElement('NumSerieFactura', $this->seriesNumber));
+        $root->appendChild($doc->createElement('sf:NumSerieFactura', $this->seriesNumber));
 
         // FechaExpedicionFactura (required)
-        $root->appendChild($doc->createElement('FechaExpedicionFactura', $this->issueDate));
+        $root->appendChild($doc->createElement('sf:FechaExpedicionFactura', $this->issueDate));
 
         return $root;
     }
