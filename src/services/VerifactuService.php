@@ -112,7 +112,7 @@ class VerifactuService
         // 3. Get the RegistroAlta XML from the invoice
         $invoiceDom = $invoice->toXml();
 
-        die($invoiceDom->saveXML());
+        // die($invoiceDom->saveXML()); // eliminar debug
         // 4. Sign the RegistroAlta XML first (so signature is inside RegistroAlta)
         $signedInvoiceXml = XmlSignerService::signXml(
             $invoiceDom->saveXML(),
@@ -271,10 +271,10 @@ TXT
         $newDoc->formatOutput = true;
 
         // Create RegFactuSistemaFacturacion root element with sfLR namespace
-        $root = $newDoc->createElementNS('https://www.agenciatributaria.es/static_files/AEAT/Contenidos_Comunes/La_Agencia_Tributaria/Modelos_y_formularios/Declaraciones/Modelos_especiales_SF/sfLR/SistemaFacturacionLR', 'sfLR:RegFactuSistemaFacturacion');
+        $root = $newDoc->createElementNS('https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd', 'sfLR:RegFactuSistemaFacturacion');
         
         // Add sf namespace declaration
-        $root->setAttribute('xmlns:sf', 'https://www.agenciatributaria.es/static_files/AEAT/Contenidos_Comunes/La_Agencia_Tributaria/Modelos_y_formularios/Declaraciones/Modelos_especiales_SF/sf/SistemaFacturacion');
+        $root->setAttribute('xmlns:sf', 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd');
         
         // Add ds namespace for signature
         $root->setAttribute('xmlns:ds', 'http://www.w3.org/2000/09/xmldsig#');
@@ -292,6 +292,12 @@ TXT
         // Add NIF and Nombre to ObligadoEmision
         $obligadoEmision->appendChild($newDoc->createElement('sf:NIF', $nif));
         $obligadoEmision->appendChild($newDoc->createElement('sf:NombreRazon', $name));
+        
+        // Add RemisionRequerimiento element with required fields
+        $remisionRequerimiento = $newDoc->createElement('sf:RemisionRequerimiento');
+        $refRequerimiento = $newDoc->createElement('sf:RefRequerimiento', 'TEST' . date('YmdHis')); // Generated reference
+        $remisionRequerimiento->appendChild($refRequerimiento);
+        $cabecera->appendChild($remisionRequerimiento);
 
         // Create RegistroFactura element
         $registroFactura = $newDoc->createElement('sfLR:RegistroFactura');

@@ -19,6 +19,8 @@ use eseperio\verifactu\models\enums\YesNoType;
 class InvoiceSubmission extends InvoiceRecord
 {
     public $externalReference;
+    // Alias para compatibilidad: en algunos sitios se usa externalRef
+    public $externalRef;
     /**
      * Issuer company or person name (NombreRazonEmisor)
      * Example: 'Acme Corp S.L.'.
@@ -555,23 +557,49 @@ class InvoiceSubmission extends InvoiceRecord
      * and copying all children and attributes. This works around PHP 8.3's read-only tagName property.
      *
      * @param \DOMDocument $doc The document
-     * @param \DOMElement $originalNode The original node to rename
+     * @param \DOMNode $originalNode The original node (can be DOMElement or DOMDocument)
      * @param string $newTagName The new tag name
      * @return \DOMElement The new element with the desired tag name
      */
-    private function renameElement(\DOMDocument $doc, \DOMElement $originalNode, string $newTagName)
+    private function renameElement(\DOMDocument $doc, \DOMNode $originalNode, string $newTagName)
     {
-        // Create new element with correct tag name
-        $newElement = $doc->createElement($newTagName);
-
-        // Copy all child nodes
-        foreach ($originalNode->childNodes as $child) {
-            $newElement->appendChild($child->cloneNode(true));
+        // Normaliza el nodo original a un DOMElement
+        if ($originalNode instanceof \DOMDocument) {
+            $originalNode = $originalNode->documentElement;
+        }
+        if (!($originalNode instanceof \DOMElement)) {
+            // Si no es un elemento, crea uno vacío con el nombre nuevo
+            return $doc->createElement($newTagName);
         }
 
-        // Copy all attributes
-        foreach ($originalNode->attributes as $attr) {
-            $newElement->setAttribute($attr->nodeName, $attr->nodeValue);
+        // Crear nuevo elemento con el nombre correcto
+        $newElement = $doc->createElement($newTagName);
+
+        // Special handling for IDFactura - direct copy of child elements to ensure all fields are included
+        if ($newTagName === 'sf:IDFactura') {
+            // Explicitly create required IDFactura child elements
+            if ($this->invoiceId) {
+                $newElement->appendChild($doc->createElement('sf:IDEmisorFactura', $this->invoiceId->issuerNif));
+                $newElement->appendChild($doc->createElement('sf:NumSerieFactura', $this->invoiceId->seriesNumber));
+                $newElement->appendChild($doc->createElement('sf:FechaExpedicionFactura', $this->invoiceId->issueDate));
+            }
+            return $newElement;
+        }
+
+        // Copiar hijos importándolos al documento destino (importNode evita pérdidas entre documentos distintos)
+        foreach ($originalNode->childNodes as $child) {
+            $newElement->appendChild($doc->importNode($child, true));
+        }
+
+        // Copiar atributos (respetando namespaces si los hay)
+        if ($originalNode->hasAttributes()) {
+            foreach ($originalNode->attributes as $attr) {
+                if ($attr->namespaceURI) {
+                    $newElement->setAttributeNS($attr->namespaceURI, $attr->nodeName, $attr->nodeValue);
+                } else {
+                    $newElement->setAttribute($attr->nodeName, $attr->nodeValue);
+                }
+            }
         }
 
         return $newElement;
@@ -590,10 +618,10 @@ class InvoiceSubmission extends InvoiceRecord
         $doc->formatOutput = true;
         
         // Create root element: RegistroAlta with namespaces
-        $root = $doc->createElementNS('https://www.agenciatributaria.es/static_files/AEAT/Contenidos_Comunes/La_Agencia_Tributaria/Modelos_y_formularios/Declaraciones/Modelos_especiales_SF/sf/SistemaFacturacion', 'sf:RegistroAlta');
+        $root = $doc->createElementNS('https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd', 'sf:RegistroAlta');
         
         // Add sfLR namespace declaration
-        $root->setAttribute('xmlns:sfLR', 'https://www.agenciatributaria.es/static_files/AEAT/Contenidos_Comunes/La_Agencia_Tributaria/Modelos_y_formularios/Declaraciones/Modelos_especiales_SF/sfLR/SistemaFacturacionLR');
+        $root->setAttribute('xmlns:sfLR', 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd');
         
         // Add ds namespace for signature
         $root->setAttribute('xmlns:ds', 'http://www.w3.org/2000/09/xmldsig#');
@@ -615,9 +643,10 @@ class InvoiceSubmission extends InvoiceRecord
             }
         }
 
-        // RefExterna (optional)
-        if (!empty($this->externalReference)) {
-            $root->appendChild($doc->createElement('sf:RefExterna', $this->externalReference));
+        // RefExterna (optional) - soporta externalReference y externalRef
+        $refExterna = $this->externalReference ?? $this->externalRef ?? null;
+        if (!empty($refExterna)) {
+            $root->appendChild($doc->createElement('sf:RefExterna', $refExterna));
         }
 
         // NombreRazonEmisor (required)

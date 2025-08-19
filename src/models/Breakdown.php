@@ -8,6 +8,7 @@ namespace eseperio\verifactu\models;
  * Model representing a tax breakdown (DesgloseType).
  * Contains a collection of breakdown details.
  * Original schema: DesgloseType.
+ * When serialized to XML, this class creates a 'sfLR:Desglose' element containing all breakdown details.
  * @see docs/aeat/esquemas/SuministroInformacion.xsd.xml
  */
 class Breakdown extends Model
@@ -129,5 +130,26 @@ class Breakdown extends Model
                 return true;
             }],
         ];
+    }
+    
+    /**
+     * Serializes the breakdown to XML.
+     *
+     * @param \DOMDocument $doc The XML document to use for creating elements
+     * @return \DOMElement The root element of this model's XML representation
+     */
+    public function toXml(\DOMDocument $doc)
+    {
+        $root = $doc->createElement('sfLR:Desglose');
+        
+        // Add each breakdown detail
+        foreach ($this->details as $detail) {
+            if (method_exists($detail, 'toXml')) {
+                $detailNode = $detail->toXml($doc);
+                $root->appendChild($detailNode);
+            }
+        }
+        
+        return $root;
     }
 }
