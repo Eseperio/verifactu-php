@@ -495,14 +495,44 @@ class InvoiceSubmission extends InvoiceRecord
 
                 return ($value instanceof RectificationBreakdown) ? true : 'Must be an instance of RectificationBreakdown.';
             }],
-            ['recipients', function ($value): bool|string {
-                if (empty($value)) {
-                    return true;
+            ['recipients', function ($value, $model): bool|string {
+                $type = $model->invoiceType?->value ?? null;
+                $sinIdentif = $model->invoiceWithoutRecipient?->value ?? null;
+                if ($type === InvoiceType::STANDARD->value) {
+                    if (empty($value)) {
+                        return 'Recipient is required for STANDARD invoices (F1).';
+                    }
+                } elseif ($type === InvoiceType::SIMPLIFIED->value) {
+                    if ($model->invoiceWithoutRecipient?->value === YesNoType::NO->value) {
+                        // Allowed but not required
+                    } else {
+                        if (!empty($value)) {
+                            return 'Recipient is not allowed for SIMPLIFIED invoices (F2) unless explicit identification.';
+                        }
+                    }
+                } elseif ($type === InvoiceType::REPLACEMENT->value) {
+                    if (empty($value)) {
+                        return 'Recipient is required for REPLACEMENT invoices (F3).';
+                    }
+                } elseif (in_array($type, [
+                    InvoiceType::RECTIFICATION_1->value,
+                    InvoiceType::RECTIFICATION_2->value,
+                    InvoiceType::RECTIFICATION_3->value,
+                    InvoiceType::RECTIFICATION_4->value
+                ])) {
+                    if (empty($value)) {
+                        return 'Recipient is required for RECTIFICATION invoices (R1-R4).';
+                    }
+                } elseif ($type === InvoiceType::RECTIFICATION_SIMPLIFIED->value) {
+                    if (!empty($value)) {
+                        return 'Recipient is not allowed for RECTIFICATION_SIMPLIFIED invoices (R5).';
+                    }
                 }
-
-                foreach ($value as $recipient) {
-                    if (!($recipient instanceof LegalPerson)) {
-                        return 'All recipients must be instances of LegalPerson.';
+                if (!empty($value)) {
+                    foreach ($value as $recipient) {
+                        if (!($recipient instanceof LegalPerson)) {
+                            return 'All recipients must be instances of LegalPerson.';
+                        }
                     }
                 }
 
@@ -558,13 +588,20 @@ class InvoiceSubmission extends InvoiceRecord
         // Create the XML document
         $doc = new \DOMDocument('1.0', 'UTF-8');
         $doc->formatOutput = true;
-
-        // Create root element: RegistroAlta
-        $root = $doc->createElement('RegistroAlta');
+        
+        // Create root element: RegistroAlta with namespaces
+        $root = $doc->createElementNS('https://www.agenciatributaria.es/static_files/AEAT/Contenidos_Comunes/La_Agencia_Tributaria/Modelos_y_formularios/Declaraciones/Modelos_especiales_SF/sf/SistemaFacturacion', 'sf:RegistroAlta');
+        
+        // Add sfLR namespace declaration
+        $root->setAttribute('xmlns:sfLR', 'https://www.agenciatributaria.es/static_files/AEAT/Contenidos_Comunes/La_Agencia_Tributaria/Modelos_y_formularios/Declaraciones/Modelos_especiales_SF/sfLR/SistemaFacturacionLR');
+        
+        // Add ds namespace for signature
+        $root->setAttribute('xmlns:ds', 'http://www.w3.org/2000/09/xmldsig#');
+        
         $doc->appendChild($root);
 
         // IDVersion (required, hardcoded as '1.0')
-        $idVersion = $doc->createElement('IDVersion', '1.0');
+        $idVersion = $doc->createElement('sf:IDVersion', '1.0');
         $root->appendChild($idVersion);
 
         // IDFactura (required)
@@ -573,38 +610,38 @@ class InvoiceSubmission extends InvoiceRecord
 
             if (method_exists($invoiceId, 'toXml')) {
                 $originalNode = $invoiceId->toXml($doc);
-                $idFacturaNode = $this->renameElement($doc, $originalNode, 'IDFactura');
+                $idFacturaNode = $this->renameElement($doc, $originalNode, 'sf:IDFactura');
                 $root->appendChild($idFacturaNode);
             }
         }
 
         // RefExterna (optional)
         if (!empty($this->externalReference)) {
-            $root->appendChild($doc->createElement('RefExterna', $this->externalReference));
+            $root->appendChild($doc->createElement('sf:RefExterna', $this->externalReference));
         }
 
         // NombreRazonEmisor (required)
-        $root->appendChild($doc->createElement('NombreRazonEmisor', $this->issuerName));
+        $root->appendChild($doc->createElement('sf:NombreRazonEmisor', $this->issuerName));
 
         // TipoFactura (required)
-        $root->appendChild($doc->createElement('TipoFactura', $this->invoiceType?->value));
+        $root->appendChild($doc->createElement('sf:TipoFactura', $this->invoiceType?->value));
 
         // TipoRectificativa (optional)
         if (!empty($this->rectificationType)) {
-            $root->appendChild($doc->createElement('TipoRectificativa', $this->rectificationType?->value));
+            $root->appendChild($doc->createElement('sf:TipoRectificativa', $this->rectificationType?->value));
         }
 
         // FacturasRectificadas (optional)
         $rectData = $this->getRectificationData();
 
         if (!empty($rectData['rectified'])) {
-            $facturasRectificadas = $doc->createElement('FacturasRectificadas');
+            $facturasRectificadas = $doc->createElement('sf:FacturasRectificadas');
 
             foreach ($rectData['rectified'] as $rect) {
-                $idFacturaRectificada = $doc->createElement('IDFacturaRectificada');
-                $idFacturaRectificada->appendChild($doc->createElement('IDEmisorFactura', $rect['issuerNif']));
-                $idFacturaRectificada->appendChild($doc->createElement('NumSerieFactura', $rect['seriesNumber']));
-                $idFacturaRectificada->appendChild($doc->createElement('FechaExpedicionFactura', $rect['issueDate']));
+                $idFacturaRectificada = $doc->createElement('sf:IDFacturaRectificada');
+                $idFacturaRectificada->appendChild($doc->createElement('sf:IDEmisorFactura', $rect['issuerNif']));
+                $idFacturaRectificada->appendChild($doc->createElement('sf:NumSerieFactura', $rect['seriesNumber']));
+                $idFacturaRectificada->appendChild($doc->createElement('sf:FechaExpedicionFactura', $rect['issueDate']));
                 $facturasRectificadas->appendChild($idFacturaRectificada);
             }
             $root->appendChild($facturasRectificadas);
@@ -612,13 +649,13 @@ class InvoiceSubmission extends InvoiceRecord
 
         // FacturasSustituidas (optional)
         if (!empty($rectData['substituted'])) {
-            $facturasSustituidas = $doc->createElement('FacturasSustituidas');
+            $facturasSustituidas = $doc->createElement('sf:FacturasSustituidas');
 
             foreach ($rectData['substituted'] as $subst) {
-                $idFacturaSustituida = $doc->createElement('IDFacturaSustituida');
-                $idFacturaSustituida->appendChild($doc->createElement('IDEmisorFactura', $subst['issuerNif']));
-                $idFacturaSustituida->appendChild($doc->createElement('NumSerieFactura', $subst['seriesNumber']));
-                $idFacturaSustituida->appendChild($doc->createElement('FechaExpedicionFactura', $subst['issueDate']));
+                $idFacturaSustituida = $doc->createElement('sf:IDFacturaSustituida');
+                $idFacturaSustituida->appendChild($doc->createElement('sf:IDEmisorFactura', $subst['issuerNif']));
+                $idFacturaSustituida->appendChild($doc->createElement('sf:NumSerieFactura', $subst['seriesNumber']));
+                $idFacturaSustituida->appendChild($doc->createElement('sf:FechaExpedicionFactura', $subst['issueDate']));
                 $facturasSustituidas->appendChild($idFacturaSustituida);
             }
             $root->appendChild($facturasSustituidas);
@@ -627,53 +664,53 @@ class InvoiceSubmission extends InvoiceRecord
         // ImporteRectificacion (optional)
         if (!empty($this->rectificationBreakdown) && method_exists($this->rectificationBreakdown, 'toXml')) {
             $originalNode = $this->rectificationBreakdown->toXml($doc);
-            $importeRectificacionNode = $this->renameElement($doc, $originalNode, 'ImporteRectificacion');
+            $importeRectificacionNode = $this->renameElement($doc, $originalNode, 'sf:ImporteRectificacion');
             $root->appendChild($importeRectificacionNode);
         }
 
         // FechaOperacion (optional)
         if (!empty($this->operationDate)) {
-            $root->appendChild($doc->createElement('FechaOperacion', $this->operationDate));
+            $root->appendChild($doc->createElement('sf:FechaOperacion', $this->operationDate));
         }
 
         // DescripcionOperacion (required)
-        $root->appendChild($doc->createElement('DescripcionOperacion', $this->operationDescription));
+        $root->appendChild($doc->createElement('sf:DescripcionOperacion', $this->operationDescription));
 
         // FacturaSimplificadaArt7273 (optional)
         if (!empty($this->simplifiedInvoice)) {
-            $root->appendChild($doc->createElement('FacturaSimplificadaArt7273', $this->simplifiedInvoice?->value));
+            $root->appendChild($doc->createElement('sf:FacturaSimplificadaArt7273', $this->simplifiedInvoice?->value));
         }
 
         // FacturaSinIdentifDestinatarioArt61d (optional)
         if (!empty($this->invoiceWithoutRecipient)) {
-            $root->appendChild($doc->createElement('FacturaSinIdentifDestinatarioArt61d', $this->invoiceWithoutRecipient?->value));
+            $root->appendChild($doc->createElement('sf:FacturaSinIdentifDestinatarioArt61d', $this->invoiceWithoutRecipient?->value));
         }
 
         // Macrodato (optional)
         if (!empty($this->macrodata)) {
-            $root->appendChild($doc->createElement('Macrodato', $this->macrodata?->value));
+            $root->appendChild($doc->createElement('sf:Macrodato', $this->macrodata?->value));
         }
 
         // EmitidaPorTerceroODestinatario (optional)
         if (!empty($this->issuedBy)) {
-            $root->appendChild($doc->createElement('EmitidaPorTerceroODestinatario', $this->issuedBy?->value));
+            $root->appendChild($doc->createElement('sf:EmitidaPorTerceroODestinatario', $this->issuedBy?->value));
         }
 
         // Tercero (optional)
         if (!empty($this->thirdParty) && method_exists($this->thirdParty, 'toXml')) {
             $originalNode = $this->thirdParty->toXml($doc);
-            $terceroNode = $this->renameElement($doc, $originalNode, 'Tercero');
+            $terceroNode = $this->renameElement($doc, $originalNode, 'sf:Tercero');
             $root->appendChild($terceroNode);
         }
 
         // Destinatarios (optional)
         if (!empty($this->recipients)) {
-            $destinatarios = $doc->createElement('Destinatarios');
+            $destinatarios = $doc->createElement('sf:Destinatarios');
 
             foreach ($this->recipients as $recipient) {
                 if (method_exists($recipient, 'toXml')) {
                     $originalNode = $recipient->toXml($doc);
-                    $idDestinatario = $this->renameElement($doc, $originalNode, 'IDDestinatario');
+                    $idDestinatario = $this->renameElement($doc, $originalNode, 'sf:IDDestinatario');
                     $destinatarios->appendChild($idDestinatario);
                 }
             }
@@ -682,59 +719,70 @@ class InvoiceSubmission extends InvoiceRecord
 
         // Cupon (optional)
         if (!empty($this->coupon)) {
-            $root->appendChild($doc->createElement('Cupon', $this->coupon?->value));
+            $root->appendChild($doc->createElement('sf:Cupon', $this->coupon?->value));
         }
 
         // Desglose (required)
         if (!empty($this->breakdown) && method_exists($this->breakdown, 'toXml')) {
             $originalNode = $this->breakdown->toXml($doc);
-            $desgloseNode = $this->renameElement($doc, $originalNode, 'Desglose');
+            $desgloseNode = $this->renameElement($doc, $originalNode, 'sf:Desglose');
             $root->appendChild($desgloseNode);
+        } else {
+            // Create an empty Desglose element if not provided (it's required)
+            $root->appendChild($doc->createElement('sf:Desglose'));
         }
 
         // CuotaTotal (required)
-        $root->appendChild($doc->createElement('CuotaTotal', number_format($this->taxAmount, 2, '.', '')));
+        $root->appendChild($doc->createElement('sf:CuotaTotal', number_format($this->taxAmount, 2, '.', '')));
 
         // ImporteTotal (required)
-        $root->appendChild($doc->createElement('ImporteTotal', number_format($this->totalAmount, 2, '.', '')));
+        $root->appendChild($doc->createElement('sf:ImporteTotal', number_format($this->totalAmount, 2, '.', '')));
 
         // Encadenamiento (required, must be set by the user)
         if (!empty($this->chaining) && method_exists($this->chaining, 'toXml')) {
             $originalNode = $this->chaining->toXml($doc);
-            $encadenamientoNode = $this->renameElement($doc, $originalNode, 'Encadenamiento');
+            $encadenamientoNode = $this->renameElement($doc, $originalNode, 'sf:Encadenamiento');
+            $root->appendChild($encadenamientoNode);
+        } else {
+            // Create an empty Encadenamiento element if not provided (it's required)
+            $encadenamientoNode = $doc->createElement('sf:Encadenamiento');
+            $encadenamientoNode->appendChild($doc->createElement('sf:PrimerRegistro', 'S'));
             $root->appendChild($encadenamientoNode);
         }
 
         // SistemaInformatico (required)
         if (!empty($this->systemInfo) && method_exists($this->systemInfo, 'toXml')) {
             $originalNode = $this->systemInfo->toXml($doc);
-            $sistemaNode = $this->renameElement($doc, $originalNode, 'SistemaInformatico');
+            $sistemaNode = $this->renameElement($doc, $originalNode, 'sf:SistemaInformatico');
             $root->appendChild($sistemaNode);
+        } else {
+            // Create an empty SistemaInformatico element if not provided (it's required)
+            $root->appendChild($doc->createElement('sf:SistemaInformatico'));
         }
 
         // FechaHoraHusoGenRegistro (required, must be set by the user)
         if (!empty($this->recordTimestamp)) {
-            $root->appendChild($doc->createElement('FechaHoraHusoGenRegistro', $this->recordTimestamp));
+            $root->appendChild($doc->createElement('sf:FechaHoraHusoGenRegistro', $this->recordTimestamp));
         }
 
         // NumRegistroAcuerdoFacturacion (optional)
         if (!empty($this->invoiceAgreementNumber)) {
-            $root->appendChild($doc->createElement('NumRegistroAcuerdoFacturacion', $this->invoiceAgreementNumber));
+            $root->appendChild($doc->createElement('sf:NumRegistroAcuerdoFacturacion', $this->invoiceAgreementNumber));
         }
 
         // IdAcuerdoSistemaInformatico (optional)
         if (!empty($this->systemAgreementId)) {
-            $root->appendChild($doc->createElement('IdAcuerdoSistemaInformatico', $this->systemAgreementId));
+            $root->appendChild($doc->createElement('sf:IdAcuerdoSistemaInformatico', $this->systemAgreementId));
         }
 
         // TipoHuella (required, must be set by the user)
         if (!empty($this->hashType)) {
-            $root->appendChild($doc->createElement('TipoHuella', $this->hashType?->value));
+            $root->appendChild($doc->createElement('sf:TipoHuella', $this->hashType?->value));
         }
 
         // Huella (required, must be set by the user)
         if (!empty($this->hash)) {
-            $root->appendChild($doc->createElement('Huella', $this->hash));
+            $root->appendChild($doc->createElement('sf:Huella', $this->hash));
         }
 
         // ds:Signature (optional, to be added after signing)
