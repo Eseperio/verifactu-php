@@ -548,7 +548,7 @@ class InvoiceSubmission extends InvoiceRecord
                 }
 
                 // Checks for format YYYY-MM-DD (simple regex)
-                return (preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $value)) ? true : 'Must be a valid date (YYYY-MM-DD).';
+                return (preg_match('/^\\d{2}-\\d{2}-\\d{4}$/', $value)) ? true : 'Must be a valid date (YYYY-MM-DD).';
             }],
             // Nueva regla para validar el formato de la fecha de expedición
             ['invoiceId', function ($value): bool|string {

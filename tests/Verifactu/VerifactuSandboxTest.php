@@ -132,7 +132,8 @@ class VerifactuSandboxTest extends TestCase
         $computerSystem->installationNumber = '1';
         $computerSystem->onlyVerifactu = YesNoType::YES;
         $computerSystem->multipleObligations = YesNoType::NO;
-        
+        $computerSystem->hasMultipleObligations = YesNoType::NO;
+
         // Set provider information
         $provider = new LegalPerson();
         $provider->name = 'Test Provider SL';
@@ -149,7 +150,7 @@ class VerifactuSandboxTest extends TestCase
         $invoice->hash = HashGeneratorService::generate($invoice);
         
         // Optional fields
-        $invoice->operationDate = date('Y-m-d');
+        $invoice->operationDate = date('d-m-Y');
         // Cambia a externalReference si prefieres no depender del alias:
         // $invoice->externalReference = 'TEST-' . date('YmdHis');
         $invoice->externalRef = 'TEST-' . date('YmdHis');
