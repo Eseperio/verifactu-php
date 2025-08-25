@@ -25,10 +25,18 @@ class SoapClientFactoryService
             throw new \RuntimeException("Certificate file not found: $certPath");
         }
 
+        // If using a PFX/P12, convert to a temporary PEM combining cert+key for SoapClient
+        $ext = strtolower(pathinfo($certPath, PATHINFO_EXTENSION));
+        $localCertPath = $certPath;
+        if ($ext === 'p12' || $ext === 'pfx') {
+            // Reuse our certificate manager to build a Soap-compatible PEM file
+            $localCertPath = CertificateManagerService::createSoapCompatiblePemTemp($certPath, $certPassword);
+        }
+
         $defaultOptions = [
             'trace' => 1,
             'exceptions' => true,
-            'local_cert' => $certPath,
+            'local_cert' => $localCertPath,
             'passphrase' => $certPassword,
             'cache_wsdl' => WSDL_CACHE_NONE,
         ];

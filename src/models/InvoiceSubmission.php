@@ -569,6 +569,71 @@ class InvoiceSubmission extends InvoiceRecord
     }
 
     /**
+     * Helper method to rename a DOM element by creating a new one with the desired tag name
+     * and copying all children and attributes. This works around PHP 8.3's read-only tagName property.
+     *
+     * @param \DOMDocument $doc The document
+     * @param \DOMNode $originalNode The original node (can be DOMElement or DOMDocument)
+     * @param string $newTagName The new tag name
+     * @return \DOMElement The new element with the desired tag name
+     */
+    private function renameElement(\DOMDocument $doc, \DOMNode $originalNode, string $newTagName, ?string $namespace = null)
+    {
+        // Normaliza el nodo original a un DOMElement
+        if ($originalNode instanceof \DOMDocument) {
+            $originalNode = $originalNode->documentElement;
+        }
+        if (!($originalNode instanceof \DOMElement)) {
+            // Si no es un elemento, crea uno vacío con el nombre nuevo
+            if ($namespace) {
+                return $doc->createElementNS($namespace, $newTagName);
+            }
+            return $doc->createElement($newTagName);
+        }
+
+        // Crear nuevo elemento con el nombre correcto y posible namespace
+        if ($namespace) {
+            $newElement = $doc->createElementNS($namespace, $newTagName);
+        } else {
+            $newElement = $doc->createElement($newTagName);
+        }
+
+        // Special handling for IDFactura - direct copy of child elements to ensure all fields are included
+        if ($newTagName === 'sf:IDFactura') {
+            if ($this->invoiceId) {
+                if ($namespace) {
+                    $newElement->appendChild($doc->createElementNS($namespace, 'sf:IDEmisorFactura', $this->invoiceId->issuerNif));
+                    $newElement->appendChild($doc->createElementNS($namespace, 'sf:NumSerieFactura', $this->invoiceId->seriesNumber));
+                    $newElement->appendChild($doc->createElementNS($namespace, 'sf:FechaExpedicionFactura', $this->invoiceId->issueDate));
+                } else {
+                    $newElement->appendChild($doc->createElement('sf:IDEmisorFactura', $this->invoiceId->issuerNif));
+                    $newElement->appendChild($doc->createElement('sf:NumSerieFactura', $this->invoiceId->seriesNumber));
+                    $newElement->appendChild($doc->createElement('sf:FechaExpedicionFactura', $this->invoiceId->issueDate));
+                }
+            }
+            return $newElement;
+        }
+
+        // Copiar hijos importándolos al documento destino (importNode evita pérdidas entre documentos distintos)
+        foreach ($originalNode->childNodes as $child) {
+            $newElement->appendChild($doc->importNode($child, true));
+        }
+
+        // Copiar atributos (respetando namespaces si los hay)
+        if ($originalNode->hasAttributes()) {
+            foreach ($originalNode->attributes as $attr) {
+                if ($attr->namespaceURI) {
+                    $newElement->setAttributeNS($attr->namespaceURI, $attr->nodeName, $attr->nodeValue);
+                } else {
+                    $newElement->setAttribute($attr->nodeName, $attr->nodeValue);
+                }
+            }
+        }
+
+        return $newElement;
+    }
+
+    /**
      * Deprecated: Use InvoiceSerializer::toInvoiceXml() instead.
      * 
      * @deprecated This method has been replaced by InvoiceSerializer::toInvoiceXml()

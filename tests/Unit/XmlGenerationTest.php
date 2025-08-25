@@ -8,6 +8,7 @@ use eseperio\verifactu\models\Breakdown;
 use eseperio\verifactu\models\BreakdownDetail;
 use eseperio\verifactu\models\InvoiceId;
 use eseperio\verifactu\models\InvoiceSubmission;
+use eseperio\verifactu\services\InvoiceSerializer;
 use eseperio\verifactu\models\enums\InvoiceType;
 use eseperio\verifactu\models\enums\OperationQualificationType;
 use PHPUnit\Framework\TestCase;
@@ -23,7 +24,8 @@ class XmlGenerationTest extends TestCase
         $invoiceId = new InvoiceId();
         $invoiceId->issuerNif = 'B12345678';
         $invoiceId->seriesNumber = 'TEST-001';
-        $invoiceId->issueDate = '2025-08-19';
+        // XSD expects DD-MM-YYYY pattern
+        $invoiceId->issueDate = '19-08-2025';
         $invoice->setInvoiceId($invoiceId);
         
         // Set basic invoice data
@@ -42,15 +44,15 @@ class XmlGenerationTest extends TestCase
         $invoice->addBreakdownDetail($breakdownDetail);
         
         // Generate XML
-        $xml = $invoice->toXml();
+        $xml = InvoiceSerializer::toInvoiceXml($invoice);
         
         // Output XML for inspection
         $xmlString = $xml->saveXML();
         echo "Generated XML:\n" . $xmlString . "\n";
         
-        // Check if the Desglose element exists
-        $desgloseElements = $xml->getElementsByTagName('sf:Desglose');
-        $this->assertEquals(1, $desgloseElements->length, 'There should be exactly one sf:Desglose element');
+        // Check if the Desglose element exists (namespace-aware)
+        $desgloseElements = $xml->getElementsByTagNameNS(InvoiceSubmission::SF_NAMESPACE, 'Desglose');
+        $this->assertEquals(1, $desgloseElements->length, 'There should be exactly one Desglose element');
         
         // Check if the Desglose element has content
         $desgloseElement = $desgloseElements->item(0);

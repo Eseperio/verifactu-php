@@ -116,10 +116,11 @@ class CertificateManagerService
     /**
      * Try to read PKCS#12 (PFX/P12) using PHP OpenSSL; if it fails (e.g. OpenSSL 3 without legacy),
      * fallback to system openssl CLI adding -legacy when the CLI is >= 3.x.
+     * Returns leaf certificate, private key, and optional chain certificates.
      *
      * @param string $certPath
      * @param string $password
-     * @return array{cert?: string, pkey?: string}
+     * @return array{cert?: string, pkey?: string, chain?: string[]}
      */
     private static function readPkcs12(string $certPath, string $password): array
     {
@@ -151,7 +152,25 @@ class CertificateManagerService
 
         $certs = [];
         if (@openssl_pkcs12_read($certContent, $certs, $password)) {
-            $out = $certs;
+            // Normalize to expected keys: cert, pkey, chain[]
+            $out = [];
+            if (!empty($certs['cert'])) {
+                $out['cert'] = is_string($certs['cert']) ? $certs['cert'] : (string)$certs['cert'];
+            }
+            if (!empty($certs['pkey'])) {
+                $out['pkey'] = is_string($certs['pkey']) ? $certs['pkey'] : (string)$certs['pkey'];
+            }
+            if (!empty($certs['extracerts']) && is_array($certs['extracerts'])) {
+                $chain = [];
+                foreach ($certs['extracerts'] as $c) {
+                    if (is_string($c)) {
+                        $chain[] = $c;
+                    }
+                }
+                if ($chain) {
+                    $out['chain'] = $chain;
+                }
+            }
             return true;
         }
 
@@ -162,9 +181,10 @@ class CertificateManagerService
 
     /**
      * Read PKCS#12 via openssl CLI, using -legacy if CLI is >= 3.
-     * Password is supplied via stdin (fd:0) to avoid leaking it via argv.
+     * Password is supplied via env to avoid leaking it via argv.
+     * Returns leaf cert + pkey + chain (other certs) when available.
      *
-     * @return array{cert?: string, pkey?: string}
+     * @return array{cert?: string, pkey?: string, chain?: string[]}
      */
     private static function pkcs12ReadWithCli(string $certPath, string $password): array
     {
@@ -176,7 +196,6 @@ class CertificateManagerService
             $opensslBin, 'pkcs12',
             '-in', $certPath,
             '-nodes',
-            '-clcerts',
         ];
         if ($useLegacy) {
             $args[] = '-legacy';
@@ -244,7 +263,6 @@ class CertificateManagerService
             $opensslBin, 'pkcs12',
             '-in', $certPath,
             '-nodes',
-            '-clcerts',
         ];
 
         $env = is_array($_ENV) ? $_ENV : [];
@@ -292,18 +310,29 @@ class CertificateManagerService
     }
 
     /**
-     * Parse PEM bundle to extract certificate and private key.
+     * Parse PEM bundle to extract leaf certificate, private key, and chain certificates.
      *
      * @param string $pem
-     * @return array{cert?: string, pkey?: string}
+     * @return array{cert?: string, pkey?: string, chain?: string[]}
      */
     private static function parsePemBundle(string $pem): array
     {
         $out = [];
 
-        // Extract certificate block as-is
-        if (preg_match('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pem, $m)) {
-            $out['cert'] = $m[0] . (str_ends_with($m[0], "\n") ? '' : "\n");
+        // Extract all certificate blocks as-is (first one assumed to be leaf cert)
+        if (preg_match_all('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pem, $m)) {
+            $certs = $m[0];
+            if (!empty($certs)) {
+                $leaf = array_shift($certs);
+                $out['cert'] = $leaf . (str_ends_with($leaf, "\n") ? '' : "\n");
+                if (!empty($certs)) {
+                    $chain = [];
+                    foreach ($certs as $c) {
+                        $chain[] = $c . (str_ends_with($c, "\n") ? '' : "\n");
+                    }
+                    $out['chain'] = $chain;
+                }
+            }
         }
 
         // Extract private key block, preserving ENCRYPTED PRIVATE KEY header if present
@@ -313,7 +342,7 @@ class CertificateManagerService
             $out['pkey'] = $m[0] . (str_ends_with($m[0], "\n") ? '' : "\n");
         }
 
-        return $out;
+    return $out;
     }
 
     /**
@@ -333,7 +362,7 @@ class CertificateManagerService
     }
 
     /**
-     * Crea un archivo PEM temporal combinando certificado y clave privada, compatible con SoapClient.
+     * Crea un archivo PEM temporal combinando certificado, cadena (CA) y clave privada, compatible con SoapClient.
      * Devuelve la ruta absoluta al archivo temporal (con permisos 0600) y programa su eliminación al shutdown.
      *
      * @param string $certPath Ruta al certificado original (PEM o PFX/P12)
@@ -347,9 +376,29 @@ class CertificateManagerService
             throw new \RuntimeException("Certificate file not found: $certPath");
         }
 
-        // Obtener bloques en PEM
-        $certPem = self::getCertificate($certPath, $certPassword);
-        $keyPem = self::getPrivateKey($certPath, $certPassword);
+        $ext = strtolower(pathinfo($certPath, PATHINFO_EXTENSION));
+        $certPem = '';
+        $keyPem = '';
+        $chainPems = [];
+
+        if ($ext === 'p12' || $ext === 'pfx') {
+            // Leer todo del contenedor PKCS#12 en una sola pasada
+            $bundle = self::readPkcs12($certPath, $certPassword);
+            $certPem = $bundle['cert'] ?? '';
+            $keyPem = $bundle['pkey'] ?? '';
+            $chainPems = isset($bundle['chain']) && is_array($bundle['chain']) ? $bundle['chain'] : [];
+        } else {
+            // PEM: extraer certs (leaf + chain) y la clave
+            $pemContent = file_get_contents($certPath);
+            if (preg_match_all('/-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----/s', $pemContent, $m)) {
+                $certs = $m[0];
+                $certPem = array_shift($certs);
+                $chainPems = $certs;
+            } else {
+                $certPem = self::getCertificate($certPath, $certPassword);
+            }
+            $keyPem = self::getPrivateKey($certPath, $certPassword);
+        }
 
         if (!\is_string($certPem) || $certPem === '') {
             throw new \RuntimeException('Failed to extract certificate in PEM format.');
@@ -362,11 +411,18 @@ class CertificateManagerService
         if (!str_ends_with($certPem, "\n")) {
             $certPem .= "\n";
         }
+        foreach ($chainPems as &$c) {
+            if (!str_ends_with($c, "\n")) {
+                $c .= "\n";
+            }
+        }
+        unset($c);
         if (!str_ends_with($keyPem, "\n")) {
             $keyPem .= "\n";
         }
 
-        $combined = $certPem . $keyPem;
+        // Orden recomendado: leaf cert, cadena (CA) y por último clave
+        $combined = $certPem . implode('', $chainPems) . $keyPem;
 
         // Crear archivo temporal seguro
         $base = tempnam(sys_get_temp_dir(), 'verifactu_cert_');
