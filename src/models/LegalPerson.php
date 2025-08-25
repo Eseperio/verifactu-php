@@ -80,16 +80,17 @@ class LegalPerson extends Model
     }
     
     /**
-    * Deprecated: This method has been replaced by direct XML generation in InvoiceSerializer.
+     * Deprecated: This method has been replaced by direct XML generation in InvoiceSerializer.
      * 
      * @deprecated This method has been replaced by direct XML generation in InvoiceSerializer
      * @param \DOMDocument $doc The XML document to use for creating elements
      * @return \DOMElement
+     * @throws \Exception
      */
     public function toXml(\DOMDocument $doc)
     {
         throw new \Exception(
-            'TThis method is deprecated. The XML generation has been moved to the InvoiceSerializer service.'
+            'This method is deprecated. The XML generation has been moved to the InvoiceSerializer service.'
         );
     }
 }

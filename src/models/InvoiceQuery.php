@@ -147,79 +147,17 @@ class InvoiceQuery extends Model
     }
 
     /**
-     * Serializes the invoice query to XML.
-     *
-     * @throws \DOMException
+     * Deprecated: Use InvoiceSerializer::toQueryXml() instead.
+     * 
+     * @deprecated This method has been replaced by InvoiceSerializer::toQueryXml()
+     * @return \DOMDocument
+     * @throws \Exception
      */
     public function toXml(): \DOMDocument
     {
-        // Create the XML document
-        $doc = new \DOMDocument('1.0', 'UTF-8');
-        $doc->formatOutput = true;
-
-        // Create root element: ConsultaFactuSistemaFacturacion
-        $root = $doc->createElement('ConsultaFactuSistemaFacturacion');
-        $doc->appendChild($root);
-
-        // Ejercicio (required)
-        $root->appendChild($doc->createElement('Ejercicio', $this->year));
-
-        // Periodo (required)
-        $root->appendChild($doc->createElement('Periodo', $this->period));
-
-        // NumSerieFactura (optional)
-        if (!empty($this->seriesNumber)) {
-            $root->appendChild($doc->createElement('NumSerieFactura', $this->seriesNumber));
-        }
-
-        // Contraparte (optional)
-        if (!empty($this->counterparty) && is_array($this->counterparty)) {
-            $contraparteNode = $doc->createElement('Contraparte');
-
-            if (!empty($this->counterparty['nif'])) {
-                $contraparteNode->appendChild($doc->createElement('NIF', $this->counterparty['nif']));
-            }
-
-            if (!empty($this->counterparty['name'])) {
-                $contraparteNode->appendChild($doc->createElement('NombreRazon', $this->counterparty['name']));
-            }
-
-            if (!empty($this->counterparty['otherId'])) {
-                $contraparteNode->appendChild($doc->createElement('OtroID', $this->counterparty['otherId']));
-            }
-            $root->appendChild($contraparteNode);
-        }
-
-        // FechaExpedicionFactura (optional)
-        if (!empty($this->issueDate)) {
-            $root->appendChild($doc->createElement('FechaExpedicionFactura', $this->issueDate));
-        }
-
-        // SistemaInformatico (optional)
-        if ($this->systemInfo !== [] && is_array($this->systemInfo)) {
-            $sistemaNode = $doc->createElement('SistemaInformatico');
-
-            foreach ($this->systemInfo as $key => $value) {
-                $sistemaNode->appendChild($doc->createElement($key, $value));
-            }
-            $root->appendChild($sistemaNode);
-        }
-
-        // RefExterna (optional)
-        if (!empty($this->externalRef)) {
-            $root->appendChild($doc->createElement('RefExterna', $this->externalRef));
-        }
-
-        // ClavePaginacion (optional)
-        if ($this->paginationKey !== [] && is_array($this->paginationKey)) {
-            $claveNode = $doc->createElement('ClavePaginacion');
-
-            foreach ($this->paginationKey as $key => $value) {
-                $claveNode->appendChild($doc->createElement($key, $value));
-            }
-            $root->appendChild($claveNode);
-        }
-
-        return $doc;
+        throw new \Exception(
+            'This method is deprecated. Use InvoiceSerializer::toQueryXml() instead. ' .
+            'The XML generation has been moved to the InvoiceSerializer service.'
+        );
     }
 }
