@@ -45,24 +45,17 @@ class InvoiceId extends Model
     }
 
     /**
-     * Serializes the invoice ID to XML.
-     *
+     * Deprecated: This method has been replaced by direct XML generation in InvoiceSerializer.
+     * 
+     * @deprecated This method has been replaced by direct XML generation in InvoiceSerializer
      * @param \DOMDocument $doc The XML document to use for creating elements
-     * @return \DOMElement The root element of this model's XML representation
+     * @return \DOMElement
+     * @throws \Exception
      */
     public function toXml(\DOMDocument $doc)
     {
-        $root = $doc->createElement('sf:IDFactura');
-
-        // IDEmisorFactura (required)
-        $root->appendChild($doc->createElement('sf:IDEmisorFactura', $this->issuerNif));
-
-        // NumSerieFactura (required)
-        $root->appendChild($doc->createElement('sf:NumSerieFactura', $this->seriesNumber));
-
-        // FechaExpedicionFactura (required)
-        $root->appendChild($doc->createElement('sf:FechaExpedicionFactura', $this->issueDate));
-
-        return $root;
+        throw new \Exception(
+            'This method is deprecated. The XML generation has been moved to the InvoiceSerializer service.'
+        );
     }
 }

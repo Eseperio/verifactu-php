@@ -118,63 +118,17 @@ class BreakdownDetail extends Model
     }
     
     /**
-     * Serializes the breakdown detail to XML.
-     *
+     * Deprecated: This method has been replaced by direct XML generation in InvoiceSerializer.
+     * 
+     * @deprecated This method has been replaced by direct XML generation in InvoiceSerializer
      * @param \DOMDocument $doc The XML document to use for creating elements
-     * @return \DOMElement The root element of this model's XML representation
+     * @return \DOMElement
+     * @throws \Exception
      */
     public function toXml(\DOMDocument $doc)
     {
-        $root = $doc->createElement('sfLR:DetalleDesglose');
-        
-        // Impuesto (optional)
-        if (!empty($this->taxType)) {
-            $root->appendChild($doc->createElement('sfLR:Impuesto', $this->taxType->value));
-        }
-        
-        // ClaveRegimen (optional)
-        if (!empty($this->regimeKey)) {
-            $root->appendChild($doc->createElement('sfLR:ClaveRegimen', $this->regimeKey));
-        }
-        
-        // CalificacionOperacion (optional, but either this or exemptOperation should be set)
-        if (!empty($this->operationQualification)) {
-            $root->appendChild($doc->createElement('sfLR:CalificacionOperacion', $this->operationQualification->value));
-        }
-        
-        // OperacionExenta (optional, but either this or operationQualification should be set)
-        if (!empty($this->exemptOperation)) {
-            $root->appendChild($doc->createElement('sfLR:OperacionExenta', $this->exemptOperation->value));
-        }
-        
-        // TipoImpositivo (optional)
-        if (!is_null($this->taxRate)) {
-            $root->appendChild($doc->createElement('sfLR:TipoImpositivo', number_format($this->taxRate, 2, '.', '')));
-        }
-        
-        // BaseImponibleOimporteNoSujeto (required)
-        $root->appendChild($doc->createElement('sfLR:BaseImponibleOimporteNoSujeto', number_format($this->taxableBase, 2, '.', '')));
-        
-        // BaseImponibleACoste (optional)
-        if (!is_null($this->costBasedTaxableBase)) {
-            $root->appendChild($doc->createElement('sfLR:BaseImponibleACoste', number_format($this->costBasedTaxableBase, 2, '.', '')));
-        }
-        
-        // CuotaRepercutida (optional)
-        if (!is_null($this->taxAmount)) {
-            $root->appendChild($doc->createElement('sfLR:CuotaRepercutida', number_format($this->taxAmount, 2, '.', '')));
-        }
-        
-        // TipoRecargoEquivalencia (optional)
-        if (!is_null($this->equivalenceSurchargeRate)) {
-            $root->appendChild($doc->createElement('sfLR:TipoRecargoEquivalencia', number_format($this->equivalenceSurchargeRate, 2, '.', '')));
-        }
-        
-        // CuotaRecargoEquivalencia (optional)
-        if (!is_null($this->equivalenceSurchargeAmount)) {
-            $root->appendChild($doc->createElement('sfLR:CuotaRecargoEquivalencia', number_format($this->equivalenceSurchargeAmount, 2, '.', '')));
-        }
-        
-        return $root;
+        throw new \Exception(
+            'This method is deprecated. The XML generation has been moved to the InvoiceSerializer service.'
+        );
     }
 }

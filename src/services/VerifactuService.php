@@ -109,10 +109,9 @@ class VerifactuService
             throw new \InvalidArgumentException('InvoiceSubmission final validation failed: ' . print_r($finalValidation, true));
         }
 
-        // 3. Get the RegistroAlta XML from the invoice
-        $invoiceDom = $invoice->toXml();
+        // 3. Get the RegistroAlta XML from the invoice using InvoiceSerializer
+        $invoiceDom = InvoiceSerializer::toInvoiceXml($invoice);
 
-        // die($invoiceDom->saveXML()); // eliminar debug
         // 4. Sign the RegistroAlta XML first (so signature is inside RegistroAlta)
         $signedInvoiceXml = XmlSignerService::signXml(
             $invoiceDom->saveXML(),
@@ -129,8 +128,8 @@ class VerifactuService
         $nif = $invoiceId->issuerNif;
         $name = $invoice->issuerName;
         
-        // 7. Wrap the signed XML with the proper structure
-        $wrappedDom = self::wrapXmlWithRegFactuStructure($signedDom, $nif, $name);
+        // 7. Wrap the signed XML with the proper structure using InvoiceSerializer
+        $wrappedDom = InvoiceSerializer::wrapXmlWithRegFactuStructure($signedDom, $nif, $name);
         
         // Get XML without the XML declaration to avoid issues in SOAP body
         $dom_xpath = new \DOMXPath($wrappedDom);
@@ -195,7 +194,22 @@ TXT
         if ($finalValidation !== true) {
             throw new \InvalidArgumentException('InvoiceCancellation final validation failed: ' . print_r($finalValidation, true));
         }
-        $xml = self::buildCancellationXml($cancellation);
+        
+        // Get the RegistroAnulacion XML from the cancellation using InvoiceSerializer
+        $cancellationDom = InvoiceSerializer::toCancellationXml($cancellation);
+        
+        // Get the issuer information for the Cabecera
+        $invoiceId = $cancellation->getInvoiceId();
+        $nif = $invoiceId->issuerNif;
+        $name = "Obligado Tributario"; // Placeholder for cancellations
+        
+        // Wrap the XML with the proper structure using InvoiceSerializer
+        $wrappedDom = InvoiceSerializer::wrapXmlWithRegFactuStructure($cancellationDom, $nif, $name);
+        
+        // Get XML without the XML declaration to avoid issues in SOAP body
+        $dom_xpath = new \DOMXPath($wrappedDom);
+        $root = $dom_xpath->query('/')->item(0)->firstChild;
+        $xml = $wrappedDom->saveXML($root);
 
         $signedXml = XmlSignerService::signXml(
             $xml,
@@ -224,10 +238,14 @@ TXT
         if ($validation !== true) {
             throw new \InvalidArgumentException('InvoiceQuery validation failed: ' . print_r($validation, true));
         }
-        $xml = self::buildQueryXml($query);
+        
+        // Get the XML from the query using InvoiceSerializer
+        $queryDom = InvoiceSerializer::toQueryXml($query);
+        $xml = $queryDom->saveXML();
+        
         $client = self::getClient();
 
-        // Igual para consulta: enviar el XML literal
+        // Enviar el XML literal
         $soapVar = new \SoapVar($xml, XSD_ANYXML);
         $responseXml = $client->__soapCall('ConsultaFactuSistemaFacturacion', [$soapVar]);
 
@@ -255,121 +273,6 @@ TXT
         return QrGeneratorService::generateQr($record, $baseUrl, $destination, $size, $engine);
     }
 
-    /**
-     * Wraps an XML element in the proper RegFactuSistemaFacturacion structure with Cabecera.
-     *
-     * NOTE:
-     * - Uses createElementNS everywhere.
-     * - Cabecera is in sfLR NS.
-     * - sf:* elements are in sf NS.
-     * - Consider removing RemisionRequerimiento when calling Veri*factu endpoint.
-     */
-    protected static function wrapXmlWithRegFactuStructure(\DOMDocument $doc, string $nif, string $name): \DOMDocument
-    {
-        $NS_SFLR = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd';
-        $NS_SF   = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd';
-        $NS_DS   = 'http://www.w3.org/2000/09/xmldsig#';
-
-        $newDoc = new \DOMDocument('1.0', 'UTF-8');
-        $newDoc->formatOutput = true;
-
-        // root: sfLR:RegFactuSistemaFacturacion
-        $root = $newDoc->createElementNS($NS_SFLR, 'sfLR:RegFactuSistemaFacturacion');
-        // declare other namespaces on root
-        $root->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:sf', $NS_SF);
-        $root->setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:ds', $NS_DS);
-        $newDoc->appendChild($root);
-
-        // sfLR:Cabecera (element in sfLR NS, type CabeceraType from sf)
-        $cabecera = $newDoc->createElementNS($NS_SFLR, 'sfLR:Cabecera');
-        $root->appendChild($cabecera);
-
-        // sf:ObligadoEmision
-        $obligadoEmision = $newDoc->createElementNS($NS_SF, 'sf:ObligadoEmision');
-        $cabecera->appendChild($obligadoEmision);
-        $obligadoEmision->appendChild($newDoc->createElementNS($NS_SF, 'sf:NIF', $nif));
-        $obligadoEmision->appendChild($newDoc->createElementNS($NS_SF, 'sf:NombreRazon', $name));
-
-        // sf:Representante (optional)
-        $representante = $newDoc->createElementNS($NS_SF, 'sf:Representante');
-        $representante->appendChild($newDoc->createElementNS($NS_SF, 'sf:NIF', $nif));
-        $representante->appendChild($newDoc->createElementNS($NS_SF, 'sf:NombreRazon', $name));
-        $cabecera->appendChild($representante);
-
-        // sf:RemisionRequerimiento (only for NO-VERIFACTU flows; remove for Veri*factu)
-        $remReq = $newDoc->createElementNS($NS_SF, 'sf:RemisionRequerimiento');
-        $remReq->appendChild($newDoc->createElementNS($NS_SF, 'sf:RefRequerimiento', 'TEST' . date('YmdHis')));
-        $remReq->appendChild($newDoc->createElementNS($NS_SF, 'sf:FinRequerimiento', 'S'));
-        $cabecera->appendChild($remReq);
-
-        // sfLR:RegistroFactura
-        $registroFactura = $newDoc->createElementNS($NS_SFLR, 'sfLR:RegistroFactura');
-        $root->appendChild($registroFactura);
-
-        // import original payload (must be sf:RegistroAlta or sf:RegistroAnulacion in SF NS)
-        $imported = $newDoc->importNode($doc->documentElement, true);
-        $registroFactura->appendChild($imported);
-
-        return $newDoc;
-    }
-
-    /**
-     * Serializes an InvoiceSubmission to AEAT-compliant XML.
-     * @return string XML string
-     * @throws \DOMException
-     */
-    protected static function buildInvoiceXml(InvoiceSubmission $invoice): string|false
-    {
-        // Get the RegistroAlta XML from the invoice
-        $invoiceDom = $invoice->toXml();
-
-        // Get the issuer information for the Cabecera
-        $invoiceId = $invoice->getInvoiceId();
-        $nif = $invoiceId->issuerNif;
-        $name = $invoice->issuerName;
-
-        // Wrap the XML with the proper structure
-        $wrappedDom = self::wrapXmlWithRegFactuStructure($invoiceDom, $nif, $name);
-
-        return $wrappedDom->saveXML();
-    }
-
-    /**
-     * Serializes an InvoiceCancellation to AEAT-compliant XML.
-     * @return string XML string
-     * @throws \DOMException
-     */
-    protected static function buildCancellationXml(InvoiceCancellation $cancellation): string|false
-    {
-        // Get the RegistroAnulacion XML from the cancellation
-        $cancellationDom = $cancellation->toXml();
-
-        // Get the issuer information for the Cabecera
-        $invoiceId = $cancellation->getInvoiceId();
-        $nif = $invoiceId->issuerNif;
-
-        // For cancellations, we don't have issuerName directly, so we'll use a placeholder or try to get it
-        // This should be improved with a more accurate way to get the issuer name for cancellations
-        $name = "Obligado Tributario"; // Placeholder
-
-        // Wrap the XML with the proper structure
-        $wrappedDom = self::wrapXmlWithRegFactuStructure($cancellationDom, $nif, $name);
-
-        return $wrappedDom->saveXML();
-    }
-
-    /**
-     * Serializes an InvoiceQuery to AEAT-compliant XML.
-     * @return string XML string
-     * @throws \DOMException
-     */
-    protected static function buildQueryXml(InvoiceQuery $query): string|false
-    {
-        $queryDom = $query->toXml();
-
-        // For queries, we don't need to wrap with RegFactuSistemaFacturacion
-        // The query structure is already complete
-
-        return $queryDom->saveXML();
-    }
+    // The XML helper methods (wrapXmlWithRegFactuStructure, buildInvoiceXml, buildCancellationXml, buildQueryXml)
+    // have been moved to the InvoiceSerializer service
 }

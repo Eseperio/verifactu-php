@@ -80,56 +80,17 @@ class LegalPerson extends Model
     }
     
     /**
-     * Serializes the person/company to XML.
-     *
+     * Deprecated: This method has been replaced by direct XML generation in InvoiceSerializer.
+     * 
+     * @deprecated This method has been replaced by direct XML generation in InvoiceSerializer
      * @param \DOMDocument $doc The XML document to use for creating elements
-     * @return \DOMElement The root element of this model's XML representation
+     * @return \DOMElement
+     * @throws \Exception
      */
     public function toXml(\DOMDocument $doc)
     {
-        // Create element without namespace prefix first
-        $root = $doc->createElement('IDDestinatario');
-        
-        // Add NombreRazon (required)
-        $root->appendChild($doc->createElement('sf:NombreRazon', $this->name));
-        
-        // Add NIF or IDOtro (one is required)
-        if (!empty($this->nif)) {
-            $root->appendChild($doc->createElement('sf:NIF', $this->nif));
-        } elseif (!empty($this->otherId) && method_exists($this->otherId, 'toXml')) {
-            $originalNode = $this->otherId->toXml($doc);
-            // Assuming there's a renameElement method available, if not you would need to implement it
-            // or copy the node attributes and children manually
-            if (method_exists($this, 'renameElement')) {
-                $idOtroNode = $this->renameElement($doc, $originalNode, 'sf:IDOtro');
-                $root->appendChild($idOtroNode);
-            } else {
-                // Fallback: manually create the IDOtro node with the otherId data
-                $idOtro = $doc->createElement('sf:IDOtro');
-                
-                // Access the otherId data directly if available
-                $otherId = $this->getOtherId();
-                if ($otherId) {
-                    if (isset($otherId->countryCode)) {
-                        $idOtro->appendChild($doc->createElement('sf:CodigoPais', $otherId->countryCode));
-                    }
-                    if (isset($otherId->idType)) {
-                        $idOtro->appendChild($doc->createElement('sf:IDType', $otherId->idType));
-                    }
-                    if (isset($otherId->id)) {
-                        $idOtro->appendChild($doc->createElement('sf:ID', $otherId->id));
-                    }
-                }
-                
-                $root->appendChild($idOtro);
-            }
-        } else {
-            // If neither NIF nor otherId is set, use a default NIF
-            // This is a safeguard to ensure we always have at least one identifier
-            // In a real-world scenario, validation should catch this before we get here
-            $root->appendChild($doc->createElement('sf:NIF', '12345678Z'));
-        }
-        
-        return $root;
+        throw new \Exception(
+            'This method is deprecated. The XML generation has been moved to the InvoiceSerializer service.'
+        );
     }
 }
