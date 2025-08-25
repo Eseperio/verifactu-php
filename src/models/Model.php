@@ -66,23 +66,28 @@ abstract class Model
                 } else {
                     switch ($validator) {
                         case 'string':
-                            if (!is_string($value)) {
+                            if ($value !== null && !is_string($value)) {
                                 $errors[$property][] = "Must be a string.";
                             }
                             break;
                         case 'integer':
-                            if (!is_int($value)) {
+                            if ($value !== null && !is_int($value)) {
                                 $errors[$property][] = "Must be an integer.";
                             }
                             break;
                         case 'float':
-                            if (!is_float($value) && !is_int($value)) {
+                            if ($value !== null && !is_float($value) && !is_int($value)) {
                                 $errors[$property][] = "Must be a float.";
                             }
                             break;
                         case 'email':
-                            if (!is_string($value) || !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                            if ($value !== null && (!is_string($value) || !filter_var($value, FILTER_VALIDATE_EMAIL))) {
                                 $errors[$property][] = "Must be a valid email address.";
+                            }
+                            break;
+                        case 'array':
+                            if ($value !== null && !is_array($value)) {
+                                $errors[$property][] = "Must be an array.";
                             }
                             break;
                         default:

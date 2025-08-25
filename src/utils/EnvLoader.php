@@ -60,7 +60,15 @@ class EnvLoader
      */
     public static function getCertPath(): ?string
     {
-        return self::get('VERIFACTU_CERT_PATH');
+        $path = self::get('VERIFACTU_CERT_PATH');
+        if (empty($path)) {
+            return null;
+        }
+        // Ensure it's a regular file; if it's a directory (common when host path missing), treat as not set
+        if (!is_file($path)) {
+            return null;
+        }
+        return $path;
     }
 
     /**

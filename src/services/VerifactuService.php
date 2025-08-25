@@ -109,8 +109,8 @@ class VerifactuService
             throw new \InvalidArgumentException('InvoiceSubmission final validation failed: ' . print_r($finalValidation, true));
         }
 
-        // 3. Get the RegistroAlta XML from the invoice
-        $invoiceDom = $invoice->toXml();
+        // 3. Get the RegistroAlta XML from the invoice via serializer
+        $invoiceDom = InvoiceSerializer::toInvoiceXml($invoice);
 
         // die($invoiceDom->saveXML()); // eliminar debug
         // 4. Sign the RegistroAlta XML first (so signature is inside RegistroAlta)

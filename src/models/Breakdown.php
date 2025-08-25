@@ -133,23 +133,17 @@ class Breakdown extends Model
     }
     
     /**
-     * Serializes the breakdown to XML.
-     *
+     * Deprecated: This method has been replaced by direct XML generation in InvoiceSerializer.
+     * 
+     * @deprecated This method has been replaced by direct XML generation in InvoiceSerializer
      * @param \DOMDocument $doc The XML document to use for creating elements
-     * @return \DOMElement The root element of this model's XML representation
+     * @return \DOMElement
+     * @throws \Exception
      */
     public function toXml(\DOMDocument $doc)
     {
-        $root = $doc->createElement('sfLR:Desglose');
-        
-        // Add each breakdown detail
-        foreach ($this->details as $detail) {
-            if (method_exists($detail, 'toXml')) {
-                $detailNode = $detail->toXml($doc);
-                $root->appendChild($detailNode);
-            }
-        }
-        
-        return $root;
+        throw new \Exception(
+            'This method is deprecated. The XML generation has been moved to the InvoiceSerializer service.'
+        );
     }
 }
