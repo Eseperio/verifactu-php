@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace eseperio\verifactu\tests\Integration;
 
-use eseperio\verifactu\models\Breakdown;
 use eseperio\verifactu\models\BreakdownDetail;
 use eseperio\verifactu\models\Chaining;
 use eseperio\verifactu\models\ComputerSystem;
@@ -189,8 +188,8 @@ class VerifactuSandboxTest extends TestCase
 
         // Submit the invoice to the AEAT service
         $response = Verifactu::registerInvoice($invoice);
-        
-//        $this->assertNotNull($response, 'Response should not be null');
+
+        $this->assertNotNull($response, 'Response should not be null');
 //        $this->assertTrue($response->isSuccessful(), 'Invoice submission should be successful');
     }
 }
