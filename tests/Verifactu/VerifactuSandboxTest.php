@@ -151,7 +151,7 @@ class VerifactuSandboxTest extends TestCase
         
         // Optional fields
         $invoice->operationDate = date('d-m-Y');
-        // Cambia a externalReference si prefieres no depender del alias:
+        // Change to externalReference if you prefer not to depend on the alias:
         // $invoice->externalReference = 'TEST-' . date('YmdHis');
         $invoice->externalRef = 'TEST-' . date('YmdHis');
         $invoice->simplifiedInvoice = YesNoType::NO;
