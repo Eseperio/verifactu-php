@@ -138,9 +138,25 @@ class QrGeneratorService
     {
         switch ($renderer) {
             case self::RENDERER_GD:
+                // Fallback to SVG if GD extension is not available
+                if (!extension_loaded('gd')) {
+                    $imageRenderer = new ImageRenderer(
+                        new RendererStyle($resolution),
+                        new SvgImageBackEnd()
+                    );
+                    return new Writer($imageRenderer);
+                }
                 return new Writer(new GDLibRenderer($resolution));
 
             case self::RENDERER_IMAGICK:
+                // Fallback to SVG if Imagick extension is not available
+                if (!extension_loaded('imagick')) {
+                    $imageRenderer = new ImageRenderer(
+                        new RendererStyle($resolution),
+                        new SvgImageBackEnd()
+                    );
+                    return new Writer($imageRenderer);
+                }
                 $imageRenderer = new ImageRenderer(
                     new RendererStyle($resolution),
                     new ImagickImageBackEnd()

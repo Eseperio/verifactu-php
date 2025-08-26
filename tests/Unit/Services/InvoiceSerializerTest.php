@@ -31,67 +31,67 @@ class InvoiceSerializerTest extends TestCase
         $this->assertEquals('sf:RegistroAlta', $dom->documentElement->nodeName);
         
         // Verify IDVersion element
-        $idVersions = $dom->getElementsByTagName('sf:IDVersion');
+    $idVersions = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'IDVersion');
         $this->assertEquals(1, $idVersions->length);
         $this->assertEquals('1.0', $idVersions->item(0)->textContent);
         
         // Verify IDFactura element and its children
-        $idFacturas = $dom->getElementsByTagName('sf:IDFactura');
+    $idFacturas = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'IDFactura');
         $this->assertEquals(1, $idFacturas->length);
         
-        $idEmisor = $idFacturas->item(0)->getElementsByTagName('sf:IDEmisorFactura');
+    $idEmisor = $idFacturas->item(0)->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'IDEmisorFactura');
         $this->assertEquals(1, $idEmisor->length);
         $this->assertEquals('12345678Z', $idEmisor->item(0)->textContent);
         
-        $numSerie = $idFacturas->item(0)->getElementsByTagName('sf:NumSerieFactura');
+    $numSerie = $idFacturas->item(0)->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'NumSerieFactura');
         $this->assertEquals(1, $numSerie->length);
         $this->assertEquals('TEST001', $numSerie->item(0)->textContent);
         
-        $fechaExpedicion = $idFacturas->item(0)->getElementsByTagName('sf:FechaExpedicionFactura');
+    $fechaExpedicion = $idFacturas->item(0)->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'FechaExpedicionFactura');
         $this->assertEquals(1, $fechaExpedicion->length);
         $this->assertEquals('01-01-2023', $fechaExpedicion->item(0)->textContent);
         
         // Verify issuer name
-        $nombreRazon = $dom->getElementsByTagName('sf:NombreRazonEmisor');
+    $nombreRazon = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'NombreRazonEmisor');
         $this->assertEquals(1, $nombreRazon->length);
         $this->assertEquals('Test Company', $nombreRazon->item(0)->textContent);
         
         // Verify invoice type
-        $tipoFactura = $dom->getElementsByTagName('sf:TipoFactura');
+    $tipoFactura = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'TipoFactura');
         $this->assertEquals(1, $tipoFactura->length);
         $this->assertEquals(InvoiceType::STANDARD->value, $tipoFactura->item(0)->textContent);
         
         // Verify operation description
-        $descripcionOperacion = $dom->getElementsByTagName('sf:DescripcionOperacion');
+    $descripcionOperacion = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'DescripcionOperacion');
         $this->assertEquals(1, $descripcionOperacion->length);
         $this->assertEquals('Test operation', $descripcionOperacion->item(0)->textContent);
         
         // Verify recipients
-        $destinatarios = $dom->getElementsByTagName('sf:Destinatarios');
+    $destinatarios = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'Destinatarios');
         $this->assertEquals(1, $destinatarios->length);
         
-        $idDestinatario = $destinatarios->item(0)->getElementsByTagName('sf:IDDestinatario');
+    $idDestinatario = $destinatarios->item(0)->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'IDDestinatario');
         $this->assertEquals(1, $idDestinatario->length);
         
-        $nif = $idDestinatario->item(0)->getElementsByTagName('sf:NIF');
+    $nif = $idDestinatario->item(0)->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'NIF');
         $this->assertEquals(1, $nif->length);
         $this->assertEquals('87654321X', $nif->item(0)->textContent);
         
         // Verify amounts
-        $cuotaTotal = $dom->getElementsByTagName('sf:CuotaTotal');
+    $cuotaTotal = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'CuotaTotal');
         $this->assertEquals(1, $cuotaTotal->length);
         $this->assertEquals('21.00', $cuotaTotal->item(0)->textContent);
         
-        $importeTotal = $dom->getElementsByTagName('sf:ImporteTotal');
+    $importeTotal = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'ImporteTotal');
         $this->assertEquals(1, $importeTotal->length);
         $this->assertEquals('121.00', $importeTotal->item(0)->textContent);
         
         // Verify hash information
-        $tipoHuella = $dom->getElementsByTagName('sf:TipoHuella');
+    $tipoHuella = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'TipoHuella');
         $this->assertEquals(1, $tipoHuella->length);
         $this->assertEquals(HashType::SHA_256->value, $tipoHuella->item(0)->textContent);
         
-        $huella = $dom->getElementsByTagName('sf:Huella');
+    $huella = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'Huella');
         $this->assertEquals(1, $huella->length);
         $this->assertEquals(str_repeat('a', 64), $huella->item(0)->textContent);
     }
@@ -112,45 +112,45 @@ class InvoiceSerializerTest extends TestCase
         $this->assertEquals('sf:RegistroAnulacion', $dom->documentElement->nodeName);
         
         // Verify IDVersion element
-        $idVersions = $dom->getElementsByTagName('sf:IDVersion');
+    $idVersions = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'IDVersion');
         $this->assertEquals(1, $idVersions->length);
         $this->assertEquals('1.0', $idVersions->item(0)->textContent);
         
         // Verify IDFactura element and its children
-        $idFacturas = $dom->getElementsByTagName('sf:IDFactura');
+    $idFacturas = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'IDFactura');
         $this->assertEquals(1, $idFacturas->length);
         
-        $idEmisor = $idFacturas->item(0)->getElementsByTagName('sf:IDEmisorFacturaAnulada');
+    $idEmisor = $idFacturas->item(0)->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'IDEmisorFacturaAnulada');
         $this->assertEquals(1, $idEmisor->length);
         $this->assertEquals('12345678Z', $idEmisor->item(0)->textContent);
         
-        $numSerie = $idFacturas->item(0)->getElementsByTagName('sf:NumSerieFacturaAnulada');
+    $numSerie = $idFacturas->item(0)->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'NumSerieFacturaAnulada');
         $this->assertEquals(1, $numSerie->length);
         $this->assertEquals('TEST001', $numSerie->item(0)->textContent);
         
-        $fechaExpedicion = $idFacturas->item(0)->getElementsByTagName('sf:FechaExpedicionFacturaAnulada');
+    $fechaExpedicion = $idFacturas->item(0)->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'FechaExpedicionFacturaAnulada');
         $this->assertEquals(1, $fechaExpedicion->length);
         $this->assertEquals('01-01-2023', $fechaExpedicion->item(0)->textContent);
         
         // Verify previous rejection
-        $rechazoPrevio = $dom->getElementsByTagName('sf:RechazoPrevio');
+    $rechazoPrevio = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'RechazoPrevio');
         $this->assertEquals(1, $rechazoPrevio->length);
         $this->assertEquals(YesNoType::NO->value, $rechazoPrevio->item(0)->textContent);
         
         // Verify encadenamiento
-        $encadenamiento = $dom->getElementsByTagName('sf:Encadenamiento');
+    $encadenamiento = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'Encadenamiento');
         $this->assertEquals(1, $encadenamiento->length);
         
-        $primerRegistro = $encadenamiento->item(0)->getElementsByTagName('sf:PrimerRegistro');
+    $primerRegistro = $encadenamiento->item(0)->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'PrimerRegistro');
         $this->assertEquals(1, $primerRegistro->length);
         $this->assertEquals('S', $primerRegistro->item(0)->textContent);
         
         // Verify hash information
-        $tipoHuella = $dom->getElementsByTagName('sf:TipoHuella');
+    $tipoHuella = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'TipoHuella');
         $this->assertEquals(1, $tipoHuella->length);
         $this->assertEquals(HashType::SHA_256->value, $tipoHuella->item(0)->textContent);
         
-        $huella = $dom->getElementsByTagName('sf:Huella');
+    $huella = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'Huella');
         $this->assertEquals(1, $huella->length);
         $this->assertEquals(str_repeat('a', 64), $huella->item(0)->textContent);
     }
@@ -168,30 +168,30 @@ class InvoiceSerializerTest extends TestCase
         
         // Verify basic structure
         $this->assertInstanceOf(\DOMDocument::class, $dom);
-        $this->assertEquals('sf:ConsultaFactuSistemaFacturacion', $dom->documentElement->nodeName);
+    $this->assertEquals('sf:ConsultaFactuSistemaFacturacion', $dom->documentElement->nodeName);
         
         // Verify required elements
-        $ejercicio = $dom->getElementsByTagName('sf:Ejercicio');
+    $ejercicio = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'Ejercicio');
         $this->assertEquals(1, $ejercicio->length);
         $this->assertEquals('2023', $ejercicio->item(0)->textContent);
         
-        $periodo = $dom->getElementsByTagName('sf:Periodo');
+    $periodo = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'Periodo');
         $this->assertEquals(1, $periodo->length);
         $this->assertEquals('01', $periodo->item(0)->textContent);
         
         // Verify optional elements
-        $numSerieFactura = $dom->getElementsByTagName('sf:NumSerieFactura');
+    $numSerieFactura = $dom->getElementsByTagNameNS(InvoiceSerializer::CONSULTA_NAMESPACE, 'NumSerieFactura');
         $this->assertEquals(1, $numSerieFactura->length);
         $this->assertEquals('TEST001', $numSerieFactura->item(0)->textContent);
         
-        $contraparte = $dom->getElementsByTagName('sf:Contraparte');
+    $contraparte = $dom->getElementsByTagNameNS(InvoiceSerializer::CONSULTA_NAMESPACE, 'Contraparte');
         $this->assertEquals(1, $contraparte->length);
         
-        $nif = $contraparte->item(0)->getElementsByTagName('sf:NIF');
+    $nif = $contraparte->item(0)->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'NIF');
         $this->assertEquals(1, $nif->length);
         $this->assertEquals('87654321X', $nif->item(0)->textContent);
         
-        $nombreRazon = $contraparte->item(0)->getElementsByTagName('sf:NombreRazon');
+    $nombreRazon = $contraparte->item(0)->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'NombreRazon');
         $this->assertEquals(1, $nombreRazon->length);
         $this->assertEquals('Test Counterparty', $nombreRazon->item(0)->textContent);
     }
@@ -264,22 +264,22 @@ class InvoiceSerializerTest extends TestCase
         $doc->appendChild($root);
         
         // Wrap it
-        $wrapped = InvoiceSerializer::wrapXmlWithRegFactuStructure($doc, '12345678Z', 'Test Name');
+    $wrapped = InvoiceSerializer::wrapXmlWithRegFactuStructure($doc, '12345678Z', 'Test Name');
         
         // Verify structure
         $this->assertInstanceOf(\DOMDocument::class, $wrapped);
         $this->assertEquals('sfLR:RegFactuSistemaFacturacion', $wrapped->documentElement->nodeName);
         
         // Check for Cabecera element
-        $cabeceras = $wrapped->getElementsByTagName('sfLR:Cabecera');
+    $cabeceras = $wrapped->getElementsByTagNameNS(InvoiceSerializer::SFLR_NAMESPACE, 'Cabecera');
         $this->assertEquals(1, $cabeceras->length);
         
         // Check for ObligadoEmision element
-        $obligados = $wrapped->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'ObligadoEmision');
+    $obligados = $wrapped->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'ObligadoEmision');
         $this->assertEquals(1, $obligados->length);
         
         // Check NIF and NombreRazon
-        $nifs = $wrapped->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'NIF');
+    $nifs = $wrapped->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'NIF');
         $this->assertGreaterThanOrEqual(1, $nifs->length);
         $this->assertEquals('12345678Z', $nifs->item(0)->textContent);
         
