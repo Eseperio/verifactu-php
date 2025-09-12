@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace eseperio\verifactu\tests\Integration;
 
-use eseperio\verifactu\models\Breakdown;
 use eseperio\verifactu\models\BreakdownDetail;
 use eseperio\verifactu\models\Chaining;
 use eseperio\verifactu\models\ComputerSystem;
@@ -132,7 +131,8 @@ class VerifactuSandboxTest extends TestCase
         $computerSystem->installationNumber = '1';
         $computerSystem->onlyVerifactu = YesNoType::YES;
         $computerSystem->multipleObligations = YesNoType::NO;
-        
+        $computerSystem->hasMultipleObligations = YesNoType::NO;
+
         // Set provider information
         $provider = new LegalPerson();
         $provider->name = 'Test Provider SL';
@@ -149,8 +149,8 @@ class VerifactuSandboxTest extends TestCase
         $invoice->hash = HashGeneratorService::generate($invoice);
         
         // Optional fields
-        $invoice->operationDate = date('Y-m-d');
-        // Cambia a externalReference si prefieres no depender del alias:
+        $invoice->operationDate = date('d-m-Y');
+        // Change to externalReference if you prefer not to depend on the alias:
         // $invoice->externalReference = 'TEST-' . date('YmdHis');
         $invoice->externalRef = 'TEST-' . date('YmdHis');
         $invoice->simplifiedInvoice = YesNoType::NO;
@@ -188,8 +188,8 @@ class VerifactuSandboxTest extends TestCase
 
         // Submit the invoice to the AEAT service
         $response = Verifactu::registerInvoice($invoice);
-        
-//        $this->assertNotNull($response, 'Response should not be null');
+
+        $this->assertNotNull($response, 'Response should not be null');
 //        $this->assertTrue($response->isSuccessful(), 'Invoice submission should be successful');
     }
 }

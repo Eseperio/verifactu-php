@@ -547,10 +547,10 @@ class InvoiceSubmission extends InvoiceRecord
                     return true;
                 }
 
-                // Checks for format YYYY-MM-DD (simple regex)
-                return (preg_match('/^\\d{4}-\\d{2}-\\d{2}$/', $value)) ? true : 'Must be a valid date (YYYY-MM-DD).';
+                // Checks for format DD-MM-YYYY (simple regex)
+                return (preg_match('/^\\d{2}-\\d{2}-\\d{4}$/', $value)) ? true : 'Must be a valid date (YYYY-MM-DD).';
             }],
-            // Nueva regla para validar el formato de la fecha de expedición
+            // New rule to validate the issue date format
             ['invoiceId', function ($value): bool|string {
                 if ($value === null) {
                     return true;
