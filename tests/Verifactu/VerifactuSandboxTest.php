@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace eseperio\verifactu\tests\Integration;
+namespace Verifactu;
 
 use eseperio\verifactu\models\BreakdownDetail;
 use eseperio\verifactu\models\Chaining;
