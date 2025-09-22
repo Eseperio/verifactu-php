@@ -180,11 +180,11 @@ class InvoiceSerializerTest extends TestCase
         $this->assertEquals('01', $periodo->item(0)->textContent);
 
         // Verify optional elements
-        $numSerieFactura = $dom->getElementsByTagNameNS(InvoiceSerializer::CONSULTA_NAMESPACE, 'NumSerieFactura');
+        $numSerieFactura = $dom->getElementsByTagNameNS(InvoiceSerializer::QUERY_NAMESPACE, 'NumSerieFactura');
         $this->assertEquals(1, $numSerieFactura->length);
         $this->assertEquals('TEST001', $numSerieFactura->item(0)->textContent);
 
-        $contraparte = $dom->getElementsByTagNameNS(InvoiceSerializer::CONSULTA_NAMESPACE, 'Contraparte');
+        $contraparte = $dom->getElementsByTagNameNS(InvoiceSerializer::QUERY_NAMESPACE, 'Contraparte');
         $this->assertEquals(1, $contraparte->length);
 
         $nif = $contraparte->item(0)->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'NIF');

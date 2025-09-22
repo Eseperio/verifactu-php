@@ -28,7 +28,7 @@ class InvoiceSerializer
     public const SFLR_NAMESPACE = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroLR.xsd';
 
     /** ConsultaLR.xsd namespace */
-    public const CONSULTA_NAMESPACE = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/ConsultaLR.xsd';
+    public const QUERY_NAMESPACE = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/ConsultaLR.xsd';
 
     /** XML Digital Signature namespace */
     public const DS_NAMESPACE = 'http://www.w3.org/2000/09/xmldsig#';
@@ -445,33 +445,33 @@ class InvoiceSerializer
         $doc->formatOutput = true;
 
         // Root element must be in ConsultaLR namespace, but tests expect the prefix 'sf'
-        $root = $doc->createElementNS(self::CONSULTA_NAMESPACE, 'sf:ConsultaFactuSistemaFacturacion');
+        $root = $doc->createElementNS(self::QUERY_NAMESPACE, 'sf:ConsultaFactuSistemaFacturacion');
         $doc->appendChild($root);
 
         // Cabecera (Consulta namespace) with required IDVersion (child in SF namespace)
-        $cabecera = $doc->createElementNS(self::CONSULTA_NAMESPACE, 'sf:Cabecera');
+        $cabecera = $doc->createElementNS(self::QUERY_NAMESPACE, 'sf:Cabecera');
         $cabecera->appendChild($doc->createElementNS(self::SF_NAMESPACE, 'sf:IDVersion', '1.0'));
         $root->appendChild($cabecera);
 
         // FiltroConsulta (Consulta namespace)
-        $filtro = $doc->createElementNS(self::CONSULTA_NAMESPACE, 'sf:FiltroConsulta');
+        $filtro = $doc->createElementNS(self::QUERY_NAMESPACE, 'sf:FiltroConsulta');
         $root->appendChild($filtro);
 
         // PeriodoImputacion (Consulta ns) with children in SF ns, per schema
-        $periodoImputacion = $doc->createElementNS(self::CONSULTA_NAMESPACE, 'sf:PeriodoImputacion');
+        $periodoImputacion = $doc->createElementNS(self::QUERY_NAMESPACE, 'sf:PeriodoImputacion');
         $periodoImputacion->appendChild($doc->createElementNS(self::SF_NAMESPACE, 'sf:Ejercicio', (string) $query->year));
         $periodoImputacion->appendChild($doc->createElementNS(self::SF_NAMESPACE, 'sf:Periodo', (string) $query->period));
         $filtro->appendChild($periodoImputacion);
 
         // Optional simple fields in Consulta namespace
         if (!empty($query->seriesNumber)) {
-            $filtro->appendChild($doc->createElementNS(self::CONSULTA_NAMESPACE, 'sf:NumSerieFactura', (string) $query->seriesNumber));
+            $filtro->appendChild($doc->createElementNS(self::QUERY_NAMESPACE, 'sf:NumSerieFactura', (string) $query->seriesNumber));
         }
 
         // Contraparte (Consulta ns) with children from SF ns
         $counterparty = $query->getCounterparty();
         if (!empty($counterparty) && is_array($counterparty)) {
-            $contraparte = $doc->createElementNS(self::CONSULTA_NAMESPACE, 'sf:Contraparte');
+            $contraparte = $doc->createElementNS(self::QUERY_NAMESPACE, 'sf:Contraparte');
             // Order matters: NombreRazon first, then identification (NIF/IDOtro)
             if (!empty($counterparty['name'])) {
                 $contraparte->appendChild($doc->createElementNS(self::SF_NAMESPACE, 'sf:NombreRazon', (string) $counterparty['name']));
@@ -500,13 +500,13 @@ class InvoiceSerializer
 
         // FechaExpedicionFactura (Consulta ns) wrapping SF choice type
         if (!empty($query->issueDate)) {
-            $fechaWrapper = $doc->createElementNS(self::CONSULTA_NAMESPACE, 'sf:FechaExpedicionFactura');
+            $fechaWrapper = $doc->createElementNS(self::QUERY_NAMESPACE, 'sf:FechaExpedicionFactura');
             $fechaWrapper->appendChild($doc->createElementNS(self::SF_NAMESPACE, 'sf:FechaExpedicionFactura', (string) $query->issueDate));
             $filtro->appendChild($fechaWrapper);
         }
 
         if (!empty($query->externalRef)) {
-            $filtro->appendChild($doc->createElementNS(self::CONSULTA_NAMESPACE, 'sf:RefExterna', (string) $query->externalRef));
+            $filtro->appendChild($doc->createElementNS(self::QUERY_NAMESPACE, 'sf:RefExterna', (string) $query->externalRef));
         }
 
         // Note: SistemaInformatico and ClavePaginacion are optional; omit unless full data is available
