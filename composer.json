@@ -44,6 +44,10 @@
       "@check-env",
       "phpunit tests/Unit/Examples/"
     ],
+    "test-verifactu": [
+      "@check-env",
+      "phpunit tests/Verifactu/"
+    ],
     "test-unit": [
       "@check-env",
       "phpunit --testsuite=Unit"

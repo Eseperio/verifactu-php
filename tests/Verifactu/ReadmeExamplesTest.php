@@ -36,15 +36,15 @@ class ReadmeExamplesTest extends TestCase
         $invoiceId = new InvoiceId();
         $invoiceId->issuerNif = 'B12345678';
         $invoiceId->seriesNumber = 'FA2024/001';
-        $invoiceId->issueDate = '2024-07-01';
+        $invoiceId->issueDate = '01-07-2024';
         $invoice->setInvoiceId($invoiceId);
 
         // Set basic invoice data
         $invoice->issuerName = 'Empresa Ejemplo SL';
         $invoice->invoiceType = InvoiceType::STANDARD; // Using enum instead of string
         $invoice->operationDescription = 'Venta de productos';
-        $invoice->taxAmount = 21.00; // Cuota total de impuestos
-        $invoice->totalAmount = 121.00; // Importe total de la factura
+        $invoice->taxAmount = 21.00; // Calculate total tax amount
+        $invoice->totalAmount = 121.00; // Total invoice amount
 
         // Add tax breakdown (using object-oriented approach)
         $breakdownDetail = new BreakdownDetail();
@@ -78,15 +78,20 @@ class ReadmeExamplesTest extends TestCase
         $invoice->setSystemInfo($computerSystem);
 
         // Set other required fields
-        $invoice->recordTimestamp = '2024-07-01T12:00:00+02:00'; // Fecha y hora con zona horaria
+        $invoice->recordTimestamp = '2024-07-01T12:00:00+02:00'; // Date and time with timezone
         $invoice->hashType = HashType::SHA_256;
-        $invoice->hash = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'; // Huella calculada
+        $invoice->hash = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'; // Calculated hash
 
         // Optional fields
-        $invoice->operationDate = '2024-07-01'; // Fecha de operación
-        $invoice->externalRef = 'REF123'; // Referencia externa
-        $invoice->simplifiedInvoice = YesNoType::NO; // No es factura simplificada
-        $invoice->invoiceWithoutRecipient = YesNoType::NO; // Tiene destinatario identificado
+        $invoice->operationDate = '01-07-2024'; // Operation date
+        $invoice->externalRef = 'REF123'; // External reference
+        $invoice->simplifiedInvoice = YesNoType::NO; // Is not a simplified invoice
+        $invoice->invoiceWithoutRecipient = YesNoType::NO; // Has identified recipient
+
+        // Needed fields to pass validation (data format as in sandbox)
+        $invoice->xmlSignature = '';
+        $invoice->invoiceAgreementNumber = '';
+        $invoice->systemAgreementId = '';
 
         // Add recipients (using object-oriented approach)
         $recipient = new LegalPerson();
@@ -107,7 +112,7 @@ class ReadmeExamplesTest extends TestCase
         $this->assertInstanceOf(InvoiceId::class, $invoice->getInvoiceId());
         $this->assertEquals('B12345678', $invoice->getInvoiceId()->issuerNif);
         $this->assertEquals('FA2024/001', $invoice->getInvoiceId()->seriesNumber);
-        $this->assertEquals('2024-07-01', $invoice->getInvoiceId()->issueDate);
+        $this->assertEquals('01-07-2024', $invoice->getInvoiceId()->issueDate);
         $this->assertEquals('Empresa Ejemplo SL', $invoice->issuerName);
         $this->assertEquals(InvoiceType::STANDARD, $invoice->invoiceType);
         $this->assertEquals('Venta de productos', $invoice->operationDescription);
@@ -127,7 +132,7 @@ class ReadmeExamplesTest extends TestCase
         $invoiceId = new InvoiceId();
         $invoiceId->issuerNif = 'B12345678';
         $invoiceId->seriesNumber = 'FA2024/001';
-        $invoiceId->issueDate = '2024-07-01';
+        $invoiceId->issueDate = '01-07-2024';
         $cancellation->setInvoiceId($invoiceId);
 
         // Set chaining data (using object-oriented approach)
@@ -136,7 +141,7 @@ class ReadmeExamplesTest extends TestCase
         $chaining->setPreviousInvoice([
             'seriesNumber' => 'FA2024/000',
             'issuerNif' => 'B12345678',
-            'issueDate' => '2024-06-30',
+            'issueDate' => '30-06-2024',
             'hash' => '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
         ]);
         $cancellation->setChaining($chaining);
@@ -160,15 +165,18 @@ class ReadmeExamplesTest extends TestCase
         $cancellation->setSystemInfo($computerSystem);
 
         // Set other required fields
-        $cancellation->recordTimestamp = '2024-07-01T12:00:00+02:00'; // Fecha y hora con zona horaria
+        $cancellation->recordTimestamp = '2024-07-01T12:00:00+02:00'; // Date and time with timezone
         $cancellation->hashType = HashType::SHA_256;
-        $cancellation->hash = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'; // Huella calculada
+        $cancellation->hash = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'; // Calculated hash
+
+        // Needed fields to pass validation (data format as in sandbox)
+        $cancellation->xmlSignature = '';
 
         // Optional fields
-        $cancellation->noPreviousRecord = YesNoType::NO; // No es anulación sin registro previo
-        $cancellation->previousRejection = YesNoType::NO; // No es anulación por rechazo previo
-        $cancellation->generator = GeneratorType::ISSUER; // Generado por el emisor
-        $cancellation->externalRef = 'REF-CANCEL-123'; // Referencia externa
+        $cancellation->noPreviousRecord = YesNoType::NO; // Is not a cancellation without previous record
+        $cancellation->previousRejection = YesNoType::NO; // Is not a cancellation due to previous rejection
+        $cancellation->generator = GeneratorType::ISSUER; // Generate by issuer
+        $cancellation->externalRef = 'REF-CANCEL-123'; // External reference
 
         // Validate the cancellation before submission
         $validationResult = $cancellation->validate();
@@ -183,7 +191,7 @@ class ReadmeExamplesTest extends TestCase
         $this->assertInstanceOf(InvoiceId::class, $cancellation->getInvoiceId());
         $this->assertEquals('B12345678', $cancellation->getInvoiceId()->issuerNif);
         $this->assertEquals('FA2024/001', $cancellation->getInvoiceId()->seriesNumber);
-        $this->assertEquals('2024-07-01', $cancellation->getInvoiceId()->issueDate);
+        $this->assertEquals('01-07-2024', $cancellation->getInvoiceId()->issueDate);
         $this->assertEquals(YesNoType::NO, $cancellation->noPreviousRecord);
         $this->assertEquals(YesNoType::NO, $cancellation->previousRejection);
         $this->assertEquals(GeneratorType::ISSUER, $cancellation->generator);
