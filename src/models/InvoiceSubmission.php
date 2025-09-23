@@ -18,8 +18,6 @@ use eseperio\verifactu\models\enums\YesNoType;
  */
 class InvoiceSubmission extends InvoiceRecord
 {
-    const SF_NAMESPACE = "https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd";
-
 
     public $externalRef;
     /**
@@ -577,9 +575,7 @@ class InvoiceSubmission extends InvoiceRecord
      */
     public function toXml(): \DOMDocument
     {
-        throw new \Exception(
-            'This method is deprecated. Use InvoiceSerializer::toInvoiceXml() instead. ' .
-            'The XML generation has been moved to the InvoiceSerializer service.'
-        );
+        // Compatibilidad hacia atrás: usar el nuevo serializador
+        return \eseperio\verifactu\services\InvoiceSerializer::toInvoiceXml($this);
     }
 }

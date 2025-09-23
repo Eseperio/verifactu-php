@@ -19,7 +19,7 @@ class ResponseParserService
      *
      * @param string $xmlResponse
      */
-    public static function parseInvoiceResponse(string $xmlResponse): InvoiceResponse
+    public static function parseInvoiceResponse($xmlResponse): InvoiceResponse
     {
         // Set internal errors handling to throw exceptions on XML parsing errors
         $previousErrorSetting = libxml_use_internal_errors(true);

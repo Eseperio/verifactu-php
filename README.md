@@ -1,5 +1,9 @@
 # Verifactu PHP Library
 
+
+NOTICE FOR COLLABORATORS: I´ve recently moved test issuer data to .env params, because AEAT requires it to be valid 
+credentials. In order to run tests, you need to add the new fields to your existing .env. See .env.example
+
 > [!WARNING]
 > 2025: Library __UNDER DEVELOPMENT__. You can try it, but expect changes, incomplete features or to be broken until
 > first alpha version is released. See the [CHANGELOG](CHANGELOG.md) for details of changes done during development.
@@ -503,8 +507,6 @@ if ($response->submissionStatus === \eseperio\verifactu\models\InvoiceResponse::
 
 - **Resolution**: Size in pixels (default: 300)
 
-```
-
 ---
 
 ## AEAT Workflow Overview
@@ -561,7 +563,7 @@ If you need more control over the configuration, you can use the `VerifactuServi
 use eseperio\verifactu\services\VerifactuService;
 
 VerifactuService::config([
-    VerifactuService::CERT_PATH_KEY => '/path/to/your-certificate.p12',
+    VerifactuService::CERT_PATH_KEY => '/path/to/your/certificate.p12',
     VerifactuService::CERT_PASSWORD_KEY => 'your-certificate-password',
     VerifactuService::WSDL_ENDPOINT => 'https://custom-endpoint.example.com',
     VerifactuService::QR_VERIFICATION_URL => 'https://custom-qr-verification.example.com',
@@ -764,6 +766,9 @@ if ($response->submissionStatus !== \eseperio\verifactu\models\InvoiceResponse::
 All AEAT error codes are mapped to human-readable messages using the official code dictionary in
 `/src/dictionaries/ErrorRegistry.php`.
 
+> [!NOTE]
+> If you receive the error: “The value of the NIF field in the ObligadoEmision block is not identified”, it means the issuer data you provided is not correct. They must exactly match your census data at the Spanish Tax Agency (AEAT). You can verify them on the AEAT website under “Mis datos censales”.
+
 ### SOAP Communication Errors
 
 When making SOAP requests, any communication errors (network issues, timeouts, etc.) will throw a `SoapFault` exception.
@@ -880,6 +885,10 @@ library uses a `.env` file to securely load certificate information without comm
 
    # Environment: 'production' or 'sandbox'
    VERIFACTU_ENVIRONMENT=sandbox
+
+   # Required by integration tests (must match your AEAT census data)
+   TEST_ISSUER_NIF=B12345678
+   TEST_ISSUER_NAME=Example Company SL
    ```
 
 3. When you run any test command, the library will automatically check if the `.env` file exists and create it from
@@ -890,6 +899,11 @@ library uses a `.env` file to securely load certificate information without comm
 
 > **Note:** The `.env` file is excluded from version control by `.gitignore` to prevent accidentally committing
 > sensitive information.
+
+> [!NOTE]
+> To run integration tests you must define TEST_ISSUER_NIF and TEST_ISSUER_NAME in `.env`.
+> Tests will throw an exception if they are not configured. These values must exactly match
+> your AEAT census data (NIF and legal name). If they do not match, you will get issuer identification errors.
 
 ### Development
 

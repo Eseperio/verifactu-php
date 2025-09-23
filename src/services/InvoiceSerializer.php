@@ -545,18 +545,15 @@ class InvoiceSerializer
 
         $obligadoEmision = $newDoc->createElementNS(self::SF_NAMESPACE, 'sf:ObligadoEmision');
         $cabecera->appendChild($obligadoEmision);
-        $obligadoEmision->appendChild($newDoc->createElementNS(self::SF_NAMESPACE, 'sf:NIF', (string) $nif));
+        // Orden según schema PersonaFisicaJuridicaESType: NombreRazon, NIF
         $obligadoEmision->appendChild($newDoc->createElementNS(self::SF_NAMESPACE, 'sf:NombreRazon', (string) $name));
+        $obligadoEmision->appendChild($newDoc->createElementNS(self::SF_NAMESPACE, 'sf:NIF', (string) $nif));
 
-        $representante = $newDoc->createElementNS(self::SF_NAMESPACE, 'sf:Representante');
-        $representante->appendChild($newDoc->createElementNS(self::SF_NAMESPACE, 'sf:NIF', (string) $nif));
-        $representante->appendChild($newDoc->createElementNS(self::SF_NAMESPACE, 'sf:NombreRazon', (string) $name));
-        $cabecera->appendChild($representante);
 
-        $remReq = $newDoc->createElementNS(self::SF_NAMESPACE, 'sf:RemisionRequerimiento');
-        $remReq->appendChild($newDoc->createElementNS(self::SF_NAMESPACE, 'sf:RefRequerimiento', 'TEST' . date('YmdHis')));
-        $remReq->appendChild($newDoc->createElementNS(self::SF_NAMESPACE, 'sf:FinRequerimiento', 'S'));
-        $cabecera->appendChild($remReq);
+//        $remReq = $newDoc->createElementNS(self::SF_NAMESPACE, 'sf:RemisionRequerimiento');
+//        $remReq->appendChild($newDoc->createElementNS(self::SF_NAMESPACE, 'sf:RefRequerimiento', 'TEST' . date('YmdHis')));
+//        $remReq->appendChild($newDoc->createElementNS(self::SF_NAMESPACE, 'sf:FinRequerimiento', 'S'));
+//        $cabecera->appendChild($remReq);
 
         $registroFactura = $newDoc->createElementNS(self::SFLR_NAMESPACE, 'sfLR:RegistroFactura');
         $root->appendChild($registroFactura);

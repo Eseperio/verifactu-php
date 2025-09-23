@@ -14,6 +14,7 @@ use eseperio\verifactu\models\enums\YesNoType;
 use eseperio\verifactu\models\InvoiceId;
 use eseperio\verifactu\models\InvoiceSubmission;
 use eseperio\verifactu\models\LegalPerson;
+use eseperio\verifactu\models\OtherID;
 use eseperio\verifactu\services\HashGeneratorService;
 use eseperio\verifactu\utils\EnvLoader;
 use eseperio\verifactu\Verifactu;
@@ -21,23 +22,28 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * Integration tests for Verifactu in the sandbox environment.
- * 
+ *
  * These tests require a valid certificate to run.
  * Make sure to set the following environment variables in your .env file:
  * - VERIFACTU_CERT_PATH: Path to your certificate file
  * - VERIFACTU_CERT_PASSWORD: Password for your certificate
  * - VERIFACTU_CERT_TYPE: Certificate type (certificate or seal)
  * - VERIFACTU_ENVIRONMENT: Environment (sandbox or production)
+ * - TEST_ISSUER_NIF: Issuer NIF used in tests (must match AEAT census)
+ * - TEST_ISSUER_NAME: Issuer name used in tests (must match AEAT census)
  */
 class VerifactuSandboxTest extends TestCase
 {
+    private string $issuerNif;
+    private string $issuerName;
+
     /**
      * Set up the test environment.
      */
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Skip tests if sandbox configuration is not available
         if (!EnvLoader::hasSandboxConfig()) {
             $this->markTestSkipped(
@@ -45,7 +51,7 @@ class VerifactuSandboxTest extends TestCase
                 'VERIFACTU_CERT_PASSWORD, VERIFACTU_CERT_TYPE, and VERIFACTU_ENVIRONMENT in your .env file.'
             );
         }
-        
+
         // Configure Verifactu with the environment variables
         Verifactu::config(
             EnvLoader::getCertPath(),
@@ -53,62 +59,73 @@ class VerifactuSandboxTest extends TestCase
             EnvLoader::getCertType(),
             EnvLoader::getEnvironment()
         );
+
+        // Read issuerNif and issuerName from environment variables and validate
+        $nif = getenv('TEST_ISSUER_NIF') ?: ($_ENV['TEST_ISSUER_NIF'] ?? null);
+        $name = getenv('TEST_ISSUER_NAME') ?: ($_ENV['TEST_ISSUER_NAME'] ?? null);
+
+        if (empty($nif) || empty($name)) {
+            throw new \RuntimeException('TEST_ISSUER_NIF and TEST_ISSUER_NAME must be defined in environment variables.');
+        }
+
+        $this->issuerNif = $nif;
+        $this->issuerName = $name;
     }
-    
+
     /**
      * Test creating and validating an invoice.
-     * 
+     *
      * This test only validates the invoice locally, without submitting it to the AEAT service.
      */
     public function testCreateAndValidateInvoice(): void
     {
         $invoice = $this->createTestInvoice();
-        
+
         // Validate the invoice
         $validationResult = $invoice->validate();
-        
+
         $this->assertTrue($validationResult, 'Invoice validation should pass');
     }
-    
+
     /**
      * Test generating a QR code for an invoice.
-     * 
+     *
      * This test generates a QR code for an invoice without submitting it to the AEAT service.
      */
     public function testGenerateInvoiceQr(): void
     {
         $invoice = $this->createTestInvoice();
-        
+
         // Generate a QR code
         $qrCode = Verifactu::generateInvoiceQr($invoice);
-        
+
         $this->assertNotEmpty($qrCode, 'QR code should not be empty');
         $this->assertIsString($qrCode, 'QR code should be a string');
     }
-    
+
     /**
      * Helper method to create a test invoice with realistic data.
-     * 
+     *
      * @return InvoiceSubmission
      */
     private function createTestInvoice(): InvoiceSubmission
     {
         $invoice = new InvoiceSubmission();
-        
+
         // Set invoice ID
         $invoiceId = new InvoiceId();
-        $invoiceId->issuerNif = 'B12345678';
+        $invoiceId->issuerNif = $this->issuerNif; // was hardcoded before
         $invoiceId->seriesNumber = 'TEST' . date('YmdHis');
         $invoiceId->issueDate = date('d-m-Y');
         $invoice->setInvoiceId($invoiceId);
-        
+
         // Set basic invoice data
-        $invoice->issuerName = 'Empresa Test SL';
+        $invoice->issuerName = $this->issuerName; // was hardcoded before
         $invoice->invoiceType = InvoiceType::STANDARD;
         $invoice->operationDescription = 'Prueba de integración';
         $invoice->taxAmount = 21.00;
         $invoice->totalAmount = 121.00;
-        
+
         // Add tax breakdown
         $breakdownDetail = new BreakdownDetail();
         $breakdownDetail->taxRate = 21.0;
@@ -116,12 +133,12 @@ class VerifactuSandboxTest extends TestCase
         $breakdownDetail->taxAmount = 21.00;
         $breakdownDetail->operationQualification = OperationQualificationType::SUBJECT_NO_EXEMPT_NO_REVERSE;
         $invoice->addBreakdownDetail($breakdownDetail);
-        
+
         // Set chaining data
         $chaining = new Chaining();
         $chaining->setAsFirstRecord();
         $invoice->setChaining($chaining);
-        
+
         // Set system information
         $computerSystem = new ComputerSystem();
         $computerSystem->systemName = 'ERP Test';
@@ -138,16 +155,16 @@ class VerifactuSandboxTest extends TestCase
         $provider->name = 'Test Provider SL';
         $provider->nif = 'B87654321';
         $computerSystem->setProviderId($provider);
-        
+
         $invoice->setSystemInfo($computerSystem);
-        
+
         // Set other required fields
         $invoice->recordTimestamp = date('Y-m-d\TH:i:sP');
         $invoice->hashType = HashType::SHA_256;
-        
+
         // Generate the hash
         $invoice->hash = HashGeneratorService::generate($invoice);
-        
+
         // Optional fields
         $invoice->operationDate = date('d-m-Y');
         // Change to externalReference if you prefer not to depend on the alias:
@@ -155,30 +172,34 @@ class VerifactuSandboxTest extends TestCase
         $invoice->externalRef = 'TEST-' . date('YmdHis');
         $invoice->simplifiedInvoice = YesNoType::NO;
         $invoice->invoiceWithoutRecipient = YesNoType::NO;
-        
+
         // Set fields that caused validation errors
         $invoice->xmlSignature = ''; // Set to empty string
         $invoice->invoiceAgreementNumber = ''; // Set to empty string
         $invoice->systemAgreementId = ''; // Set to empty string
-        
-        // Add recipients with proper structure
+
+        // Add recipient marked as "Not Registered (No Censado)" (OtherID IDType=07)
         $recipient = new LegalPerson();
         $recipient->name = 'Cliente Test SL';
-        $recipient->nif = '12345678Z'; // Make sure NIF is set properly
+        $otherId = new OtherID();
+        $otherId->idType = '07'; // No Censado
+        $otherId->id = 'NC-TEST-001';
+        $recipient->setOtherId($otherId);
         $invoice->addRecipient($recipient);
-        
-        // Check that the recipient was added correctly
+
+        // Check that the recipient was added correctly as No Censado
         $recipients = $invoice->getRecipients();
-        if (empty($recipients) || !isset($recipients[0]->nif) || $recipients[0]->nif !== '12345678Z') {
-            throw new \RuntimeException('Failed to add recipient with proper NIF');
+        $other = $recipients[0]->getOtherId() ?? null;
+        if (empty($recipients) || !$other || $other->idType !== '07') {
+            throw new \RuntimeException('Failed to add recipient as "No Censado" (IDType 07)');
         }
 
         return $invoice;
     }
-    
+
     /**
      * Optional: Test submitting an invoice to the AEAT sandbox service.
-     * 
+     *
      * This test is commented out because it would make real API calls to the AEAT service.
      * Uncomment and run manually when needed.
      */
