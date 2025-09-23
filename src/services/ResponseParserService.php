@@ -52,35 +52,35 @@ class ResponseParserService
         $xpath = new \DOMXPath($doc);
 
         // CSV (if present)
-        $csvNode = $xpath->query('//CSV')->item(0);
+        $csvNode = self::firstNode($xpath, '//*[local-name()="CSV"]');
 
         if ($csvNode) {
-            $model->csv = $csvNode->nodeValue;
+            $model->csv = trim((string) $csvNode->nodeValue);
         }
 
         // Header
-        $headerNode = $xpath->query('//Cabecera')->item(0);
+        $headerNode = self::firstNode($xpath, '//*[local-name()="Cabecera"]');
 
         if ($headerNode) {
             $model->header = self::xmlNodeToArray($headerNode);
         }
 
         // Wait time (TiempoEsperaEnvio)
-        $waitNode = $xpath->query('//TiempoEsperaEnvio')->item(0);
+        $waitNode = self::firstNode($xpath, '//*[local-name()="TiempoEsperaEnvio"]');
 
         if ($waitNode) {
-            $model->waitTime = $waitNode->nodeValue;
+            $model->waitTime = trim((string) $waitNode->nodeValue);
         }
 
         // Submission status (EstadoEnvio)
-        $statusNode = $xpath->query('//EstadoEnvio')->item(0);
+        $statusNode = self::firstNode($xpath, '//*[local-name()="EstadoEnvio"]');
 
         if ($statusNode) {
-            $model->submissionStatus = $statusNode->nodeValue;
+            $model->submissionStatus = trim((string) $statusNode->nodeValue);
         }
 
         // SubmissionData
-        $dataNode = $xpath->query('//DatosPresentacion')->item(0);
+        $dataNode = self::firstNode($xpath, '//*[local-name()="DatosPresentacion"]');
 
         if ($dataNode) {
             $model->submissionData = self::xmlNodeToArray($dataNode);
@@ -89,11 +89,26 @@ class ResponseParserService
         // Line responses (RespuestaLinea)
         $model->lineResponses = [];
 
-        foreach ($xpath->query('//RespuestaLinea') as $lineNode) {
-            $line = self::xmlNodeToArray($lineNode);
-
+        foreach ($xpath->query('//*[local-name()="RespuestaLinea"]') as $lineNode) {
+            // Extrae los campos según el XSD
+            $line = [];
+            foreach (['IDFactura', 'Operacion', 'RefExterna', 'EstadoRegistro', 'CodigoErrorRegistro', 'DescripcionErrorRegistro', 'RegistroDuplicado'] as $field) {
+                $fieldNode = self::firstNode(
+                    new \DOMXPath($lineNode->ownerDocument),
+                    './/*[local-name()="' . $field . '"]'
+                );
+                if ($fieldNode) {
+                    if (in_array($field, ['IDFactura', 'RegistroDuplicado'])) {
+                        $line[$field] = self::xmlNodeToArray($fieldNode);
+                    } else {
+                        $line[$field] = trim((string)$fieldNode->nodeValue);
+                    }
+                } else {
+                    $line[$field] = null;
+                }
+            }
             // Map AEAT error codes to human-readable messages
-            if (isset($line['CodigoErrorRegistro'])) {
+            if (isset($line['CodigoErrorRegistro']) && $line['CodigoErrorRegistro'] !== null) {
                 $line['ErrorDescription'] = ErrorRegistry::getErrorMessage($line['CodigoErrorRegistro']);
             }
             $model->lineResponses[] = $line;
@@ -136,28 +151,28 @@ class ResponseParserService
         $model = new QueryResponse();
         $xpath = new \DOMXPath($doc);
 
-        $headerNode = $xpath->query('//Cabecera')->item(0);
+        $headerNode = self::firstNode($xpath, '//*[local-name()="Cabecera"]');
 
         if ($headerNode) {
             $model->header = self::xmlNodeToArray($headerNode);
         }
 
-        $periodNode = $xpath->query('//PeriodoImputacion')->item(0);
+        $periodNode = self::firstNode($xpath, '//*[local-name()="PeriodoImputacion"]');
 
         if ($periodNode) {
             $model->period = self::xmlNodeToArray($periodNode);
         }
 
-        $model->paginationIndicator = self::findText($xpath, '//IndicadorPaginacion');
-        $model->queryResult = self::findText($xpath, '//ResultadoConsulta');
+        $model->paginationIndicator = self::findText($xpath, '//*[local-name()="IndicadorPaginacion"]');
+        $model->queryResult = self::findText($xpath, '//*[local-name()="ResultadoConsulta"]');
 
         $model->foundRecords = [];
 
-        foreach ($xpath->query('//RegistroRespuestaConsultaFactuSistemaFacturacion') as $recordNode) {
+        foreach ($xpath->query('//*[local-name()="RegistroRespuestaConsultaFactuSistemaFacturacion"]') as $recordNode) {
             $model->foundRecords[] = self::xmlNodeToArray($recordNode);
         }
 
-        $paginationKeyNode = $xpath->query('//ClavePaginacion')->item(0);
+        $paginationKeyNode = self::firstNode($xpath, '//*[local-name()="ClavePaginacion"]');
 
         if ($paginationKeyNode) {
             $model->paginationKey = self::xmlNodeToArray($paginationKeyNode);
@@ -182,7 +197,8 @@ class ResponseParserService
             foreach ($node->childNodes as $child) {
                 if ($child->nodeType === XML_ELEMENT_NODE) {
                     $hasElementNodes = true;
-                    $result[$child->nodeName] = self::xmlNodeToArray($child);
+                    $key = $child->localName ?: $child->nodeName;
+                    $result[$key] = self::xmlNodeToArray($child);
                 } elseif ($child->nodeType === XML_TEXT_NODE) {
                     $textContent .= $child->nodeValue;
                 }
@@ -205,8 +221,23 @@ class ResponseParserService
      */
     protected static function findText($xpath, $query): ?string
     {
-        $node = $xpath->query($query)->item(0);
+        $node = self::firstNode($xpath, $query);
 
         return $node ? trim((string) $node->nodeValue) : null;
+    }
+
+    /**
+     * Returns the first DOMNode matched by the XPath query, or null if none.
+     */
+    protected static function firstNode(\DOMXPath $xpath, string $query): ?\DOMNode
+    {
+        $nodes = $xpath->query($query);
+        if ($nodes === false) {
+            return null;
+        }
+        foreach ($nodes as $n) {
+            return $n;
+        }
+        return null;
     }
 }

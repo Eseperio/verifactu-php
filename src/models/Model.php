@@ -35,6 +35,7 @@ abstract class Model
     public function validate()
     {
         $errors = [];
+        $class = static::class;
         foreach ($this->rules() as $rule) {
             $properties = $rule[0];
             $validator = $rule[1];
@@ -51,47 +52,59 @@ abstract class Model
                     $value = isset($this->$property) ? $this->$property : null;
                 }
 
+                $errorKey = $class . '::$' . $property;
+
                 if ($validator === 'required') {
                     if ($value === null || $value === '' || (is_array($value) && empty($value))) {
-                        $errors[$property][] = "This field is required.";
+                        $errors[$errorKey][] = "This field is required.";
                     }
+                    continue;
+                }
+
+                // Si el valor está vacío, ignorar el resto de reglas
+                if ($value === null || $value === '' || (is_array($value) && empty($value))) {
                     continue;
                 }
 
                 if (is_callable($validator)) {
                     $result = call_user_func($validator, $value, $this);
                     if ($result !== true) {
-                        $errors[$property][] = is_string($result) ? $result : "Validation failed for $property.";
+                        $errors[$errorKey][] = is_string($result) ? $result : "Validation failed for $property.";
                     }
                 } else {
                     switch ($validator) {
                         case 'string':
                             if (!is_string($value)) {
-                                $errors[$property][] = "Must be a string.";
+                                $errors[$errorKey][] = "Must be a string.";
                             }
                             break;
                         case 'integer':
                             if (!is_int($value)) {
-                                $errors[$property][] = "Must be an integer.";
+                                $errors[$errorKey][] = "Must be an integer.";
                             }
                             break;
                         case 'float':
                             if (!is_float($value) && !is_int($value)) {
-                                $errors[$property][] = "Must be a float.";
+                                $errors[$errorKey][] = "Must be a float.";
                             }
                             break;
                         case 'email':
                             if (!is_string($value) || !filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                                $errors[$property][] = "Must be a valid email address.";
+                                $errors[$errorKey][] = "Must be a valid email address.";
+                            }
+                            break;
+                        case 'array':
+                            if (!is_array($value)) {
+                                $errors[$errorKey][] = "Must be an array.";
                             }
                             break;
                         default:
-                            $errors[$property][] = "Unknown validator: $validator";
+                            $errors[$errorKey][] = "Unknown validator: $validator";
                     }
                 }
             }
         }
 
-        return empty($errors) ? true : $errors;
+        return $errors ;
     }
 }

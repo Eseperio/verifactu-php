@@ -48,9 +48,21 @@ class XmlGenerationTest extends TestCase
         $xmlString = $xml->saveXML();
         echo "Generated XML:\n" . $xmlString . "\n";
         
-        // Check if the Desglose element exists
-        $desgloseElements = $xml->getElementsByTagName('sf:Desglose');
-        $this->assertEquals(1, $desgloseElements->length, 'There should be exactly one sf:Desglose element');
+        // Check if the Desglose element exists (use namespace-aware search)
+        $ns = 'https://www2.agenciatributaria.gob.es/static_files/common/internet/dep/aplicaciones/es/aeat/tike/cont/ws/SuministroInformacion.xsd';
+        $desgloseElements = $xml->getElementsByTagNameNS($ns, 'Desglose');
+        if ($desgloseElements->length === 0) {
+            // Fallback: try XPath if namespace lookup fails
+            $xpath = new \DOMXPath($xml);
+            $xpath->registerNamespace('sf', $ns);
+            $nodeList = $xpath->query('//sf:Desglose');
+            $this->assertNotFalse($nodeList, 'XPath query for sf:Desglose failed');
+            $this->assertEquals(1, $nodeList->length, 'There should be exactly one sf:Desglose element');
+            $desgloseElement = $nodeList->item(0);
+        } else {
+            $this->assertEquals(1, $desgloseElements->length, 'There should be exactly one sf:Desglose element');
+            $desgloseElement = $desgloseElements->item(0);
+        }
         
         // Check if the Desglose element has content
         $desgloseElement = $desgloseElements->item(0);

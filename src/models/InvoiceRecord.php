@@ -227,7 +227,7 @@ abstract class InvoiceRecord extends Model
     public function rules()
     {
         return [
-            [['versionId', 'invoiceId', 'chaining', 'systemInfo', 'recordTimestamp', 'hashType', 'hash'], 'required'],
+            [['versionId', 'invoiceId', 'chaining', 'systemInfo', 'recordTimestamp', 'hashType'], 'required'],
             [['versionId', 'recordTimestamp', 'hash', 'externalRef', 'xmlSignature'], 'string'],
             ['invoiceId', fn($value): bool|string => ($value instanceof InvoiceId) ? true : 'Must be an instance of InvoiceId.'],
             ['chaining', fn($value): bool|string => ($value instanceof Chaining) ? true : 'Must be an instance of Chaining.'],

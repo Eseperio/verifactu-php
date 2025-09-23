@@ -97,6 +97,9 @@ class QrGeneratorServiceTest extends TestCase
         $this->assertInstanceOf(Writer::class, $writer);
 
         // Test Imagick renderer
+        if (!extension_loaded('imagick')) {
+            $this->markTestSkipped('Imagick extension is not installed; skipping Imagick renderer test. Install ext-imagick to run this part.');
+        }
         $writer = $method->invoke(null, QrGeneratorService::RENDERER_IMAGICK, 300);
         $this->assertInstanceOf(Writer::class, $writer);
 

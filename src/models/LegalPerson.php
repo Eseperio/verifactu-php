@@ -47,13 +47,18 @@ class LegalPerson extends Model
     public function setOtherId($otherId): static
     {
         if (is_array($otherId)) {
-            $otherID = new OtherID();
-            $otherID->countryCode = $otherId['countryCode'] ?? null;
-            $otherID->idType = $otherId['idType'] ?? null;
-            $otherID->id = $otherId['id'] ?? null;
-            $this->otherId = $otherID;
+            $otherIDModel = new OtherID();
+            $otherIDModel->countryCode = $otherId['countryCode'] ?? null;
+            $otherIDModel->idType = $otherId['idType'] ?? null;
+            $otherIDModel->id = $otherId['id'] ?? null;
+            $this->otherId = $otherIDModel;
         } else {
+            $errors= $otherId->validate();
+            if(!empty($errors)){
+                throw new \Exception(json_encode($errors));
+            }
             $this->otherId = $otherId;
+
         }
 
         return $this;
@@ -67,7 +72,6 @@ class LegalPerson extends Model
         return [
             [['name'], 'required'],
             [['name', 'nif'], 'string'],
-            [['otherId'], 'array'],
             [['nif', 'otherId'], function ($value, $model): string|bool {
                 // Either NIF or otherId must be set
                 if ($model->nif === null && $model->otherId === null) {

@@ -95,17 +95,16 @@ class VerifactuService
         // 1. Validate input (excluding hash which will be generated)
         $validation = $invoice->validate();
 
-        if ($validation !== true) {
+        if (!empty($validation)) {
             throw new \InvalidArgumentException('InvoiceSubmission validation failed: ' . print_r($validation, true));
         }
 
-        // 2. Generate hash (huella)
         $invoice->hash = HashGeneratorService::generate($invoice);
 
         // 3. Final validation including hash
         $finalValidation = $invoice->validate();
 
-        if ($finalValidation !== true) {
+        if (!empty($finalValidation)) {
             throw new \InvalidArgumentException('InvoiceSubmission final validation failed: ' . print_r($finalValidation, true));
         }
 
@@ -167,8 +166,9 @@ TXT
             throw new \RuntimeException('Error calling AEAT service: ' . $e->getMessage());
         }
 
-        // 7. Parse AEAT response
-        return ResponseParserService::parseInvoiceResponse($responseXml);
+        // 7. Parse AEAT response (use raw SOAP XML string instead of stdClass)
+        $rawResponseXml = $client->__getLastResponse();
+        return ResponseParserService::parseInvoiceResponse($rawResponseXml);
     }
 
     /**
@@ -181,7 +181,7 @@ TXT
         // 1. Validate input (excluding hash which will be generated)
         $validation = $cancellation->validate();
 
-        if ($validation !== true) {
+        if (!empty($validation)) {
             throw new \InvalidArgumentException('InvoiceCancellation validation failed: ' . print_r($validation, true));
         }
 
@@ -191,7 +191,7 @@ TXT
         // 3. Final validation including hash
         $finalValidation = $cancellation->validate();
 
-        if ($finalValidation !== true) {
+        if (!empty($finalValidation)) {
             throw new \InvalidArgumentException('InvoiceCancellation final validation failed: ' . print_r($finalValidation, true));
         }
         
@@ -222,7 +222,9 @@ TXT
         $soapVar = new \SoapVar($signedXml, XSD_ANYXML);
         $responseXml = $client->__soapCall('RegFactuSistemaFacturacion', [$soapVar]);
 
-        return ResponseParserService::parseInvoiceResponse($responseXml);
+        // Parse using raw SOAP response string
+        $rawResponseXml = $client->__getLastResponse();
+        return ResponseParserService::parseInvoiceResponse($rawResponseXml);
     }
 
     /**
@@ -235,7 +237,7 @@ TXT
     {
         $validation = $query->validate();
 
-        if ($validation !== true) {
+        if (!empty($validation)) {
             throw new \InvalidArgumentException('InvoiceQuery validation failed: ' . print_r($validation, true));
         }
         
@@ -249,7 +251,9 @@ TXT
         $soapVar = new \SoapVar($xml, XSD_ANYXML);
         $responseXml = $client->__soapCall('ConsultaFactuSistemaFacturacion', [$soapVar]);
 
-        return ResponseParserService::parseQueryResponse($responseXml);
+        // Parse using raw SOAP response string
+        $rawResponseXml = $client->__getLastResponse();
+        return ResponseParserService::parseQueryResponse($rawResponseXml);
     }
 
     /**

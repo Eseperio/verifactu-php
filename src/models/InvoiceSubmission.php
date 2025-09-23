@@ -249,27 +249,16 @@ class InvoiceSubmission extends InvoiceRecord
 
             $this->recipients[] = $legalPerson;
         } else {
+            $errors = $recipient->validate();
+            if(!empty($errors)){
+                throw new \Exception(json_encode($errors));
+            }
             $this->recipients[] = $recipient;
         }
 
         return $this;
     }
 
-    /**
-     * Legacy method for backward compatibility.
-     * @param string $nif Recipient NIF
-     * @param string|null $name Recipient name (optional)
-     * @return $this
-     * @deprecated Use addRecipient with a LegalPerson object instead
-     */
-    public function addRecipientLegacy($nif, $name = null)
-    {
-        $recipient = new LegalPerson();
-        $recipient->nif = $nif;
-        $recipient->name = $name ?? 'Unknown';
-
-        return $this->addRecipient($recipient);
-    }
 
     /**
      * Get the third party.

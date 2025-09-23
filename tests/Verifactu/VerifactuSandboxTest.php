@@ -9,7 +9,9 @@ use eseperio\verifactu\models\Chaining;
 use eseperio\verifactu\models\ComputerSystem;
 use eseperio\verifactu\models\enums\HashType;
 use eseperio\verifactu\models\enums\InvoiceType;
+use eseperio\verifactu\models\enums\LegalPersonIdType;
 use eseperio\verifactu\models\enums\OperationQualificationType;
+use eseperio\verifactu\models\enums\TaxType;
 use eseperio\verifactu\models\enums\YesNoType;
 use eseperio\verifactu\models\InvoiceId;
 use eseperio\verifactu\models\InvoiceSubmission;
@@ -129,6 +131,7 @@ class VerifactuSandboxTest extends TestCase
         // Add tax breakdown
         $breakdownDetail = new BreakdownDetail();
         $breakdownDetail->taxRate = 21.0;
+        $breakdownDetail->taxType = TaxType::IVA->value;
         $breakdownDetail->taxableBase = 100.00;
         $breakdownDetail->taxAmount = 21.00;
         $breakdownDetail->operationQualification = OperationQualificationType::SUBJECT_NO_EXEMPT_NO_REVERSE;
@@ -143,7 +146,7 @@ class VerifactuSandboxTest extends TestCase
         $computerSystem = new ComputerSystem();
         $computerSystem->systemName = 'ERP Test';
         $computerSystem->version = '1.0';
-        $computerSystem->providerName = 'Test Provider';
+        $computerSystem->providerName = $this->issuerName;
         $computerSystem->systemId = '01';
         $computerSystem->installationNumber = '1';
         $computerSystem->onlyVerifactu = YesNoType::YES;
@@ -152,18 +155,16 @@ class VerifactuSandboxTest extends TestCase
 
         // Set provider information
         $provider = new LegalPerson();
-        $provider->name = 'Test Provider SL';
-        $provider->nif = 'B87654321';
+        $provider->name = $this->issuerName;
+        $provider->nif = $this->issuerNif;
+
+
         $computerSystem->setProviderId($provider);
 
         $invoice->setSystemInfo($computerSystem);
 
         // Set other required fields
         $invoice->recordTimestamp = date('Y-m-d\TH:i:sP');
-        $invoice->hashType = HashType::SHA_256;
-
-        // Generate the hash
-        $invoice->hash = HashGeneratorService::generate($invoice);
 
         // Optional fields
         $invoice->operationDate = date('d-m-Y');
@@ -180,19 +181,14 @@ class VerifactuSandboxTest extends TestCase
 
         // Add recipient marked as "Not Registered (No Censado)" (OtherID IDType=07)
         $recipient = new LegalPerson();
-        $recipient->name = 'Cliente Test SL';
-        $otherId = new OtherID();
-        $otherId->idType = '07'; // No Censado
-        $otherId->id = 'NC-TEST-001';
-        $recipient->setOtherId($otherId);
+        $recipient->name = 'DECATHLON ESPAÑA SAU';
+        $recipient->nif = 'A79935607';
+
         $invoice->addRecipient($recipient);
 
         // Check that the recipient was added correctly as No Censado
         $recipients = $invoice->getRecipients();
         $other = $recipients[0]->getOtherId() ?? null;
-        if (empty($recipients) || !$other || $other->idType !== '07') {
-            throw new \RuntimeException('Failed to add recipient as "No Censado" (IDType 07)');
-        }
 
         return $invoice;
     }
@@ -209,6 +205,10 @@ class VerifactuSandboxTest extends TestCase
 
         // Submit the invoice to the AEAT service
         $response = Verifactu::registerInvoice($invoice);
+
+        // Mostrar la respuesta en la consola
+        var_dump($response->getErrors());
+        var_dump($response);
 
         $this->assertNotNull($response, 'Response should not be null');
 //        $this->assertTrue($response->isSuccessful(), 'Invoice submission should be successful');

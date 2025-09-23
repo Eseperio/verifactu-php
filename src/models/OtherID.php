@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace eseperio\verifactu\models;
 
+use eseperio\verifactu\models\enums\LegalPersonIdType;
+
 /**
  * Model representing an identifier for foreign entities (IDOtroType).
  * Used when the entity doesn't have a Spanish NIF.
@@ -50,6 +52,13 @@ class OtherID extends Model
                 $validTypes = ['02', '03', '04', '05', '06', '07'];
 
                 return in_array($value, $validTypes) ? true : 'Invalid ID type.';
+            }],
+            // countryCode es obligatorio cuando idType es distinto de '02'
+            ['countryCode', function () {
+                if ($this->idType !== LegalPersonIdType::VAT_ID->value && (empty($this->countryCode) || !is_string($this->countryCode))) {
+                    return 'El campo countryCode es obligatorio cuando el tipo es distinto de 02.';
+                }
+                return true;
             }],
         ];
     }
