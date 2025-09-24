@@ -1,12 +1,14 @@
 # Verifactu PHP Library
 
+[ES] Librería completa (registro, consulta, anulación) orientada a objetos para la integración del sistema de facturación digital de Verifactu.
 
-NOTICE FOR COLLABORATORS: I´ve recently moved test issuer data to .env params, because AEAT requires it to be valid 
-credentials. In order to run tests, you need to add the new fields to your existing .env. See .env.example
+[EN] Full object oriented (register, query, cancellation) library for integration of Verifactu digital invoicing system.
 
-> [!WARNING]
-> 2025: Library __UNDER DEVELOPMENT__. You can try it, but expect changes, incomplete features or to be broken until
-> first alpha version is released. See the [CHANGELOG](CHANGELOG.md) for details of changes done during development.
+
+Disclaimer: this is an open source library, not an invoicing system. It is provided **without any warranties**; it is
+the sole responsibility of the integrator to verify its correct operation and compliance with legal or technical
+requirements. The library includes automated tests to help verify its functionality, but use in production is at your
+own risk.
 
 **A modern PHP library for integrating with 🇪🇸Spain’s AEAT Verifactu system (digital invoice submission, cancellation,
 querying, and events) according to the official regulatory technical specification.**
@@ -767,7 +769,10 @@ All AEAT error codes are mapped to human-readable messages using the official co
 `/src/dictionaries/ErrorRegistry.php`.
 
 > [!NOTE]
-> If you receive the error: “The value of the NIF field in the ObligadoEmision block is not identified”, it means the issuer data you provided is not correct. They must exactly match your census data at the Spanish Tax Agency (AEAT). You can verify them on the AEAT website under “Mis datos censales”.
+> If you receive the error: “The value of the NIF field in the ObligadoEmision block is not identified”, it means the
+> issuer data you provided is not correct. They must exactly match your census data at the Spanish Tax Agency (AEAT).
+> You
+> can verify them on the AEAT website under “Mis datos censales”.
 
 ### SOAP Communication Errors
 
