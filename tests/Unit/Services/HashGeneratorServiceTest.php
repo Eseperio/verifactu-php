@@ -35,9 +35,9 @@ class HashGeneratorServiceTest extends TestCase
         // Verify that both hashes are the same
         $this->assertEquals($hash1, $hash2, 'Hash should be consistent for the same input');
         
-        // Verify that the hash is a valid SHA-256 hash (base64 encoded)
-        $this->assertEquals(44, strlen($hash1), 'Base64 encoded SHA-256 hash should be 44 characters long');
-        $this->assertMatchesRegularExpression('/^[A-Za-z0-9+\/]+={0,2}$/i', $hash1, 'Hash should be a valid base64 encoded string');
+        // Verify that the hash is a valid SHA-256 hash (uppercase hexadecimal)
+        $this->assertEquals(64, strlen($hash1), 'Hex-encoded SHA-256 hash should be 64 characters long');
+        $this->assertMatchesRegularExpression('/^[A-F0-9]{64}$/', $hash1, 'Hash should be a valid uppercase hexadecimal string');
     }
     
     /**
@@ -85,8 +85,8 @@ class HashGeneratorServiceTest extends TestCase
         
         // Verify it's not empty and has the right format
         $this->assertNotEmpty($hash, 'Hash should not be empty');
-        $this->assertEquals(44, strlen($hash), 'Base64 encoded SHA-256 hash should be 44 characters long');
-        $this->assertMatchesRegularExpression('/^[A-Za-z0-9+\/]+={0,2}$/i', $hash, 'Hash should be a valid base64 encoded string');
+        $this->assertEquals(64, strlen($hash), 'Hex-encoded SHA-256 hash should be 64 characters long');
+        $this->assertMatchesRegularExpression('/^[A-F0-9]{64}$/', $hash, 'Hash should be a valid uppercase hexadecimal string');
     }
     
     /**

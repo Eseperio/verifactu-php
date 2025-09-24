@@ -86,7 +86,8 @@ class VerifactuSandboxTest extends TestCase
         // Validate the invoice
         $validationResult = $invoice->validate();
 
-        $this->assertTrue($validationResult, 'Invoice validation should pass');
+        $this->assertIsArray($validationResult);
+        $this->assertEmpty($validationResult, 'Invoice validation should pass');
     }
 
     /**

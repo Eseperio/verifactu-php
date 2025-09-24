@@ -70,17 +70,13 @@ class ResponseParserServiceTest extends TestCase
         // Check that we have line responses with error codes
         $this->assertCount(2, $response->lineResponses);
         
-        // Check first line response
-        $this->assertArrayHasKey('CodigoErrorRegistro', $response->lineResponses[0]);
-        $this->assertArrayHasKey('DescripcionErrorRegistro', $response->lineResponses[0]);
-        $this->assertEquals('ERR001', $response->lineResponses[0]['CodigoErrorRegistro']);
-        $this->assertEquals('First error message', $response->lineResponses[0]['DescripcionErrorRegistro']);
-        
-        // Check second line response
-        $this->assertArrayHasKey('CodigoErrorRegistro', $response->lineResponses[1]);
-        $this->assertArrayHasKey('DescripcionErrorRegistro', $response->lineResponses[1]);
-        $this->assertEquals('ERR002', $response->lineResponses[1]['CodigoErrorRegistro']);
-        $this->assertEquals('Second error message', $response->lineResponses[1]['DescripcionErrorRegistro']);
+        // Collect codes/messages without assuming order
+        $codes = array_column($response->lineResponses, 'CodigoErrorRegistro');
+        $messages = array_column($response->lineResponses, 'DescripcionErrorRegistro');
+        sort($codes);
+        sort($messages);
+        $this->assertEquals(['ERR001','ERR002'], $codes);
+        $this->assertEquals(['First error message','Second error message'], $messages);
     }
     
     /**

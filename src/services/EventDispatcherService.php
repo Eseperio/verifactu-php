@@ -26,7 +26,7 @@ class EventDispatcherService
         // 1. Validate event
         $validation = $event->validate();
 
-        if ($validation !== true) {
+        if (!empty($validation)) {
             throw new \InvalidArgumentException('EventRecord validation failed: ' . print_r($validation, true));
         }
 

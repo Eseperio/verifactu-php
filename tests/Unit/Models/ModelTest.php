@@ -31,23 +31,29 @@ class ModelTest extends TestCase
 
         // Test validation fails for missing required field
         $result = $model->validate();
-        $this->assertNotTrue($result);
-        $this->assertArrayHasKey('requiredField', $result);
+        $this->assertIsArray($result);
+        $this->assertNotEmpty($result);
+        // Error keys are namespaced (Class::$property); assert any key contains 'requiredField'
+        $this->assertTrue((bool) array_filter(array_keys($result), fn($k) => str_contains($k, 'requiredField')), 'Errors should contain requiredField');
 
         // Test validation passes when required fields are set
         $model->requiredField = 'test';
         $result = $model->validate();
-        $this->assertTrue($result);
+        $this->assertIsArray($result);
+        $this->assertEmpty($result);
 
         // Test validation with custom validator function
         $model->optionalField = 123; // Not a string
         $result = $model->validate();
-        $this->assertNotTrue($result);
-        $this->assertArrayHasKey('optionalField', $result);
+        $this->assertIsArray($result);
+        $this->assertNotEmpty($result);
+        // Namespaced keys; ensure optionalField appears
+        $this->assertTrue((bool) array_filter(array_keys($result), fn($k) => str_contains($k, 'optionalField')), 'Errors should contain optionalField');
 
         // Fix the field and test again
         $model->optionalField = 'valid string';
         $result = $model->validate();
-        $this->assertTrue($result);
+        $this->assertIsArray($result);
+        $this->assertEmpty($result);
     }
 }

@@ -122,7 +122,7 @@ class Breakdown extends Model
 
                     $validation = $detail->validate();
 
-                    if ($validation !== true) {
+                    if (!empty($validation)) {
                         return 'Invalid breakdown detail: ' . json_encode($validation);
                     }
                 }

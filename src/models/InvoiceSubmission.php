@@ -250,7 +250,7 @@ class InvoiceSubmission extends InvoiceRecord
             $this->recipients[] = $legalPerson;
         } else {
             $errors = $recipient->validate();
-            if(!empty($errors)){
+            if (!empty($errors)) {
                 throw new \Exception(json_encode($errors));
             }
             $this->recipients[] = $recipient;

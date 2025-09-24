@@ -113,7 +113,8 @@ class ReadmeAltaExampleTest extends TestCase
 
         // Validate the invoice before submission
         $validationResult = $invoice->validate();
-        $this->assertTrue($validationResult, 'Invoice validation failed: ' . (is_array($validationResult) ? print_r($validationResult, true) : ''));
+        $this->assertIsArray($validationResult);
+        $this->assertEmpty($validationResult, 'Invoice validation failed: ' . print_r($validationResult, true));
 
         // Submit the invoice
         $response = Verifactu::registerInvoice($invoice);

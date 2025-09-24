@@ -25,8 +25,8 @@ class HashGeneratorService
         // Build the data string based on record type (submission or cancellation)
         $dataString = self::buildDataString($record);
 
-        // Hash using SHA-256 and encode to base64
-        return base64_encode(hash('sha256', $dataString, true));
+        // Hash using SHA-256 and return as uppercase hexadecimal per AEAT spec
+        return strtoupper(hash('sha256', $dataString));
     }
 
     /**
@@ -101,7 +101,7 @@ class HashGeneratorService
      */
     protected static function normalizeDecimal($value): string
     {
-        // Convert to float, remove trailing zeros, use dot as decimal separator
-        return rtrim(rtrim(number_format((float) $value, 2, '.', ''), '0'), '.');
+        // Convert to float and format with exactly two decimals (dot separator) as used by AEAT examples
+        return number_format((float) $value, 2, '.', '');
     }
 }

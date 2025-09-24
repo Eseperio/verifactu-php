@@ -90,13 +90,11 @@ class ResponseParserService
         $model->lineResponses = [];
 
         foreach ($xpath->query('//*[local-name()="RespuestaLinea"]') as $lineNode) {
-            // Extrae los campos según el XSD
+            // Extract fields relative to the current line node
             $line = [];
             foreach (['IDFactura', 'Operacion', 'RefExterna', 'EstadoRegistro', 'CodigoErrorRegistro', 'DescripcionErrorRegistro', 'RegistroDuplicado'] as $field) {
-                $fieldNode = self::firstNode(
-                    new \DOMXPath($lineNode->ownerDocument),
-                    './/*[local-name()="' . $field . '"]'
-                );
+                $nodes = $xpath->query('.//*[local-name()="' . $field . '"]', $lineNode);
+                $fieldNode = $nodes && $nodes->length > 0 ? $nodes->item(0) : null;
                 if ($fieldNode) {
                     if (in_array($field, ['IDFactura', 'RegistroDuplicado'])) {
                         $line[$field] = self::xmlNodeToArray($fieldNode);

@@ -28,9 +28,9 @@ abstract class Model
 
     /**
      * Validates model properties based on rules().
-     * Returns true if all validations pass, otherwise returns an array of error messages.
+     * Always returns an array of error messages; empty array means validation passed.
      *
-     * @return true|array
+     * @return array
      */
     public function validate()
     {
@@ -105,6 +105,6 @@ abstract class Model
             }
         }
 
-        return $errors ;
+        return $errors;
     }
 }
