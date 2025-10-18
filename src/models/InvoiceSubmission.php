@@ -35,7 +35,7 @@ class InvoiceSubmission extends InvoiceRecord
      *          [
      *              'issuerNif' => 'B12345678', // NIF of the original invoice issuer
      *              'seriesNumber' => 'A-2023/007', // Series and number of rectified invoice
-     *              'issueDate' => '2023-09-12' // Date of rectified invoice (YYYY-MM-DD)
+     *              'issueDate' => '12-09-2023' // Date of rectified invoice (DD-MM-YYYY)
      *          ],
      *          ...
      *      ],
@@ -43,7 +43,7 @@ class InvoiceSubmission extends InvoiceRecord
      *          [
      *              'issuerNif' => 'B12345678', // NIF of the original invoice issuer
      *              'seriesNumber' => 'B-2023/010', // Series and number of substituted invoice
-     *              'issueDate' => '2023-08-15' // Date of substituted invoice (YYYY-MM-DD)
+     *              'issueDate' => '15-08-2023' // Date of substituted invoice (DD-MM-YYYY)
      *          ],
      *          ...
      *      ]
@@ -181,7 +181,7 @@ class InvoiceSubmission extends InvoiceRecord
      * Add a rectified invoice.
      * @param string $issuerNif NIF of the original invoice issuer
      * @param string $seriesNumber Series and number of rectified invoice
-     * @param string $issueDate Date of rectified invoice (YYYY-MM-DD)
+     * @param string $issueDate Date of rectified invoice (DD-MM-YYYY)
      * @return $this
      */
     public function addRectifiedInvoice($issuerNif, $seriesNumber, $issueDate): static
@@ -203,7 +203,7 @@ class InvoiceSubmission extends InvoiceRecord
      * Add a substituted invoice.
      * @param string $issuerNif NIF of the original invoice issuer
      * @param string $seriesNumber Series and number of substituted invoice
-     * @param string $issueDate Date of substituted invoice (YYYY-MM-DD)
+     * @param string $issueDate Date of substituted invoice (DD-MM-YYYY)
      * @return $this
      */
     public function addSubstitutedInvoice($issuerNif, $seriesNumber, $issueDate): static
@@ -535,7 +535,7 @@ class InvoiceSubmission extends InvoiceRecord
                 }
 
                 // Checks for format DD-MM-YYYY (simple regex)
-                return (preg_match('/^\\d{2}-\\d{2}-\\d{4}$/', $value)) ? true : 'Must be a valid date (YYYY-MM-DD).';
+                return (preg_match('/^\\d{2}-\\d{2}-\\d{4}$/', $value)) ? true : 'Must be a valid date (DD-MM-YYYY).';
             }],
             // New rule to validate the issue date format
             ['invoiceId', function ($value): bool|string {
