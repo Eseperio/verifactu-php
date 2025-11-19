@@ -14,7 +14,7 @@ own risk.
 querying, and events) according to the official regulatory technical specification.**
 
 > [!NOTE]
-> This library supports verfactu transactions only. For non verifactu signed transactions, such as those required when
+> This library supports verifactu transactions only. For non verifactu signed transactions, such as those required when
 > not using invoicing software, you may look for a different library.
 
 ---
