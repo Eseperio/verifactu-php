@@ -16,6 +16,10 @@ use eseperio\verifactu\models\enums\YesNoType;
 class InvoiceCancellation extends InvoiceRecord
 {
     public $externalReference;
+
+    //Fix https://github.com/Eseperio/verifactu-php/issues/27
+    public $issuerName;
+
     /**
      * No previous record found indicator (SinRegistroPrevio, optional).
      * @var YesNoType|null

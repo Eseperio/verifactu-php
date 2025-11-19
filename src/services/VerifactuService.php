@@ -201,7 +201,8 @@ TXT
         // Get the issuer information for the Cabecera
         $invoiceId = $cancellation->getInvoiceId();
         $nif = $invoiceId->issuerNif;
-        $name = "Obligado Tributario"; // Placeholder for cancellations
+        //Fix https://github.com/Eseperio/verifactu-php/issues/27
+        $name = $cancellation->issuerName; // Placeholder for cancellations
         
         // Wrap the XML with the proper structure using InvoiceSerializer
         $wrappedDom = InvoiceSerializer::wrapXmlWithRegFactuStructure($cancellationDom, $nif, $name);
@@ -217,6 +218,9 @@ TXT
             self::getConfig(self::CERT_PASSWORD_KEY)
         );
         $client = self::getClient();
+
+        //Fix https://github.com/Eseperio/verifactu-php/issues/28
+        $signedXml = preg_replace('/<\?xml.*?\?>/', '', $signedXml);
 
         // Envío como ANYXML (evita "object has no 'Cabecera' property")
         $soapVar = new \SoapVar($signedXml, XSD_ANYXML);
@@ -247,6 +251,9 @@ TXT
         
         $client = self::getClient();
 
+        //Fix https://github.com/Eseperio/verifactu-php/issues/28
+        $xml = preg_replace('/<\?xml.*?\?>/', '', $xml);
+        
         // Enviar el XML literal
         $soapVar = new \SoapVar($xml, XSD_ANYXML);
         $responseXml = $client->__soapCall('ConsultaFactuSistemaFacturacion', [$soapVar]);

@@ -28,6 +28,13 @@ class InvoiceQuery extends Model
      */
     public $seriesNumber;
 
+    //Fix https://github.com/Eseperio/verifactu-php/issues/39
+    /**
+     * Issuerparty information (Emisor).
+     * @var array
+     */
+    private $issuerparty;
+
     /**
      * Counterparty information (Contraparte, optional).
      * @var array
@@ -55,6 +62,36 @@ class InvoiceQuery extends Model
      * Pagination key (ClavePaginacion, optional).
      */
     private ?array $paginationKey = null;
+
+    //Fix https://github.com/Eseperio/verifactu-php/issues/39
+    /**
+     * Get the issuerparty information.
+     * @return array
+     */
+    public function getIssuerparty()
+    {
+        return $this->issuerparty;
+    }
+
+    //Fix https://github.com/Eseperio/verifactu-php/issues/39
+    /**
+     * Set the issuerparty information.
+     * @param string $nif Issuer party NIF
+     * @param string|null $name Issuer party name (optional)
+     * @return $this
+     */
+    public function setIssuerparty($nif, $name = null): static
+    {
+        $this->issuerparty = [
+            'nif' => $nif,
+        ];
+
+        if ($name !== null) {
+            $this->issuerparty['name'] = $name;
+        }
+
+        return $this;
+    }
 
     /**
      * Get the counterparty information.

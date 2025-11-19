@@ -452,6 +452,13 @@ class InvoiceSerializer
         $cabecera = $doc->createElementNS(self::QUERY_NAMESPACE, 'sf:Cabecera');
         $cabecera->appendChild($doc->createElementNS(self::SF_NAMESPACE, 'sf:IDVersion', '1.0'));
         $root->appendChild($cabecera);
+        #Fix https://github.com/Eseperio/verifactu-php/issues/39
+        $issuerparty = $query->getIssuerparty();
+        $obligadoEmision = $doc->createElementNS(self::SF_NAMESPACE, 'sf:ObligadoEmision');
+        $cabecera->appendChild($obligadoEmision);
+        // Orden según schema PersonaFisicaJuridicaESType: NombreRazon, NIF
+        $obligadoEmision->appendChild($doc->createElementNS(self::SF_NAMESPACE, 'sf:NombreRazon', (string) $issuerparty['name']));
+        $obligadoEmision->appendChild($doc->createElementNS(self::SF_NAMESPACE, 'sf:NIF', (string) $issuerparty['nif']));
 
         // FiltroConsulta (Consulta namespace)
         $filtro = $doc->createElementNS(self::QUERY_NAMESPACE, 'sf:FiltroConsulta');
