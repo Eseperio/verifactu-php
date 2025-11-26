@@ -73,7 +73,10 @@ class InvoiceSerializer
         // NombreRazonEmisor (required)
         $root->appendChild($doc->createElementNS(self::SF_NAMESPACE, 'sf:NombreRazonEmisor', (string) $invoice->issuerName));
 
-
+		// Subsanacion (optional)
+		if($invoice->isCorrection) {
+			$root->appendChild($doc->createElementNS(self::SF_NAMESPACE, 'sf:Subsanacion', 'S'));
+		}
 
         // TipoFactura (required)
         if ($invoice->invoiceType) {

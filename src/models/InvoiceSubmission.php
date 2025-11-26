@@ -53,6 +53,13 @@ class InvoiceSubmission extends InvoiceRecord
      */
     private $rectificationData = [];
 
+	/**
+	 * Identifies if a submission is to subsanate a previous one accepted with errors
+	 *
+	 * @var bool
+	 */
+	public $isCorrection = false;
+
     /**
      * Invoice type (TipoFactura).
      * @var InvoiceType
@@ -557,7 +564,7 @@ class InvoiceSubmission extends InvoiceRecord
 
     /**
      * Deprecated: Use InvoiceSerializer::toInvoiceXml() instead.
-     * 
+     *
      * @deprecated This method has been replaced by InvoiceSerializer::toInvoiceXml()
      * @return \DOMDocument
      * @throws \Exception
