@@ -53,12 +53,12 @@ class InvoiceSubmission extends InvoiceRecord
      */
     private $rectificationData = [];
 
-	/**
-	 * Identifies if a submission is to subsanate a previous one accepted with errors
-	 *
-	 * @var bool
-	 */
-	public $isCorrection = false;
+    /**
+     * Identifies if a submission is to subsanate a previous one accepted with errors
+     *
+     * @var YesNoType|null
+     */
+    public $isCorrection;
 
     /**
      * Invoice type (TipoFactura).
@@ -443,6 +443,13 @@ class InvoiceSubmission extends InvoiceRecord
                 return ($value instanceof RectificationType) ? true : 'Must be an instance of RectificationType.';
             }],
             ['simplifiedInvoice', function ($value): bool|string {
+                if ($value === null) {
+                    return true;
+                }
+
+                return ($value instanceof YesNoType) ? true : 'Must be an instance of YesNoType.';
+            }],
+            ['isCorrection', function ($value): bool|string {
                 if ($value === null) {
                     return true;
                 }

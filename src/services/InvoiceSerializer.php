@@ -7,6 +7,7 @@ namespace eseperio\verifactu\services;
 use eseperio\verifactu\models\Breakdown;
 use eseperio\verifactu\models\BreakdownDetail;
 use eseperio\verifactu\models\ComputerSystem;
+use eseperio\verifactu\models\enums\YesNoType;
 use eseperio\verifactu\models\InvoiceCancellation;
 use eseperio\verifactu\models\InvoiceId;
 use eseperio\verifactu\models\InvoiceQuery;
@@ -75,7 +76,7 @@ class InvoiceSerializer
 
 		// Subsanacion (optional)
 		if($invoice->isCorrection) {
-			$root->appendChild($doc->createElementNS(self::SF_NAMESPACE, 'sf:Subsanacion', 'S'));
+			$root->appendChild($doc->createElementNS(self::SF_NAMESPACE, 'sf:Subsanacion', (string) $invoice->isCorrection->value));
 		}
 
         // TipoFactura (required)

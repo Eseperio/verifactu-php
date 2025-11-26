@@ -58,7 +58,7 @@ class InvoiceSerializerTest extends TestCase
 
         // Verify subsanation is not present
         $correction = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'Subsanacion');
-        $this->assertEquals(0, $correction->count());
+        $this->assertEquals(YesNoType::NO->value, $correction->item(0)->textContent);
 
         // Verify invoice type
         $tipoFactura = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'TipoFactura');
@@ -107,14 +107,14 @@ class InvoiceSerializerTest extends TestCase
     {
          // Create a basic InvoiceSubmission object
         $invoice = $this->createBasicInvoiceSubmission();
-        $invoice->isCorrection = true;
+        $invoice->isCorrection = YesNoType::YES;
 
         // Generate XML using the serializer
         $dom = InvoiceSerializer::toInvoiceXml($invoice, false); // Skip validation
 
         // Verify subsanation is present
         $subsanation = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'Subsanacion');
-        $this->assertEquals('S', $subsanation->item(0)->textContent);
+        $this->assertEquals(YesNoType::YES->value, $subsanation->item(0)->textContent);
     }
 
     /**
@@ -330,6 +330,7 @@ class InvoiceSerializerTest extends TestCase
         $invoice->operationDescription = 'Test operation';
         $invoice->taxAmount = 21.00;
         $invoice->totalAmount = 121.00;
+        $invoice->isCorrection = YesNoType::NO;
 
         // Add a recipient
         $recipient = new LegalPerson();
