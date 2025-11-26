@@ -148,7 +148,7 @@ $invoice->simplifiedInvoice = YesNoType::NO;
 $invoice->invoiceWithoutRecipient = YesNoType::NO;
 
 // If providing a subsanation after receiving an "Accepted with error" message
-// $invoice->isSubsanation = true;
+// $invoice->isCorrection = true;
 
 // Add tax breakdown (using object-oriented approach)
 $breakdown = new Breakdown();
