@@ -120,7 +120,6 @@ use eseperio\verifactu\models\BreakdownDetail;
 use eseperio\verifactu\models\Chaining;
 use eseperio\verifactu\models\ComputerSystem;
 use eseperio\verifactu\models\LegalPerson;
-use eseperio\verifactu\models\Recipient;
 use eseperio\verifactu\models\enums\InvoiceType;
 use eseperio\verifactu\models\enums\TaxType;
 use eseperio\verifactu\models\enums\YesNoType;
@@ -200,12 +199,10 @@ $invoice->simplifiedInvoice = YesNoType::NO; // Not a simplified invoice
 $invoice->invoiceWithoutRecipient = YesNoType::NO; // Has identified recipient
 
 // Add recipients (using object-oriented approach)
-$recipient = new Recipient();
-$recipientPerson = new LegalPerson();
-$recipientPerson->name = 'Cliente Ejemplo SL';
-$recipientPerson->nif = 'A98765432';
-$recipient->setLegalPerson($recipientPerson);
-$invoice->setRecipient($recipient);
+$recipient = new LegalPerson();
+$recipient->name = 'Cliente Ejemplo SL';
+$recipient->nif = 'A98765432';
+$invoice->addRecipient($recipient);
 
 // Validate the invoice before submission
 $validationResult = $invoice->validate();
