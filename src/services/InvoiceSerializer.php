@@ -214,7 +214,7 @@ class InvoiceSerializer
                 }
 
                 // ClaveRegimen (optional)
-                if (!empty($detail->regimeKey)) {
+                if ($detail->regimeKey) {
                     $detalleDesglose->appendChild($doc->createElementNS(self::SF_NAMESPACE, 'sf:ClaveRegimen', (string) $detail->regimeKey->value));
                 }
 
