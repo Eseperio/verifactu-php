@@ -1,5 +1,9 @@
 # Verifactu PHP Library
 
+> [!warning]
+> VERIFACTU OBLIGATION HAS BEEN DELAYED TO 2027 FOR COMPANIES AND JULY 1 2027 FOR SELF-EMPLOYEES
+> LA OBLIGACIÓN DE USAR VERIFACTU HA SIDO POSPUESTA HASTA 2027 PARA SOCIDEDADES Y 1 JULIO DE 2027 PARA AUTÓNOMOS.
+
 [ES] Librería completa (registro, consulta, anulación) orientada a objetos para la integración del sistema de facturación digital de Verifactu.
 
 [EN] Full object oriented (register, query, cancellation) library for integration of Verifactu digital invoicing system.
