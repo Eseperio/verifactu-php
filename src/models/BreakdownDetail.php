@@ -6,6 +6,7 @@ namespace eseperio\verifactu\models;
 
 use eseperio\verifactu\models\enums\ExemptOperationType;
 use eseperio\verifactu\models\enums\OperationQualificationType;
+use eseperio\verifactu\models\enums\RegimeType;
 use eseperio\verifactu\models\enums\TaxType;
 
 /**
@@ -24,7 +25,7 @@ class BreakdownDetail extends Model
 
     /**
      * Regime key (ClaveRegimen, optional).
-     * @var string|null
+     * @var RegimeType|null
      */
     public $regimeKey;
 
@@ -83,7 +84,6 @@ class BreakdownDetail extends Model
     {
         return [
             [['taxableBase'], 'required'],
-            [['regimeKey'], 'string'],
             [['taxRate', 'taxableBase', 'costBasedTaxableBase', 'taxAmount', 'equivalenceSurchargeRate', 'equivalenceSurchargeAmount'], fn($value): bool|string => (is_null($value) || is_float($value) || is_int($value)) ? true : 'Must be a number or null.'],
             [['operationQualification', 'exemptOperation'], function ($value, $model): string|bool {
                 // Either operationQualification or exemptOperation must be set
@@ -99,6 +99,13 @@ class BreakdownDetail extends Model
                 }
 
                 return ($value instanceof TaxType) ? true : 'Must be an instance of TaxType.';
+            }],
+            ['regimeKey', function ($value): bool|string {
+                if ($value === null) {
+                    return true;
+                }
+
+                return ($value instanceof RegimeType) ? true : 'Must be an instance of RegimeType.';
             }],
             ['operationQualification', function ($value): bool|string {
                 if ($value === null) {

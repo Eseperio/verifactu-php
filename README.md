@@ -129,6 +129,7 @@ use eseperio\verifactu\models\enums\TaxType;
 use eseperio\verifactu\models\enums\YesNoType;
 use eseperio\verifactu\models\enums\HashType;
 use eseperio\verifactu\models\enums\OperationQualificationType;
+use eseperio\verifactu\models\enums\RegimeType;
 
 // After calling Verifactu::config(...)
 
@@ -154,6 +155,7 @@ $invoice->invoiceWithoutRecipient = YesNoType::NO;
 $breakdown = new Breakdown();
 $detail = new BreakdownDetail();
 $detail->taxType = TaxType::IVA;
+$detail->regimeKey = RegimeType::GENERAL; // General regime operation
 $detail->taxRate = 21.00;
 $detail->taxableBase = 100.00; 
 $detail->taxAmount = 21.00;
@@ -613,6 +615,7 @@ The library uses enum classes for type-safe constants:
 * **OperationQualificationType:** Tax operation qualifications
 * **PeriodType:** Month or quarter periods
 * **RectificationType:** Types of invoice rectifications
+* **RegimeType:** Special regime keys for VAT (ClaveRegimen) - General regime, exports, travel agencies, cash basis, etc.
 * **YesNoType:** Yes/No values for boolean fields
 * **GeneratorType:** Invoice generator types
 * **ThirdPartyOrRecipientType:** Types of third parties or recipients
