@@ -56,6 +56,10 @@ class InvoiceSerializerTest extends TestCase
         $this->assertEquals(1, $nombreRazon->length);
         $this->assertEquals('Test Company', $nombreRazon->item(0)->textContent);
 
+        // Verify subsanation is not present
+        $correction = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'Subsanacion');
+        $this->assertEquals(YesNoType::NO->value, $correction->item(0)->textContent);
+
         // Verify invoice type
         $tipoFactura = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'TipoFactura');
         $this->assertEquals(1, $tipoFactura->length);
@@ -94,6 +98,23 @@ class InvoiceSerializerTest extends TestCase
         $huella = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'Huella');
         $this->assertEquals(1, $huella->length);
         $this->assertEquals(str_repeat('a', 64), $huella->item(0)->textContent);
+    }
+
+    /**
+     * Test that the InvoiceSerializer can generate a XML for InvoiceSubmission with the subsanation info
+     */
+    public function testToInvoiceXmlWithIsSubsanation()
+    {
+         // Create a basic InvoiceSubmission object
+        $invoice = $this->createBasicInvoiceSubmission();
+        $invoice->isCorrection = YesNoType::YES;
+
+        // Generate XML using the serializer
+        $dom = InvoiceSerializer::toInvoiceXml($invoice, false); // Skip validation
+
+        // Verify subsanation is present
+        $subsanation = $dom->getElementsByTagNameNS(InvoiceSerializer::SF_NAMESPACE, 'Subsanacion');
+        $this->assertEquals(YesNoType::YES->value, $subsanation->item(0)->textContent);
     }
 
     /**
@@ -309,6 +330,7 @@ class InvoiceSerializerTest extends TestCase
         $invoice->operationDescription = 'Test operation';
         $invoice->taxAmount = 21.00;
         $invoice->totalAmount = 121.00;
+        $invoice->isCorrection = YesNoType::NO;
 
         // Add a recipient
         $recipient = new LegalPerson();
@@ -375,6 +397,9 @@ class InvoiceSerializerTest extends TestCase
 
         // Set counterparty
         $query->setCounterparty('87654321X', 'Test Counterparty');
+
+        // Set issuerparty
+        $query->setIssuerparty('98765432M', 'Test Issuer');
 
         // Set system info
         $query->setSystemInfo('Test System', '1.0');

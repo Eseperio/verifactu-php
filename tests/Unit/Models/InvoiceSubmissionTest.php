@@ -78,6 +78,7 @@ class InvoiceSubmissionTest extends TestCase
         $submission->invoiceType = 'F1';
         $submission->taxAmount = 21.00;
         $submission->totalAmount = 121.00;
+        $submission->isCorrection = YesNoType::NO;
 
         // Set InvoiceId
         $invoiceId = new InvoiceId();

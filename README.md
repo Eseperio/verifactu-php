@@ -90,7 +90,7 @@ composer require robrichards/xmlseclibs
 ### 1. **Configuration**
 
 Before using any service, you must configure the library with your certificate, password, certificate type, and
-environment.  
+environment.
 Choose between certificate type (`certificate` or `seal`) and environment (`production` or `sandbox`) according to
 whether you'll be working in production or testing.
 
@@ -148,14 +148,17 @@ $invoice->operationDescription = 'Venta de productos';
 $invoice->taxAmount = 21.00; // Total tax amount
 $invoice->totalAmount = 121.00; // Total invoice amount
 $invoice->simplifiedInvoice = YesNoType::NO;
-$invoice->invoiceWithoutRecipient = YesNoType::NO; 
+$invoice->invoiceWithoutRecipient = YesNoType::NO;
+
+// If providing a subsanation after receiving an "Accepted with error" message
+// $invoice->isCorrection = true;
 
 // Add tax breakdown (using object-oriented approach)
 $breakdown = new Breakdown();
 $detail = new BreakdownDetail();
 $detail->taxType = TaxType::IVA;
 $detail->taxRate = 21.00;
-$detail->taxableBase = 100.00; 
+$detail->taxableBase = 100.00;
 $detail->taxAmount = 21.00;
 $detail->operationQualification = OperationQualificationType::SUBJECT_NO_EXEMPT_NO_REVERSE;
 $breakdown->addDetail($detail);
