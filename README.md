@@ -194,7 +194,7 @@ $invoice->setSystemInfo($computerSystem);
 // Set other required fields
 $invoice->recordTimestamp = '2024-07-01T12:00:00+02:00'; // Date and time with timezone
 $invoice->hashType = HashType::SHA_256;
-$invoice->hash = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'; // Calculated hash
+$invoice->hash = HashGeneratorService::generate($invoice); // Calculate hash
 
 // Optional fields
 $invoice->operationDate = '2024-07-01'; // Operation date
@@ -667,7 +667,7 @@ more advanced use cases.
   use eseperio\verifactu\services\HashGeneratorService;
 
   // Calculate hash for an invoice
-  $hash = HashGeneratorService::generateHash($invoice);
+  $hash = HashGeneratorService::generate($invoice);
   $invoice->hash = $hash;
   ```
 
