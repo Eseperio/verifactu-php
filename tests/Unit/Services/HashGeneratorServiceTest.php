@@ -88,6 +88,30 @@ class HashGeneratorServiceTest extends TestCase
         $this->assertEquals(64, strlen($hash), 'Hex-encoded SHA-256 hash should be 64 characters long');
         $this->assertMatchesRegularExpression('/^[A-F0-9]{64}$/', $hash, 'Hash should be a valid uppercase hexadecimal string');
     }
+
+    /**
+     * Test that the hash uses DD-MM-YYYY date format for FechaExpedicionFactura,
+     * matching the format used in the generated XML.
+     */
+    public function testIssueDateIsFormattedAsDdMmYyyyInHash(): void
+    {
+        $invoice = $this->createTestInvoice();
+
+        // issueDate is stored as YYYY-MM-DD (2023-01-01); hash must use DD-MM-YYYY (01-01-2023)
+        $expectedDataString = 'IDEmisorFactura=B12345678'
+            . '&NumSerieFactura=TEST001'
+            . '&FechaExpedicionFactura=01-01-2023'
+            . '&TipoFactura=F1'
+            . '&CuotaTotal=21.00'
+            . '&ImporteTotal=121.00'
+            . '&Huella='
+            . '&FechaHoraHusoGenRegistro=2023-01-01T12:00:00+01:00';
+
+        $expectedHash = strtoupper(hash('sha256', $expectedDataString));
+        $actualHash = HashGeneratorService::generate($invoice);
+
+        $this->assertEquals($expectedHash, $actualHash, 'Hash must use DD-MM-YYYY date format for FechaExpedicionFactura');
+    }
     
     /**
      * Helper method to create a test invoice with consistent data for hash testing.
