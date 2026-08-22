@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace eseperio\verifactu\services;
 
-use eseperio\verifactu\models\InvoiceSubmission;
 use eseperio\verifactu\models\InvoiceCancellation;
 use eseperio\verifactu\models\InvoiceRecord;
+use eseperio\verifactu\models\InvoiceSubmission;
 
 /**
  * Service responsible for generating the official SHA-256 hash ("huella") for invoice records,
@@ -58,7 +58,7 @@ class HashGeneratorService
             $parts = [
                 'IDEmisorFactura=' . trim($fields['issuerNif']),
                 'NumSerieFactura=' . trim($fields['seriesNumber']),
-                'FechaExpedicionFactura=' . trim($fields['issueDate']),
+                'FechaExpedicionFactura=' . InvoiceSerializer::formatDate(trim($fields['issueDate'])),
                 'TipoFactura=' . trim($fields['invoiceType']),
                 'CuotaTotal=' . $fields['taxAmount'],
                 'ImporteTotal=' . $fields['totalAmount'],
@@ -83,7 +83,7 @@ class HashGeneratorService
             $parts = [
                 'IDEmisorFacturaAnulada=' . trim($fields['issuerNif']),
                 'NumSerieFacturaAnulada=' . trim($fields['seriesNumber']),
-                'FechaExpedicionFacturaAnulada=' . trim($fields['issueDate']),
+                'FechaExpedicionFacturaAnulada=' . InvoiceSerializer::formatDate(trim($fields['issueDate'])),
                 'Huella=' . trim($fields['hash']),
                 'FechaHoraHusoGenRegistro=' . trim($fields['recordTimestamp']),
             ];
