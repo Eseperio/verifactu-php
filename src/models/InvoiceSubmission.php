@@ -54,6 +54,13 @@ class InvoiceSubmission extends InvoiceRecord
     private $rectificationData = [];
 
     /**
+     * Identifies if a submission is to subsanate a previous one accepted with errors
+     *
+     * @var YesNoType|null
+     */
+    public $isCorrection;
+
+    /**
      * Invoice type (TipoFactura).
      * @var InvoiceType
      */
@@ -442,6 +449,13 @@ class InvoiceSubmission extends InvoiceRecord
 
                 return ($value instanceof YesNoType) ? true : 'Must be an instance of YesNoType.';
             }],
+            ['isCorrection', function ($value): bool|string {
+                if ($value === null) {
+                    return true;
+                }
+
+                return ($value instanceof YesNoType) ? true : 'Must be an instance of YesNoType.';
+            }],
             ['invoiceWithoutRecipient', function ($value): bool|string {
                 if ($value === null) {
                     return true;
@@ -557,7 +571,7 @@ class InvoiceSubmission extends InvoiceRecord
 
     /**
      * Deprecated: Use InvoiceSerializer::toInvoiceXml() instead.
-     * 
+     *
      * @deprecated This method has been replaced by InvoiceSerializer::toInvoiceXml()
      * @return \DOMDocument
      * @throws \Exception
